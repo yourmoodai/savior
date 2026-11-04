@@ -1,15 +1,23 @@
-# Local replacement inspection
+# See what Savior changed
 
-A replacement trace records actual detector spans, applied edits, configuration
-identity, processing time, and the adapter's outcome. Human judgments are
-separate annotations, not detector scores or provider approval.
+Choose how much you want to see and whether to keep it.
 
-## Commands
+| View | What it shows | What it retains |
+| --- | --- | --- |
+| `/savior` in Claude Code | Latest original and replacement | Session memory, cleared at session boundaries |
+| Browser inspector with recording enabled | Saved edits and model details | Private local records, with separate opt-in |
 
-From a source build:
+These views do not add the original wording to model context. A successful edit
+means local processing completed; it is not proof of provider receipt.
+
+## Saved history
+
+Recording is off by default. Enable it before submitting prompts you want to
+inspect later; the inspector cannot recover originals from Claude history.
+
+From a [source build](../CONTRIBUTING.md#development):
 
 ```sh
-npm run build
 node bridge/cli.mjs inspect
 node bridge/cli.mjs traces status
 node bridge/cli.mjs traces enable
@@ -19,17 +27,16 @@ node bridge/cli.mjs traces delete
 ```
 
 Open the printed loopback URL in a browser. Its fragment contains a per-launch
-access token; do not share the URL. The app removes the token from the address
-bar, so refresh requires reopening the original URL. `Ctrl+C` stops the server.
-No background service is installed. An installed plugin can invoke its
-`bridge/cli.mjs` using the bundled `runtime/<target>/node` executable instead of
-PATH Node. The bridge prepares verified runtime artifacts when necessary.
+access token; do not share it. The app removes the token from the address bar,
+so refresh requires reopening the original URL. `Ctrl+C` stops the server;
+no background service is installed. Recording can also be enabled through the
+app's confirmation. In a packaged plugin, invoke `bridge/cli.mjs` with the bundled
+`runtime/<target>/node` executable, using `node.exe` on Windows. The bridge
+prepares verified runtime artifacts when necessary.
 
-Full-text capture defaults off. Enable it through the command or the web app's
-confirmation before submitting prompts. Disabling stops new text capture;
-deletion separately disables capture and removes retained records. Exports may
-contain secrets and remain after deletion. Files have private permissions but
-are not encrypted. Operating-system backups are outside Savior's control.
+Disabling stops new text capture. Deletion also disables capture and removes
+managed records, annotations, and projections. Exports and backups remain
+outside that deletion. Records have private permissions but are not encrypted.
 
 ## Storage and interpretation
 
@@ -61,36 +68,8 @@ gap warns without changing the successful replacement. Capture is currently
 wired to the Claude adapter's version-3 bridge requests and the explicit native
 `rewriteTraced` method; existing version-1/2 callers do not gain persistence.
 
-## Verification
-
-```sh
-npm run inspect:build:debug
-npm run inspect:build:release
-npm run inspect:test
-npm run test:bootstrap
-npx playwright install chromium
-npm run inspect:e2e
-npm run inspect:profile
-npm run verify
-```
-
-Both `inspect:e2e` and `inspect:profile` accept a new JSON output path after `--`
-to retain source-bound evidence. They refuse to overwrite an existing report.
-The native release binary also exposes `savior inspect` and `savior traces`; it
-delegates to the adjacent, verified `savior-review` executable.
-
-The browser check uses synthetic prompts, isolated state, and the current local
-model. It checks consent, exact Unicode edits, annotation, literal hostile markup,
-authentication, Host/Origin restrictions, export, deletion, and local-only browser
-requests. Profiling reports five short-input samples for disabled, metadata, and
-full-text capture, RSS, and cold/warm export times. It is not detector latency
-qualification. Editor tasks expose debug/release inspection, tests, browser E2E,
-and memory profiling.
-
-Signed-release installation is a separate gate: candidate cache tests do not
-prove a public GitHub download works. Production signing-key provisioning and
-the macOS/Linux/Windows published-download matrix are required before marketplace
-promotion. The bootstrap recovers a lock whose recorded PID is no longer alive.
-An incomplete lock or interrupted recovery can require manual repair: confirm
-no setup process is running before removing only the lock in the identified
-release cache. Verified partial downloads remain reusable.
+The native binary also exposes `savior inspect` and `savior traces`, which
+delegate to the adjacent `savior-review` executable.
+[Verification commands](benchmarking.md#inspection-checks) and
+[dated inspection evidence](evaluation.md#inspection-evidence) are maintained
+separately.

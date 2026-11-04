@@ -22,6 +22,14 @@ def digest(path):
     with path.open('rb') as stream:
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
+def copy_documentation(destination):
+    for name in ['README.md', 'CONTRIBUTING.md']:
+        shutil.copy2(ROOT/name, destination/name)
+    shutil.copytree(ROOT/'docs', destination/'docs')
+    shutil.copytree(ROOT/'benchmarks/results', destination/'benchmarks/results')
+    for name in ['sources.json', 'NOTICE.md']:
+        shutil.copy2(ROOT/'benchmarks'/name, destination/'benchmarks'/name)
+
 def stage(target, destination):
     ext, expected, addon = TARGETS[target]
     suffix = '.exe' if target.startswith('win32') else ''
@@ -63,12 +71,9 @@ def assemble(parts, destination):
             (destination/'runtime'/target/(name+suffix)).chmod(0o755)
     for name in ['hooks','bridge','src','models','.claude-plugin']:
         shutil.copytree(ROOT/name,destination/name,ignore=shutil.ignore_patterns('__pycache__'))
-    for name in ['LICENSE','NOTICE','THIRD-PARTY-NOTICES.md','README.md','package.json','package-lock.json']:
+    for name in ['LICENSE','NOTICE','THIRD-PARTY-NOTICES.md','package.json','package-lock.json']:
         shutil.copy2(ROOT/name,destination/name)
-    (destination/'docs/assets').mkdir(parents=True)
-    for name in ['savior.png', 'savior.svg']:
-        shutil.copy2(ROOT/'docs/assets'/name,destination/'docs/assets')
-    shutil.copy2(ROOT/'docs/migration.md',destination/'docs')
+    copy_documentation(destination)
     subprocess.run(['npm','ci','--omit=dev','--omit=optional','--ignore-scripts','--bin-links=false','--prefix',str(destination)],check=True)
     package=json.loads((destination/'package.json').read_text())
     for key in ['dependencies','devDependencies','scripts','napi','bin','files']:

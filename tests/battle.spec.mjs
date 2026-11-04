@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, writeFile, readFile, mkdir} from 'node:fs/promises';
+import {mkdtemp, writeFile, readFile, mkdir, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {csv, normalize, normalizeLicense, proposal, validate, select, fetchCorpus, digest, applyAnnotations} from '../scripts/bench/corpus.mjs';
@@ -120,8 +120,9 @@ test('performance decoding retains inference failures without treating them as t
   assert.throws(()=>decodeMeasurement(JSON.stringify(evidence),fixture,2,'omit'),/incompatible_results/);
   assert.throws(()=>decodeMeasurement(JSON.stringify(evidence),fixture,1,'fixed_phrase'),/strategy_mismatch/);
 });
-test('report command publishes failed coverage honestly and never overwrites evidence',async()=>{
-  const directory=await mkdtemp(join(tmpdir(),'savior-report-test-'));
+test('publishing preserves README, validates evidence, and retains failed coverage',async t=>{
+  const directory=await mkdtemp(join(tmpdir(),'savior report (test)-'));
+  t.after(()=>rm(directory,{recursive:true,force:true}));
   const identity={model:{'pytorch_model.bin':'synthetic'},machine:{cpu:'synthetic',platform:'test',arch:'test'},configuration:{}};
   const result={id:'one',track:'profanity',expected:true,predicted:false,strategies:{fixed_phrase:{status:'unchanged',preserved:true,parity:true}}};
   const q={version:1,kind:'quality',status:'completed',identity,selection:{selected:1},rows:[result],
@@ -137,18 +138,54 @@ test('report command publishes failed coverage honestly and never overwrites evi
   assert.match(markdown,/0\/1 checks passed/);assert.match(markdown,/not requested/);assert.match(markdown,/did not pass/);
   assert.match(markdown,/Failure classifications: 1 `unresolved`/);
   assert.match(markdown,/contention was not recorded/);
+  assert.match(markdown,/\[Evidence snapshot\]\(snapshot.json\)/);
+  const guide=markdown.match(/\[Reproduce the checks\]\(([^)]+)\)/)[1];
+  assert.equal(resolve(directory,decodeURIComponent(guide)),resolve('docs/benchmarking.md'));
   const saved=await readFile(join(directory,'snapshot.json'),'utf8');
   await assert.rejects(report(directory),{code:'EEXIST'});
   assert.equal(await readFile(join(directory,'snapshot.json'),'utf8'),saved);
   await mkdir(join(directory,'benchmarks/results'),{recursive:true});
-  await writeFile(join(directory,'README.md'),'cute intro\n<!-- benchmark-results:start -->\n<!-- benchmark-results:end -->\ninstallation\n');
-  const argv=[fileURLToPath(new URL('../scripts/bench/run.mjs',import.meta.url)),'readme','--output',directory];
-  assert.equal(spawnSync(process.execPath,argv,{cwd:directory,encoding:'utf8'}).status,0);
-  const readme=await readFile(join(directory,'README.md'),'utf8');
-  assert.match(readme,/^cute intro/);assert.match(readme,/installation\n$/);assert.match(readme,/0\/1 checks passed/);
-  snapshot.e2e.correctness.passed=100;
-  await writeFile(join(directory,'snapshot.json'),JSON.stringify(snapshot));
-  const tampered=spawnSync(process.execPath,argv,{cwd:directory,encoding:'utf8'});
-  assert.equal(tampered.status,1);assert.match(tampered.stderr,/snapshot_summary_mismatch/);
-  assert.equal(await readFile(join(directory,'README.md'),'utf8'),readme);
+  await mkdir(join(directory,'docs'));
+  const readme='tool overview\ninstallation\n';
+  const page_path=join(directory,'docs/evaluation.md');
+  const canonical_path=join(directory,'benchmarks/results/latest.json');
+  await writeFile(join(directory,'README.md'),readme);
+  await writeFile(page_path,'evidence introduction\n<!-- benchmark-results:start -->\n<!-- benchmark-results:end -->\ninspection evidence\n');
+  const run=command=>spawnSync(process.execPath,[fileURLToPath(new URL('../scripts/bench/run.mjs',import.meta.url)),command,'--output',directory],{cwd:directory,encoding:'utf8'});
+  for(const command of ['publish','readme']) {
+    const result=run(command);
+    assert.equal(result.status,0,result.stderr);
+    assert.equal(result.stderr.includes('deprecated'),command==='readme');
+    const page=await readFile(page_path,'utf8');
+    assert.match(page,/^evidence introduction/);assert.match(page,/inspection evidence\n$/);
+    assert.match(page,/0\/1 checks passed/);assert.match(page,/did not pass/);
+    assert.match(page,/\[Evidence snapshot\]\(\.\.\/benchmarks\/results\/latest.json\)/);
+    assert.match(page,/\[Reproduce the checks\]\(benchmarking.md\)/);
+    assert.equal(await readFile(join(directory,'README.md'),'utf8'),readme);
+    assert.deepEqual(JSON.parse(await readFile(canonical_path)),JSON.parse(saved));
+  }
+  const published=await readFile(page_path,'utf8');
+  const canonical=await readFile(canonical_path,'utf8');
+  for(const [code,alter] of [
+    ['snapshot_summary_mismatch',async()=>{const changed=structuredClone(snapshot);changed.e2e.correctness.passed=100;await writeFile(join(directory,'snapshot.json'),JSON.stringify(changed));}],
+    ['snapshot_evidence_mismatch',async()=>writeFile(join(directory,'quality.json'),JSON.stringify(q)+' ')],
+    ['incompatible_reports',async()=>writeFile(join(directory,'performance.json'),JSON.stringify({...p,filtered:true}))],
+    ['incompatible_reports',async()=>writeFile(join(directory,'quality.json'),JSON.stringify({...q,identity_stable:false}))],
+    ['incompatible_reports',async()=>writeFile(join(directory,'e2e.json'),JSON.stringify({...e,identity:{...identity,model:{weights:'different'}}}))],
+    ['incomplete_quality',async()=>writeFile(join(directory,'quality.json'),JSON.stringify({...q,rows:[]}))],
+    ['incomplete_performance',async()=>writeFile(join(directory,'performance.json'),JSON.stringify({...p,status:'completed',rows:[]}))],
+    ['prerequisite_missing',async()=>rm(join(directory,'e2e.json'))],
+    ['missing_results_markers',async()=>writeFile(page_path,'no results markers\n')],
+  ]) {
+    for(const stage of [q,e,p]) await writeFile(join(directory,`${stage.kind}.json`),JSON.stringify(stage));
+    await writeFile(join(directory,'snapshot.json'),saved);
+    await writeFile(page_path,published);
+    await alter();
+    const unchanged_page=await readFile(page_path,'utf8');
+    const rejected=run('publish');
+    assert.equal(rejected.status,1,code);assert.ok(rejected.stderr.includes(code),rejected.stderr);
+    assert.equal(await readFile(page_path,'utf8'),unchanged_page);
+    assert.equal(await readFile(canonical_path,'utf8'),canonical);
+    assert.equal(await readFile(join(directory,'README.md'),'utf8'),readme);
+  }
 });

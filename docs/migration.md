@@ -7,7 +7,7 @@ and default `ya ya ya` phrase are unchanged.
 
 Disable and uninstall the old `craig@yourmood.ai` plugin before installing
 `savior@yourmood.ai`. Do not enable both: a prompt must pass through one instance
-of the mod. Follow the [installation instructions](../README.md#installation)
+of the mod. Follow the [installation instructions](usage.md#installation)
 once an installable release is available. For source development, follow
 [Contributing](../CONTRIBUTING.md#development).
 

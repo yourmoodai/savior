@@ -4,61 +4,44 @@ Date: 2026-10-20
 
 ## Status
 
-Accepted for release qualification and default promotion. It does not promote a
-model, backend, or judge by describing it.
+Accepted for release qualification and default promotion. This record does not
+promote a model, backend, or judge.
 
-## The claim path
+## Context
 
-A release and a quality claim both need a visible provenance trail. The project
-does not compress artifact integrity, exact replacement behavior, reviewed
-labels, and model agreement into one reassuring score.
-
-```mermaid
-flowchart LR
-    A[Versioned artifacts] --> V[Verified local setup]
-    V --> O[Offline runtime]
-    T[Tests and parity] --> E[Evidence]
-    L[Reviewed labels] --> E
-    J[Local judge comparison] --> E
-    E --> C[Scoped claim]
-    C -. not .-> P[Provider approval or enforcement]
-```
+Artifact integrity, exact replacement, agreement with reference labels, and
+agreement between judges answer different questions. A successful package or a
+fast experiment cannot establish all of them.
 
 ## Decision
 
-- Releases are versioned, immutable bundles. Models are separately pinned and
-  verified on setup; runtime inference has no network client.
-- The installed plugin pins an Ed25519 verification key and signed runtime
-  manifest. First activation downloads only matching platform artifacts and
-  verifies hashes before execution. Bundled Node supplies the bootstrap runtime;
-  no user compiler, GitHub CLI, or PATH Node is required.
-- Tag builds require the protected release signing key. Qualification builds
-  use ephemeral test keys and must not be published. Marketplace promotion
-  also requires the real published-download matrix to pass.
-- Exact replacement and protected-span behavior are deterministic checks.
-  Reference-label agreement depends on the corpus. Judge agreement describes
-  judges, not ground truth.
-- A new default requires complete evidence for its relevant safety, parity,
-  quality, and performance gates. Missing or uncertain evidence holds the
-  existing default.
-- Policy work is reported as **measured policy alignment**. It is not
-  certification, provider approval, or an enforcement guarantee.
+Distribute immutable versioned bundles. The installed plugin pins an Ed25519
+verification key and signed runtime manifest; setup verifies matching platform
+artifacts and separately pinned models before execution. Bundled Node supplies
+bootstrap execution without a user compiler, GitHub CLI, or PATH Node.
 
-## Consequence
+Promote a new default only with complete evidence for its applicable safety,
+parity, quality, and performance gates. Report provider-policy work as
+**measured policy alignment**.
 
-A fast experiment, a successful package, or agreement between models may be
-useful evidence, but none is enough on its own. Detailed commands, thresholds,
-corpora, and benchmark reports live in [benchmarking](../benchmarking.md);
-release operation lives in [contributing](../../CONTRIBUTING.md).
+## Invariants & Abstention
 
-## Open questions
+- Runtime inference remains offline; downloads belong to setup.
+- Tag builds require the protected production signing key. Qualification builds
+  use ephemeral keys and cannot be published as releases.
+- Marketplace promotion requires the real published-download matrix to pass.
+- Exact-output checks establish replacement behavior; reference-label agreement
+  depends on the corpus; judge agreement describes judges, not ground truth.
+- Missing or uncertain evidence holds the existing default. Measurements do not
+  establish certification, provider approval, or enforcement guarantees.
 
-- What reviewed corpus can support a promotion claim beyond provisional labels?
-- Which backends can satisfy both behavioral parity and full-input performance?
-- What installed-host coverage is needed before a release is qualified?
+## Consequences
 
-## Policy
+Releases and claims retain a provenance trail readers can inspect. Qualification
+requires more than one reassuring score and can withhold a fast candidate.
 
-Evidence is contextual: a number without its corpus, machine, and comparison
-does not say what readers may assume it says. Claims remain scoped to the
-conditions that produced them.
+The required reviewed corpus, backend coverage, and installed-host coverage
+remain open questions for claims beyond the existing evidence.
+[Evaluation](../evaluation.md) owns recorded findings,
+[benchmarking](../benchmarking.md) owns reproduction, and
+[release preparation](../releases.md) owns operational procedure.

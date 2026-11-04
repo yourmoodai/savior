@@ -265,6 +265,30 @@ native and Node coverage, and every observed resident rewrite below 500 ms.
 Use `npm run bench:decisions -- --help` for the existing qualification protocol.
 Shared CI hardware cannot qualify latency.
 
+## Inspection checks
+
+```sh
+npm run inspect:build:debug
+npm run inspect:build:release
+npm run inspect:test
+npm run test:bootstrap
+npx playwright install chromium
+npm run inspect:e2e
+npm run inspect:profile
+npm run verify
+```
+
+Both `inspect:e2e` and `inspect:profile` accept a new JSON output path after `--`
+to retain source-bound evidence. They refuse to overwrite an existing report.
+
+The browser check uses synthetic prompts, isolated state, and the current local
+model. It checks consent, exact Unicode edits, annotation, literal hostile markup,
+authentication, Host/Origin restrictions, export, deletion, and local-only browser
+requests. Profiling reports five short-input samples for disabled, metadata, and
+full-text capture, RSS, and cold/warm export times. It is not detector latency
+qualification. Editor tasks expose debug/release inspection, tests, browser E2E,
+and memory profiling.
+
 ## Publishing the results
 
 `bench:all` creates `quality.json`, `e2e.json`, `performance.json`, a compact
@@ -276,16 +300,21 @@ match across stages before assembling a report; do not edit code between runs.
 They contain case IDs and counts, not dataset text or private prompts.
 
 To assemble separately run stages, place the three named JSON reports in one
-directory, then generate and publish the README block explicitly:
+directory, then generate the report and publish its evidence block explicitly:
 
 ```sh
 npm run bench:report -- --output .cache/battle-001
-npm run bench:readme -- --output .cache/battle-001
+npm run bench:publish -- --output .cache/battle-001
 ```
 
 Skip `bench:report` when `bench:all` already generated it. Existing report files
-are never overwritten. `bench:readme` intentionally updates only the marked
-README block and `benchmarks/results/latest.json`, after checking evidence
+are never overwritten. `bench:publish` updates only the marked results block in
+`docs/evaluation.md` and `benchmarks/results/latest.json`, after checking evidence
 digests and compatible source, harness, model, machine, and runtime configuration.
 It rejects changed-during-run or filtered performance evidence. Failed checks
 remain visible. Review the resulting diff before committing.
+
+The README is not modified. Standalone reports link to their own `snapshot.json`;
+the published evidence page links to the canonical snapshot. The old
+`bench:readme` command and `readme` subcommand remain deprecated aliases for
+`publish`, with a warning on stderr. Both publish to the evidence page.
