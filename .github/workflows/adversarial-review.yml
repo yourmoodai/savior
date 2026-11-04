@@ -3,8 +3,10 @@ on:
   push:
     branches: [develop]
   pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
     branches: [main]
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -16,11 +18,12 @@ permissions:
 jobs:
   scope:
     timeout-minutes: 15
-    if: github.event_name != 'pull_request_target' || github.event.pull_request.draft == false
+    if: github.event_name != 'issue_comment' || (github.event.issue.pull_request && startsWith(github.event.comment.body, '/savior review'))
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
+      actions: read
     outputs:
       eligible: ${{ steps.scope.outputs.eligible }}
       head: ${{ steps.scope.outputs.head }}
@@ -36,43 +39,13 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
           BOOTSTRAP_CODEOWNERS: ${{ vars.ADVERSARIAL_BOOTSTRAP_CODEOWNERS }}
+          REVIEW_ENABLED: ${{ vars.BEDROCK_REVIEW_ENABLED }}
         with:
           script: |
-            if (context.eventName === 'push') {
-              const pulls = (await github.rest.pulls.list({...context.repo, state:'open',head:context.repo.owner+':develop',base:'main'})).data;
-              if (pulls.length !== 1) throw Error('expected one open develop PR');
-              process.env.PR_NUMBER=String(pulls[0].number);
-            }
-            if (!/^[1-9][0-9]*$/.test(process.env.PR_NUMBER)) throw Error('invalid PR');
-            const pr = (await github.rest.pulls.get({...context.repo, pull_number:Number(process.env.PR_NUMBER)})).data;
-            if (pr.state !== 'open' || pr.draft) throw Error('PR is not ready');
-            const eligible = await require('./tools/adversarial_reviewer/author_gate.cjs')({github,context,pr,bootstrap:process.env.BOOTSTRAP_CODEOWNERS});
-            core.setOutput('eligible', String(eligible));
-            if (!eligible) core.notice('adversarial review skipped: PR author is not an authorized code owner');
-            core.setOutput('pr', pr.number);
-            core.setOutput('head', pr.head.sha);
-            core.setOutput('base', pr.base.sha);
-  oidc:
-    timeout-minutes: 5
-    name: verify bedrock oidc
-    needs: scope
-    if: needs.scope.outputs.eligible == 'true'
-    runs-on: ubuntu-24.04
-    environment:
-      name: bedrock-review
-      deployment: false
-    permissions:
-      id-token: write
-    steps:
-      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
-        with:
-          role-to-assume: ${{ vars.BEDROCK_REVIEW_ROLE_ARN }}
-          aws-region: us-east-1
-          allowed-account-ids: '463509296941'
-          role-duration-seconds: 900
-          role-session-name: savior-oidc-${{ github.run_id }}
-      - name: verify assumed identity without inference
-        run: aws sts get-caller-identity --query Arn --output text
+            await require('./tools/adversarial_reviewer/scope.cjs')({
+              github, context, core, enabled:process.env.REVIEW_ENABLED,
+              bootstrap:process.env.BOOTSTRAP_CODEOWNERS,
+            });
   review:
     timeout-minutes: 120
     name: adversarial verdict
@@ -93,6 +66,11 @@ jobs:
     env:
       HEAD_SHA: ${{ needs.scope.outputs.head }}
       PR_NUMBER: ${{ needs.scope.outputs.pr }}
+      BASE_SHA: ${{ needs.scope.outputs.base }}
+      AWS_REGION: us-east-1
+      BEDROCK_REVIEW_MODEL: ${{ vars.BEDROCK_REVIEW_MODEL }}
+      BEDROCK_REVIEW_ENABLED: ${{ vars.BEDROCK_REVIEW_ENABLED }}
+      BEDROCK_EXTERNAL_PROBE_NANODOLLARS: ${{ vars.BEDROCK_EXTERNAL_PROBE_NANODOLLARS }}
     steps:
       # Only trusted base code executes with secrets. PR code is diff data.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -125,8 +103,57 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.22.2
-      - name: assume bedrock review role
+      - name: restore pilot budget
         if: vars.BEDROCK_REVIEW_ENABLED == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            try { await require('./tools/adversarial_reviewer/pilot.cjs')({github,context}); }
+            catch (error) {
+              const fs=require('node:fs'); fs.mkdirSync('review-result',{recursive:true});
+              fs.writeFileSync('review-result/failure.json',JSON.stringify({reason:'spending_unresolved'}));
+              throw error;
+            }
+      - name: validate spending comment
+        if: github.event_name == 'issue_comment'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          BOOTSTRAP_CODEOWNERS: ${{ vars.ADVERSARIAL_BOOTSTRAP_CODEOWNERS }}
+        with:
+          script: |
+            const handler=require('./tools/adversarial_reviewer/approval.cjs');
+            const approval=await handler.record_failure(()=>handler.revalidate({
+              github,context,number:process.env.PR_NUMBER,head:process.env.HEAD_SHA,
+              base:process.env.BASE_SHA,bootstrap:process.env.BOOTSTRAP_CODEOWNERS,
+            }));
+            require('node:fs').writeFileSync('review-result/approval.json',JSON.stringify(approval));
+      - name: estimate and authorize spending without inference
+        id: preflight
+        env:
+          REVIEW_TEST_EVIDENCE: ${{ runner.temp }}/review-tests.json
+        run: python3 tools/adversarial_reviewer/preflight.py
+      - name: revalidate before inference
+        if: steps.preflight.outputs.spend == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          BOOTSTRAP_CODEOWNERS: ${{ vars.ADVERSARIAL_BOOTSTRAP_CODEOWNERS }}
+        with:
+          script: |
+            const handler=require('./tools/adversarial_reviewer/approval.cjs');
+            await handler.record_failure(()=>handler.revalidate({
+              github,context,number:process.env.PR_NUMBER,head:process.env.HEAD_SHA,
+              base:process.env.BASE_SHA,bootstrap:process.env.BOOTSTRAP_CODEOWNERS,
+            }));
+      - name: persist pilot reservation
+        if: steps.preflight.outputs.spend == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: haiku45-pilot-20261015-reserved-${{ github.run_id }}-${{ github.run_attempt }}
+          path: review-result/reservation.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: assume bedrock review role
+        if: steps.preflight.outputs.spend == 'true'
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.BEDROCK_REVIEW_ROLE_ARN }}
@@ -134,21 +161,8 @@ jobs:
           allowed-account-ids: '463509296941'
           role-duration-seconds: 3600
           role-session-name: savior-review-${{ github.run_id }}
-      - name: restore pilot budget
-        if: vars.BEDROCK_REVIEW_ENABLED == 'true'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            await require('./tools/adversarial_reviewer/pilot.cjs')({github,context});
-      - name: persist pilot reservation
-        if: vars.BEDROCK_REVIEW_ENABLED == 'true'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: haiku45-pilot-20261015-reserved-${{ github.run_id }}-${{ github.run_attempt }}
-          path: review-result/reservation.json
-          retention-days: 90
-          if-no-files-found: error
       - name: qualify and assess
+        if: steps.preflight.outputs.spend == 'true'
         env:
           BEDROCK_REVIEW_ENABLED: ${{ vars.BEDROCK_REVIEW_ENABLED }}
           BEDROCK_REVIEW_MODEL: ${{ vars.BEDROCK_REVIEW_MODEL }}
@@ -156,6 +170,7 @@ jobs:
           BASE_SHA: ${{ needs.scope.outputs.base }}
           HEAD_SHA: ${{ needs.scope.outputs.head }}
           REVIEW_TEST_EVIDENCE: ${{ runner.temp }}/review-tests.json
+          REVIEW_BUDGET_GRANT: ${{ steps.preflight.outputs.grant }}
         run: python3 tools/adversarial_reviewer/run_ci.py
       - name: snapshot budget after completion or cancellation
         if: always() && vars.BEDROCK_REVIEW_ENABLED == 'true' && hashFiles('review-result/ledger.db') != ''
@@ -184,6 +199,18 @@ jobs:
           path: review-result/
           retention-days: 90
           if-no-files-found: error
+      - name: identify spending quote
+        if: always() && hashFiles('review-result/quote.json') != ''
+        id: quote
+        run: python3 -c 'import json,os; q=json.load(open("review-result/quote.json")); open(os.environ["GITHUB_OUTPUT"],"a").write("id="+q["id"]+"\n")'
+      - name: preserve spending quote
+        if: always() && steps.quote.outputs.id != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: review-quote-${{ steps.quote.outputs.id }}
+          path: review-result/quote.json
+          retention-days: 7
+          if-no-files-found: error
       - name: publish verdict
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -202,4 +229,4 @@ jobs:
             const fs = require('node:fs');
             const path = process.env.RUNNER_TEMP+'/review-tests.json';
             const evidence = fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, 'utf8')) : undefined;
-            await publish({github, context, core, head:process.env.HEAD_SHA, pr:process.env.PR_NUMBER, phase:'failed', evidence});
+            await publish({github, context, core, head:process.env.HEAD_SHA, pr:process.env.PR_NUMBER, phase:'failed', evidence, reason:fs.existsSync('review-result/failure.json') ? JSON.parse(fs.readFileSync('review-result/failure.json','utf8')).reason : undefined});

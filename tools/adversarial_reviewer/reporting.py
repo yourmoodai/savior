@@ -114,7 +114,9 @@ def render(report):
     lines = [prose(report['overview'], 900), '', f'**Verdict: {verdict}**', '',
              f"Coverage: {report.get('completed_chunks', 0)}/{report.get('total_chunks', 0)} chunks."]
     if report.get('budget'):
-        lines.append(f"Budget committed: ${report['budget']['committed_usd']:.4f} / ${report['budget']['limit_usd']:.2f}.")
+        budget = report['budget']
+        pilot = budget.get('pilot_committed_nanodollars', round(budget['committed_usd']*1e9))/1e9
+        lines.append(f"Inference committed: ${budget['committed_usd']:.4f}; pilot ${pilot:.4f} / ${budget['limit_usd']:.2f}.")
     findings = report.get('findings', [])
     if findings:
         lines += ['', 'Findings:']

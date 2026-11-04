@@ -19,13 +19,21 @@ def fixture(index, case):
             f'@@ -1,{old} +1,{new} @@\n'+change), filename
 
 
-def qualify(output):
-    from result_cache import key, get, put, measure
+def cached_qualification():
+    from result_cache import key, get
     from bedrock_client import MODEL
     from prompt_profiles import settings
     identity = key('qualification', [MODEL, settings.get()[:2], CASES])
     cached = get(identity, 86400)
     if isinstance(cached, dict) and cached.get('qualified') is True and cached.get('cases') and all(c.get('passed') is True for c in cached['cases']) and cached.get('comparison', {}).get('baseline', {}).get('passed') is True:
+        return identity, cached
+    return identity, None
+
+
+def qualify(output):
+    from result_cache import put, measure
+    identity, cached = cached_qualification()
+    if cached is not None:
         measure('hit')
         cached = {**cached, 'cache_hit': True, 'budget': Ledger(os.environ['REVIEW_BUDGET_LEDGER']).summary()}
         Path(output).write_text(json.dumps(cached, indent=2)+'\n')

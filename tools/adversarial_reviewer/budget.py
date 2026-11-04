@@ -1,6 +1,7 @@
 """Durable reservations prevent concurrent or resumed calls from reusing dollars."""
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 import json
+import os
 import sqlite3
 import time
 import uuid
@@ -16,6 +17,10 @@ class BudgetError(Exception):
     pass
 
 
+class BudgetExhausted(BudgetError):
+    pass
+
+
 def cost(inputs, outputs):
     return inputs * INPUT_RATE + outputs * OUTPUT_RATE
 
@@ -25,6 +30,21 @@ class Ledger:
         self.path = path
         with self.connect() as db:
             db.execute('CREATE TABLE IF NOT EXISTS calls (id TEXT PRIMARY KEY, phase TEXT, identity TEXT, reserved INTEGER, charged INTEGER, metrics TEXT)')
+            db.execute('CREATE TABLE IF NOT EXISTS grants (id TEXT PRIMARY KEY, cap INTEGER, context TEXT)')
+            db.execute('CREATE TABLE IF NOT EXISTS funding (call_id TEXT PRIMARY KEY, grant_id TEXT NOT NULL)')
+
+    def authorize(self, grant):
+        """An approval belongs to one logical workflow run, including its retries."""
+        identity, cap = grant['id'], grant['cap_nanodollars']
+        if not isinstance(identity, str) or not identity or type(cap) is not int or not 0 < cap <= 2**53-1:
+            raise BudgetError('invalid review allowance')
+        context = json.dumps(grant, sort_keys=True)
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            old = db.execute('SELECT cap,context FROM grants WHERE id=?', (identity,)).fetchone()
+            if old and old != (cap, context):
+                raise BudgetError('approval already used or changed')
+            db.execute('INSERT OR IGNORE INTO grants VALUES (?,?,?)', (identity, cap, context))
 
     @contextmanager
     def connect(self):
@@ -55,15 +75,35 @@ class Ledger:
 
     def merge(self, source):
         """Union settled histories without dropping calls or repricing prior usage."""
-        with sqlite3.connect(source) as prior:
+        with closing(sqlite3.connect(source)) as prior:
             rows = prior.execute('SELECT id,phase,identity,reserved,charged,metrics FROM calls').fetchall()
+            tables = {r[0] for r in prior.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            grants = prior.execute('SELECT id,cap,context FROM grants').fetchall() if 'grants' in tables else []
+            funding = dict(prior.execute('SELECT call_id,grant_id FROM funding')) if 'funding' in tables else {}
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            for identity, cap, context in grants:
+                metadata = json.loads(context)
+                if (type(cap) is not int or not 0 < cap <= 2**53-1 or metadata.get('id') != identity
+                        or metadata.get('cap_nanodollars') != cap):
+                    raise BudgetError('invalid historical allowance')
+                old = db.execute('SELECT cap,context FROM grants WHERE id=?', (identity,)).fetchone()
+                if old and old != (cap, context):
+                    raise BudgetError('conflicting historical allowance')
+                db.execute('INSERT OR IGNORE INTO grants VALUES (?,?,?)', (identity, cap, context))
             for row in rows:
                 key, phase, identity, reserved, charged, metrics = row
                 if phase not in ('qualification', 'review') or type(reserved) is not int or reserved < 0 or (charged is not None and (type(charged) is not int or charged < 0)):
                     raise BudgetError('invalid historical ledger row')
                 old = db.execute('SELECT id,phase,identity,reserved,charged,metrics FROM calls WHERE id=?', (key,)).fetchone()
+                funded = db.execute('SELECT grant_id FROM funding WHERE call_id=?', (key,)).fetchone()
+                grant = funding.get(key)
+                if old and (funded[0] if funded else None) != grant:
+                    raise BudgetError('conflicting historical funding')
+                if grant:
+                    if not db.execute('SELECT 1 FROM grants WHERE id=?', (grant,)).fetchone():
+                        raise BudgetError('missing historical allowance')
+                    db.execute('INSERT OR IGNORE INTO funding VALUES (?,?)', (key, grant))
                 if old is None:
                     db.execute('INSERT INTO calls VALUES (?,?,?,?,?,?)', row)
                 elif key == 'external-probes' and old[1:3] == row[1:3] and old[4] is None and charged is None:
@@ -91,12 +131,23 @@ class Ledger:
             db.execute('BEGIN IMMEDIATE')
             if db.execute('SELECT COUNT(*) FROM calls WHERE charged > reserved').fetchone()[0]:
                 raise BudgetError('provider usage exceeded a reservation; pilot halted')
-            total = db.execute('SELECT COALESCE(SUM(COALESCE(charged,reserved)),0) FROM calls').fetchone()[0]
-            qualification = db.execute("SELECT COALESCE(SUM(COALESCE(charged,reserved)),0) FROM calls WHERE phase='qualification'").fetchone()[0]
-            if total + amount > LIMIT or (phase == 'qualification' and qualification + amount > QUALIFICATION_LIMIT):
-                raise BudgetError('pilot budget exhausted; assessment remains incomplete')
+            grant = os.environ.get('REVIEW_BUDGET_GRANT')
+            if grant:
+                allowance = db.execute('SELECT cap FROM grants WHERE id=?', (grant,)).fetchone()
+                if allowance is None:
+                    raise BudgetError('review allowance unavailable')
+                spent = db.execute('SELECT COALESCE(SUM(COALESCE(charged,reserved)),0) FROM calls JOIN funding ON calls.id=funding.call_id WHERE grant_id=?', (grant,)).fetchone()[0]
+                if spent + amount > allowance[0]:
+                    raise BudgetExhausted('approved review allowance exhausted')
+            else:
+                total = db.execute('SELECT COALESCE(SUM(COALESCE(charged,reserved)),0) FROM calls WHERE id NOT IN (SELECT call_id FROM funding)').fetchone()[0]
+                qualification = db.execute("SELECT COALESCE(SUM(COALESCE(charged,reserved)),0) FROM calls WHERE phase='qualification' AND id NOT IN (SELECT call_id FROM funding)").fetchone()[0]
+                if total + amount > LIMIT or (phase == 'qualification' and qualification + amount > QUALIFICATION_LIMIT):
+                    raise BudgetExhausted('pilot budget exhausted; assessment remains incomplete')
             key = uuid.uuid4().hex
             db.execute('INSERT INTO calls VALUES (?,?,?,?,NULL,NULL)', (key, phase, identity, amount))
+            if grant:
+                db.execute('INSERT INTO funding VALUES (?,?)', (key, grant))
         return key
 
     def reconcile(self, key, envelope, elapsed):
@@ -121,7 +172,13 @@ class Ledger:
     def summary(self):
         with self.connect() as db:
             rows = db.execute('SELECT id,phase,identity,reserved,charged,metrics FROM calls ORDER BY rowid').fetchall()
+            funding = dict(db.execute('SELECT call_id,grant_id FROM funding'))
+            grants = db.execute('SELECT id,cap,context FROM grants ORDER BY id').fetchall()
         return {'limit_usd': LIMIT / 1e9, 'committed_usd': sum(r[4] if r[4] is not None else r[3] for r in rows) / 1e9,
+                'pilot_committed_nanodollars': sum(r[4] if r[4] is not None else r[3] for r in rows if r[0] not in funding),
+                'qualification_committed_nanodollars': sum(r[4] if r[4] is not None else r[3] for r in rows if r[0] not in funding and r[1] == 'qualification'),
+                'grants': [dict(id=g[0], cap_nanodollars=g[1], context=json.loads(g[2]),
+                               committed_nanodollars=sum(r[4] if r[4] is not None else r[3] for r in rows if funding.get(r[0]) == g[0])) for g in grants],
                 'calls': [dict(id=r[0], phase=r[1], identity=r[2], reserved_usd=r[3]/1e9,
                                actual_usd=None if r[4] is None else r[4]/1e9,
                                metrics=json.loads(r[5]) if r[5] else None) for r in rows]}
