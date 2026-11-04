@@ -10,11 +10,11 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-NODE = '24.22.0'
+NODE = '24.22.2'
 TARGETS = {
-    'darwin-arm64': ('tar.gz', '6a9724d9b50a5f22b4816cded441b5a8d9ddae546191a5e5b7efa5a5e2ee26d5', 'darwin-arm64'),
-    'linux-x64': ('tar.gz', '28ea0a438de9a13bd7891fd758eee6c7819ee8af5442dfd8d45bd65e56d4228c', 'linux-x64-gnu'),
-    'win32-x64': ('zip', 'f9683a19877e12a9b167305c8db71040d812876359de21f0d2e97c3f321f80c3', 'win32-x64-msvc'),
+    'darwin-arm64': ('tar.gz', 'aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a', 'darwin-arm64'),
+    'linux-x64': ('tar.gz', '361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9', 'linux-x64-gnu'),
+    'win32-x64': ('zip', 'ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2', 'win32-x64-msvc'),
 }
 LIMIT = 210_000_000  # 210 MB, stricter than the host's 256 MiB download limit
 

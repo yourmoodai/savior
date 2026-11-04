@@ -1,10 +1,10 @@
-import {createPrivateKey,createPublicKey,createHash} from 'node:crypto';
+import {createPublicKey,createHash} from 'node:crypto';
 import {readFileSync,statSync,createReadStream} from 'node:fs';
 import {join} from 'node:path';
 import {verify_manifest} from '../../bridge/bootstrap.mjs';
 const directory=process.argv[2];
-if(!directory || !process.env.SAVIOR_RELEASE_SIGNING_KEY)throw Error('production_signing_identity_required');
-const key=createPublicKey(createPrivateKey(process.env.SAVIOR_RELEASE_SIGNING_KEY)).export({type:'spki',format:'pem'});
+if(!directory || !process.env.SAVIOR_RELEASE_PUBLIC_KEY)throw Error('production_signing_identity_required');
+const key=createPublicKey(process.env.SAVIOR_RELEASE_PUBLIC_KEY).export({type:'spki',format:'pem'});
 if(key!==readFileSync(join(directory,'release-public.pem'),'utf8'))throw Error('release_signer_mismatch');
 const bytes=readFileSync(join(directory,'runtime-manifest.json'));const signature=readFileSync(join(directory,'runtime-manifest.sig'));
 const version=JSON.parse(readFileSync('package.json')).version;

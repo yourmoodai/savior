@@ -189,10 +189,11 @@ def main():
             if key in os.environ: env[key]=os.environ[key]
         env['USERPROFILE']=str(home)
         version = subprocess.run([binary, "--version"], cwd=workspace, env=env, text=True, capture_output=True, check=True, timeout=10)
-        if not version.stdout.startswith("2.1.290 "):
+        expected_version = json.loads((Path(__file__).resolve().parents[1] / "tools/host/package.json").read_text())["dependencies"]["@anthropic-ai/claude-code"]
+        if not version.stdout.startswith(expected_version + " "):
             server.shutdown()
             print(json.dumps({'error':'host_version_unsupported'}), flush=True)
-            raise SystemExit("installed UI fixture requires claude 2.1.290")
+            raise SystemExit("installed UI fixture requires claude " + expected_version)
         terminal = Terminal([binary, "--plugin-dir", str(plugin), "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--setting-sources", "", "--tools", "", "--model", "claude-sonnet-4-5", "--system-prompt", "Respond with synthetic response."], workspace, env)
         output = b""
         try:

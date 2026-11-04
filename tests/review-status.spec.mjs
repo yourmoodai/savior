@@ -37,3 +37,12 @@ test('snapshot uses the latest attempt regardless of outcome',async()=>{
   assert.equal(result.runs[0].id,10);
   assert.equal(result.runs[0].conclusion,'cancelled');
 });
+test('generated release checks must match the current branch and repository',()=>{
+  const pull = {head:{ref:'release/v0.2.0',repo:{full_name:'owner/repo'}}};
+  const checks = runs.map(run=>({...run,event:'workflow_dispatch',head_branch:pull.head.ref,
+    head_repository:{full_name:'owner/repo'}}));
+  assert(snapshot.select_runs(checks,'head',pull,'owner/repo').every(Boolean));
+  for (const extra of [{head_branch:'main'}, {head_sha:'old'}, {head_repository:{full_name:'fork/repo'}}]) {
+    assert(snapshot.select_runs(checks.map(run=>({...run,...extra})),'head',pull,'owner/repo').every(run=>!run));
+  }
+});

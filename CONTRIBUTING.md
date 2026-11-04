@@ -186,15 +186,76 @@ published assets. A correction to published bytes requires a new version.
 The current source version may be tagged directly for the first release.
 
 The protected `release` environment must provide `SAVIOR_RELEASE_SIGNING_KEY`
-as an Ed25519 private PEM. Provision it outside the repository; do not generate
-or publish a production identity as part of a development test. Non-tag builds
-use an ephemeral qualification key. The plugin carries its public key and
-signed manifest; rotating the key requires a new trusted plugin version.
+as an Ed25519 private PEM secret and `SAVIOR_RELEASE_PUBLIC_KEY` as its matching
+public PEM variable. Provision them outside the repository; do not generate
+or publish a production identity as part of a development test. Only the
+packaging job receives the private key. Publication verifies the signature
+and runtime hashes against the independently configured public key. Missing
+or mismatched configuration blocks publication. Non-tag builds use an ephemeral
+qualification key. The plugin carries its public key and signed manifest;
+rotating the key requires a new trusted plugin version.
 Platform signing and notarization remain separate prerequisites; this workflow
 change does not establish OS acceptance. The existing moving `latest`
 marketplace URL also requires a separate promotion change before it can
 guarantee that advertising waits for public-download checks. See
 [local inspection](docs/inspection.md) for trace tooling.
+
+### Automation maintenance
+
+PR updates run one native build matrix on macOS, Linux, and Windows. The same
+matrix builds fresh artifacts for integration-branch pushes and release tags.
+`verify` owns tooling and Core ML checks; qualification owns native tests,
+packaging, and installed-host checks. Browser checks run on macOS and Linux.
+The completion-triggered cancellation workflow cancels active sibling checks
+only after an eligible workflow fails on the same revision. It runs trusted
+default-branch code and does not poll while builds are running.
+
+External actions use full commit SHA pins. Weekly Dependabot PRs cover workflow
+and composite-action references and the isolated Claude host installation in
+`tools/host`. Compatible action updates are grouped; major upgrades remain
+separate. Review upstream changes and CI results before merging updates.
+
+Rust uses `rust-toolchain.toml`, with the same exact version passed to the
+pinned installer. Cargo commands require the committed lockfile. Node's
+packaged version and per-platform checksums live in `scripts/release/package.py`;
+update setup-node inputs alongside them. Python uses an exact `3.12.10`
+installer version. The Windows host fixture uses a hash-locked CPython 3.12
+wheel. Updating Python requires reviewing that wheel and its hash together.
+Hosted runner labels receive image updates and do not provide immutable builds.
+
+After `npm ci`, run `python3 scripts/release/lint_workflows.py` to check every
+workflow, local composite metadata, action pins, and update coverage. The
+script downloads checksum-verified actionlint `1.7.12` for Linux x64 or macOS
+ARM64. Run `npm run build` and `npm run verify` for the native checks. Generic
+manual qualification also runs the ignored training/reload parity checks on
+macOS and Linux; generated release PR dispatches omit that optional experiment.
+
+Repository administrators can preview release protections without changing
+GitHub settings:
+
+```sh
+python3 scripts/release/configure_github.py
+python3 scripts/release/configure_github.py --apply
+```
+
+The command uses the configured `gh` account and repository. It allows only
+maintainers and admins to create `v*` tags, blocks their updates and deletion
+with a separate ruleset that has no bypasses, and restricts the `release`
+environment to those tags. It preserves existing environment reviewers and
+unrelated rulesets. Unexpected deployment policies require inspection.
+
+Once these workflow changes are merged into `main`, enable SHA enforcement and
+read-only default workflow tokens:
+
+```sh
+python3 scripts/release/configure_github.py --enforce-after-merge
+python3 scripts/release/configure_github.py --enforce-after-merge --apply
+```
+
+The command verifies that the local automation matches `main` before enforcing
+pins, so old base-branch review workflows remain usable during migration.
+Qualification artifacts expire after seven days; production staging artifacts
+expire after 30 days. Published release assets retain their separate lifecycle.
 
 The `adversarial verdict` CI job and its review limits are documented in the
 [reviewer guide](tools/adversarial_reviewer/README.md). Existing required human

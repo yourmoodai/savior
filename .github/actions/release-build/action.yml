@@ -10,16 +10,17 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
       with:
+        toolchain: 1.99.1
         components: rustfmt, clippy
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
-        node-version: 24.22.0
+        node-version: 24.22.2
         cache: npm
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
-        python-version: '3.12'
+        python-version: '3.12.10'
     - run: npm ci --prefer-offline --no-audit --no-fund
       shell: bash
     - if: runner.os == 'Windows'
@@ -27,46 +28,69 @@ runs:
       run: '"RUSTFLAGS=-C target-feature=+crt-static" | Out-File -FilePath $env:GITHUB_ENV -Append'
     - name: restore rust dependencies
       id: rust_cache
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       with:
         shared-key: native-${{ inputs.runner_label }}-${{ runner.arch }}
         cache-on-failure: true
     - name: native build
       shell: bash
       run: npm run build
-    - run: cargo clippy --workspace --all-targets -- -D warnings
+    - run: cargo clippy --locked --workspace --all-targets -- -D warnings
       shell: bash
-    - run: cargo test --workspace
+    - run: cargo fmt --all --check
       shell: bash
-    - run: npm run inspect:test
+    - run: npm run check
       shell: bash
     - uses: ./.github/actions/model-cache
-    - run: npm run test:bootstrap
+    - run: npm test
+      env:
+        SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
+      shell: bash
+    - run: >-
+        cargo clippy --locked -p savior-review --features judge,inspector --all-targets -- -D warnings
+        && cargo test --locked -p savior-review --features judge,inspector --test traces
+      shell: bash
+    - run: node scripts/test-bootstrap-runtime.mjs
       shell: bash
     - run: npm run eval:local
       shell: bash
-    - run: node --test tests/native.spec.mjs tests/review.spec.mjs
-      shell: bash
     - name: restore pinned node runtime archive
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
           .cache/node-v*.tar.gz
           .cache/node-v*.zip
         key: release-node-v1-${{ inputs.target }}-${{ hashFiles('scripts/release/package.py') }}
+    - if: runner.os != 'Windows'
+      run: npx --no-install playwright install --with-deps --only-shell chromium
+      shell: bash
+    - name: standalone local inspector browser checks
+      if: runner.os != 'Windows'
+      env:
+        SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
+      run: npm run inspect:e2e
+      shell: bash
+    - name: real model training and reload parity
+      if: github.event_name == 'workflow_dispatch' && inputs.pr_number == '' && runner.os != 'Windows'
+      env:
+        SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
+      run: cargo test --locked --profile profiling -p savior-lab --test cli -- --ignored
+      shell: bash
     - name: stage native target
       shell: bash
       env:
         RELEASE_TARGET: ${{ inputs.target }}
       run: python scripts/release/package.py stage "$RELEASE_TARGET" .cache/part
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: ${{ inputs.target }}
         path: .cache/part
+        retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 30 || 7 }}
+        if-no-files-found: error
     - name: summarize cache measurements
       if: always()
       continue-on-error: true
-      uses: actions/github-script@v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         CACHE_HIT: ${{ steps.rust_cache.outputs.cache-hit }}
         CACHE_GROUP: native-${{ inputs.runner_label }}-${{ runner.arch }}

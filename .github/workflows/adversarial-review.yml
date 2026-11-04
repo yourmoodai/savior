@@ -15,6 +15,7 @@ permissions:
   contents: read
 jobs:
   scope:
+    timeout-minutes: 15
     if: github.event_name != 'pull_request_target' || github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
     permissions:
@@ -26,11 +27,11 @@ jobs:
       pr: ${{ steps.scope.outputs.pr }}
       base: ${{ steps.scope.outputs.base }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/github-script@v7
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: scope
         env:
           PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
@@ -51,39 +52,19 @@ jobs:
             core.setOutput('pr', pr.number);
             core.setOutput('head', pr.head.sha);
             core.setOutput('base', pr.base.sha);
-  cancel_siblings:
-    name: cancel sibling ci on failure
-    needs: scope
-    if: needs.scope.outputs.eligible == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 105
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          persist-credentials: false
-      - uses: actions/github-script@v7
-        env:
-          HEAD_SHA: ${{ needs.scope.outputs.head }}
-        with:
-          script: |
-            await require('./tools/ci/cancel_siblings.cjs')({github,context,core,head:process.env.HEAD_SHA});
   oidc:
+    timeout-minutes: 5
     name: verify bedrock oidc
     needs: scope
     if: needs.scope.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
     environment:
       name: bedrock-review
       deployment: false
     permissions:
       id-token: write
     steps:
-      - uses: aws-actions/configure-aws-credentials@v5
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.BEDROCK_REVIEW_ROLE_ARN }}
           aws-region: us-east-1
@@ -93,6 +74,7 @@ jobs:
       - name: verify assumed identity without inference
         run: aws sts get-caller-identity --query Arn --output text
   review:
+    timeout-minutes: 120
     name: adversarial verdict
     needs: scope
     if: needs.scope.outputs.eligible == 'true'
@@ -100,7 +82,6 @@ jobs:
     concurrency:
       group: bedrock-haiku45-pilot
       cancel-in-progress: false
-    timeout-minutes: 120
     environment:
       name: bedrock-review
       deployment: false
@@ -114,19 +95,19 @@ jobs:
       PR_NUMBER: ${{ needs.scope.outputs.pr }}
     steps:
       # Only trusted base code executes with secrets. PR code is diff data.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ github.event.pull_request.base.sha || github.sha }}
           fetch-depth: 0
-          persist-credentials: false
       - name: update review status
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const publish = require('./tools/adversarial_reviewer/publish.cjs');
             await publish({github, context, core, head:process.env.HEAD_SHA, pr:process.env.PR_NUMBER, phase:'waiting'});
       - name: snapshot current test status without waiting
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           HEAD_SHA: ${{ needs.scope.outputs.head }}
           PR_NUMBER: ${{ needs.scope.outputs.pr }}
@@ -134,19 +115,19 @@ jobs:
           script: |
             const snapshot = require('./tools/adversarial_reviewer/test_status.cjs');
             await snapshot({github, context, head:process.env.HEAD_SHA, pr:process.env.PR_NUMBER, output:process.env.RUNNER_TEMP+'/review-tests.json'});
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12'
+          python-version: '3.12.10'
       - name: fetch diff without checkout
         env:
           PR_NUMBER: ${{ needs.scope.outputs.pr }}
         run: git fetch origin "pull/$PR_NUMBER/head"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.22.0
+          node-version: 24.22.2
       - name: assume bedrock review role
         if: vars.BEDROCK_REVIEW_ENABLED == 'true'
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.BEDROCK_REVIEW_ROLE_ARN }}
           aws-region: us-east-1
@@ -155,13 +136,13 @@ jobs:
           role-session-name: savior-review-${{ github.run_id }}
       - name: restore pilot budget
         if: vars.BEDROCK_REVIEW_ENABLED == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             await require('./tools/adversarial_reviewer/pilot.cjs')({github,context});
       - name: persist pilot reservation
         if: vars.BEDROCK_REVIEW_ENABLED == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: haiku45-pilot-20261015-reserved-${{ github.run_id }}-${{ github.run_attempt }}
           path: review-result/reservation.json
@@ -181,7 +162,7 @@ jobs:
         run: python3 tools/adversarial_reviewer/settle.py review-result
       - name: preserve validated review cache
         if: always() && hashFiles('review-result/cache/*.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: review-cache
           path: review-result/cache/*.json
@@ -189,7 +170,7 @@ jobs:
           if-no-files-found: error
       - name: reconcile pilot reservation
         if: always() && vars.BEDROCK_REVIEW_ENABLED == 'true' && hashFiles('review-result/recovery/settled.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: haiku45-pilot-20261015-settled-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -197,14 +178,14 @@ jobs:
             review-result/recovery/settled.json
           retention-days: 90
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: adversarial-report
           path: review-result/
           retention-days: 90
           if-no-files-found: error
       - name: publish verdict
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const report = JSON.parse(require('node:fs').readFileSync('review-result/report.json', 'utf8'));
@@ -214,7 +195,7 @@ jobs:
         id: verdict
       - name: publish unavailable status
         if: failure() && steps.verdict.outputs.published != 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const publish = require('./tools/adversarial_reviewer/publish.cjs');
