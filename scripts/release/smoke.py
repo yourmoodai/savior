@@ -4,16 +4,69 @@ import json
 import os
 from pathlib import Path
 import platform
+import queue
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import urllib.request
 import zipfile
 from bridge_check import request as bridge_request
 from runtime_cache import seed
 from macos_bundle import executable
 from native_acceptance import acceptance
+
+
+def watch_replacements(root, node, runtime, env):
+    """Check packaged routing and the live feed with saved text disabled."""
+    command = [str(node), str(root/'bridge/cli.mjs')]
+    help_result = subprocess.run([*command, 'watch', '--help'], env=env,
+                                 text=True, capture_output=True, check=True, timeout=30)
+    assert 'span-diff' in help_result.stdout
+    binary = runtime/('savior.exe' if os.name == 'nt' else 'savior')
+    for view in ['spans', 'span-diff', 'prompt-diff']:
+        watcher = subprocess.Popen([str(binary), 'watch', '--view', view], env=env,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        output, diagnostics = queue.Queue(), queue.Queue()
+        def read_lines(stream, destination):
+            for line in stream:
+                destination.put(line)
+        readers = [threading.Thread(target=read_lines, args=(stream, destination), daemon=True)
+                   for stream, destination in [(watcher.stdout, output), (watcher.stderr, diagnostics)]]
+        for reader in readers:
+            reader.start()
+        try:
+            assert 'watching live' in diagnostics.get(timeout=15)
+            result = subprocess.run([*command, 'rewrite'], env=env, text=True,
+                                    input=json.dumps({'version': 3, 'text': 'You idiot, keep the test.'}),
+                                    capture_output=True, check=True, timeout=60)
+            assert json.loads(result.stdout)['text'] == 'You ya ya ya, keep the test.'
+            lines = []
+            while True:
+                line = output.get(timeout=15)
+                if line == '\n':
+                    break
+                lines.append(line)
+            display = ''.join(lines)
+            assert 'idiot' in display
+            assert ('keep the test' in display) == (view == 'prompt-diff')
+            assert ('ya ya ya' in display) == (view != 'spans')
+        finally:
+            watcher.terminate()
+            try:
+                watcher.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                watcher.kill()
+                watcher.wait(timeout=10)
+            for reader in readers:
+                reader.join(timeout=5)
+            watcher.stdout.close()
+            watcher.stderr.close()
+    status = subprocess.run([str(runtime/('savior-review.exe' if os.name == 'nt' else 'savior-review')),
+                             'traces', 'status'], env=env, text=True,
+                            capture_output=True, check=True, timeout=30)
+    assert json.loads(status.stdout)['full_text'] is False
 
 
 def exercise(root, release, target, downloaded, native):
@@ -57,6 +110,8 @@ def exercise(root, release, target, downloaded, native):
         profile = root/'profile'
         profile.mkdir()
         env['CLAUDE_CONFIG_DIR'] = str(profile)
+        env['XDG_STATE_HOME'] = str(root/'state')
+        watch_replacements(root, node, runtime, env)
         def request(command):
             return bridge_request([str(node),str(root/'bridge/review.mjs')],command,env,'smoke_'+command['command'])
         started = False

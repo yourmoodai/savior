@@ -537,6 +537,9 @@ pub fn rewrite_traced(
         answer["assessment"] = json!({"input_characters":characters,"removed_characters":removed,"replacement_count":applied.len(),"removed_proportion":if characters==0 {0.0} else {removed as f64/characters as f64},"detector_confidence":detected.as_ref().ok().and_then(|s|s.iter().map(|s|s.score).reduce(f32::max)),"residual_confidence":residual,"protected_abstention":outcome=="abstained"});
     }
     let id = random_id();
+    if let Ok(result) = &result {
+        crate::live::publish(text, result, strategy, &id);
+    }
     let full = consent.is_some_and(|c| c.0);
     let trace = Trace {
         schema: 1,
