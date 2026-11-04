@@ -1,6 +1,14 @@
 {
   "version": "2.0.0",
   "tasks": [
+    {"label":"watch replacements release","type":"process","command":"npm","args":["run","watch"],"problemMatcher":[]},
+    {"label":"watch replacements debug","type":"process","command":"npm","args":["run","watch:debug"],"problemMatcher":["$rustc"]},
+    {"label":"build replacement watcher release","type":"process","command":"npm","args":["run","watch:build:release"],"problemMatcher":["$rustc"]},
+    {"label":"test replacement watcher","type":"process","command":"npm","args":["run","watch:test"],"problemMatcher":[]},
+    {"label":"profile replacement watcher memory","type":"process","command":"npm","args":["run","watch:profile"],"problemMatcher":[]},
+    {"label":"plan release signing","type":"process","command":"cmake","args":["--workflow","--preset","release_plan"],"problemMatcher":[]},
+    {"label":"test release signing","type":"process","command":"cmake","args":["--build","--preset","release_test"],"problemMatcher":[]},
+    {"label":"prepare signed candidate","type":"process","command":"cmake","args":["--build","--preset","release_candidate"],"problemMatcher":[]},
     {"label":"inspect replacements release","type":"process","command":"npm","args":["run","inspect"],"problemMatcher":[]},
     {"label":"inspect replacements debug","type":"process","command":"npm","args":["run","inspect:debug"],"problemMatcher":["$rustc"]},
     {"label":"test private inspector","type":"process","command":"npm","args":["run","inspect:test"],"problemMatcher":[]},

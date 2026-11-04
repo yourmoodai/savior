@@ -285,9 +285,8 @@ def review_messages(diff, files, doc_context, anchors, candidate=None, supportin
     return [{"role": "system", "content": system}, {"role": "user", "content": content}]
 
 
-def run_model_reviewer(diff, files, doc_context, anchors=None, *, candidate=None,
-                       deadline=None, supporting_context=""):
-    from result_cache import key, get, put, measure
+def cached_assessment(diff, files, doc_context, anchors=None, *, candidate=None, supporting_context=""):
+    from result_cache import key, get
     from prompt_profiles import settings
     evidence = list(locations(diff).values()) if anchors is None else list(anchors)
     evidence = [a for a in evidence if a['evidence'].strip()]
@@ -301,9 +300,19 @@ def run_model_reviewer(diff, files, doc_context, anchors=None, *, candidate=None
                 f.get('file') == f"{a['file']}:{a['line']}" and f.get('evidence') == a['evidence']
                 and f.get('source_side') == a.get('side', 'new') for a in evidence) for f in findings)
             if grounded and (disposition == 'APPROVE') == (len(findings) == 0):
-                record(stage='cache_hit', files=files)
-                measure('hit')
-                return tuple(cached)
+                return identity, evidence, tuple(cached)
+    return identity, evidence, None
+
+
+def run_model_reviewer(diff, files, doc_context, anchors=None, *, candidate=None,
+                       deadline=None, supporting_context=""):
+    from result_cache import put, measure
+    identity, evidence, cached = cached_assessment(diff, files, doc_context, anchors,
+        candidate=candidate, supporting_context=supporting_context)
+    if cached is not None:
+        record(stage='cache_hit', files=files)
+        measure('hit')
+        return cached
     result = _run_model_reviewer(diff, files, doc_context, evidence, candidate=candidate,
                                  deadline=deadline, supporting_context=supporting_context)
     if result[0] in ('APPROVE', 'REQUEST_CHANGES') and not result[2].startswith('review incomplete:'):

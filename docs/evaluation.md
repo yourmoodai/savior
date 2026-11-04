@@ -83,7 +83,7 @@ Per-measurement 1-minute load ranged from 6.29 to 8.94. Background work was not 
 ## Inspection evidence
 
 Recorded on 2026-10-21. These checks concern signed setup and retained inspection;
-they do not qualify changes made after that run.
+they do not qualify later changes, including the live watcher.
 
 | New boundary | Local verification |
 | --- | --- |
@@ -105,7 +105,7 @@ about 480 MiB including the detector. A separate busy-machine run reached
 [Browser evidence](../benchmarks/results/inspection-e2e-2026-10-21.json) ·
 [Final timing screen](../benchmarks/results/inspection-final-2026-10-21.json) ·
 [Busy-machine screen](../benchmarks/results/inspection-2026-10-21.json) ·
-[Inspection guide and reproduction commands](benchmarking.md#inspection-checks).
+[Inspection guide and reproduction commands](benchmarking.md#inspection-and-live-feed-checks).
 
 ## Boundaries still unverified
 

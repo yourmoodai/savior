@@ -2,11 +2,55 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync,sign,createHash} from 'node:crypto';
 import {mkdtemp,readFile,writeFile,rm,symlink,realpath,mkdir,copyFile} from 'node:fs/promises';
-import {spawnSync} from 'node:child_process';
+import {spawnSync,spawn} from 'node:child_process';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {verify_manifest,download_file,private_directory,prepare_runtime} from '../bridge/bootstrap.mjs';
+import {verify_manifest,verify_bundle,download_file,private_directory,prepare_runtime} from '../bridge/bootstrap.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
+test('included macOS bundle is verified offline and rejects changed or extra files',async()=>{
+ const root=await realpath(await mkdtemp(join(tmpdir(),'savior-bundle-')));
+ const base='runtime/darwin-arm64/SaviorRuntime.app/Contents';
+ const {publicKey,privateKey}=generateKeyPairSync('ed25519');
+ const key=publicKey.export({type:'spki',format:'pem'});
+ const files=['Info.plist','MacOS/savior-bootstrap','Frameworks/node','Helpers/savior','Helpers/savior-review','Helpers/savior.node','CodeResources'];
+ const manifest={schema:2,protocol:1,version:'0.1.0',targets:{'darwin-arm64':
+   ['savior','savior-review','savior.node'].map(name=>({name,path:base+'/Helpers/'+name,bytes:4,sha256:hash('test')}))},
+   macos_bundle:files.map(name=>({path:base+'/'+name,bytes:4,sha256:hash('test')}))};
+ function verify(value){const bytes=Buffer.from(JSON.stringify(value));return verify_manifest(bytes,sign(null,bytes,privateKey),key,'0.1.0','darwin-arm64');}
+ try{
+  for(const file of manifest.macos_bundle){await mkdir(join(root,file.path,'..'),{recursive:true});await writeFile(join(root,file.path),'test');}
+  await verify_bundle(root,verify(manifest));
+  const invalid=structuredClone(manifest);invalid.macos_bundle[0].path=base+'/../escape';assert.throws(()=>verify(invalid),/manifest/);
+  await writeFile(join(root,base,'Frameworks/node'),'evil');await assert.rejects(verify_bundle(root,verify(manifest)),/digest/);
+  await writeFile(join(root,base,'Frameworks/node'),'test');
+  await writeFile(join(root,base,'extra'),'test');await assert.rejects(verify_bundle(root,verify(manifest)),/manifest/);
+  await rm(join(root,base,'extra'));
+  if(process.platform==='darwin'){
+   const bytes=Buffer.from(JSON.stringify(manifest));
+   await writeFile(join(root,'release.json'),JSON.stringify({version:'0.1.0'}));
+   await writeFile(join(root,'runtime-manifest.json'),bytes);await writeFile(join(root,'runtime-manifest.sig'),sign(null,bytes,privateKey));await writeFile(join(root,'release-public.pem'),key);
+   const ready=await prepare_runtime(root,()=>{throw Error('network_forbidden');});assert.equal(ready.runtime_dir,join(root,base,'Helpers'));
+  }
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+test('bundle launcher preserves stdin, arguments, exit status, and signals',{skip:process.platform==='win32'},async()=>{
+ const root=await realpath(await mkdtemp(join(tmpdir(),'savior-launcher-')));
+ try{
+  await mkdir(join(root,'Contents/MacOS'),{recursive:true});await mkdir(join(root,'Contents/Frameworks'));
+  const launcher=join(root,'Contents/MacOS/savior-bootstrap');
+  await copyFile(new URL('../target/release/savior-bootstrap',import.meta.url),launcher);
+  // Exercise process forwarding with the installed Node, including shared-library builds.
+  await symlink(process.execPath,join(root,'Contents/Frameworks/node'));
+  const result=spawnSync(launcher,['-e','process.stdin.pipe(process.stdout);process.stderr.write(process.argv[1]);process.exitCode=17','argument with spaces'],{input:'synthetic stdin',encoding:'utf8'});
+  assert.equal(result.status,17,result.stderr);assert.equal(result.stdout,'synthetic stdin');assert.equal(result.stderr,'argument with spaces');
+  const child=spawn(launcher,['-e','process.stdout.write("ready");setInterval(()=>{},1000)']);
+  await new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>{child.kill('SIGKILL');reject(Error('launcher_timeout'));},10000);
+   child.once('error',reject);child.stdout.once('data',()=>child.kill('SIGTERM'));
+   child.once('exit',(code,signal)=>{clearTimeout(timer);try{assert.equal(code,null);assert.equal(signal,'SIGTERM');resolve();}catch(error){reject(error);}});
+  });
+ }finally{await rm(root,{recursive:true,force:true});}
+});
 test('bootstrap entrypoint reports setup failure through a directory alias; imports stay silent',async()=>{
  const temporary=await realpath(await mkdtemp(join(tmpdir(),'savior-bootstrap-')));
  try {

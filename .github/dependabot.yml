@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/model-cache
+      - /.github/actions/release-build
+      - /.github/actions/release-installed
+    schedule:
+      interval: weekly
+    groups:
+      compatible-actions:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: chore
+  - package-ecosystem: npm
+    directory: /tools/host
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore

@@ -2,29 +2,53 @@ name: commit messages
 on:
   pull_request:
   push:
+    branches: [main, develop]
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Generated release pull request number
+        required: false
+        type: string
+      head_sha:
+        description: Exact generated pull request head
+        required: false
+        type: string
 concurrency:
   group: commit-messages-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
+  pull-requests: read
 jobs:
   check:
+    timeout-minutes: 15
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
           fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.10'
+      - name: validate pull request context
+        id: context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/release/pr_context.py
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: 1.99.1
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: commit-check-ubuntu-24.04-${{ runner.arch }}
           cache-on-failure: true
       - run: cargo test --locked -p commit_check
       - name: check new commits
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE_SHA: ${{ steps.context.outputs.base }}
+          HEAD_SHA: ${{ steps.context.outputs.head }}
           POLICY_BASE: cde250554fee48e5d231054c666426b7aa24d291
         run: |
           if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = 0000000000000000000000000000000000000000 ]; then
@@ -36,7 +60,28 @@ jobs:
           fi
           cargo run --locked --quiet -p commit_check -- --range "$BASE_SHA" "$HEAD_SHA"
       - name: check pull request title
-        if: github.event_name == 'pull_request'
+        if: steps.context.outputs.pr_number != ''
         env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_TITLE: ${{ steps.context.outputs.title }}
         run: printf '%s\n' "$PR_TITLE" | cargo run --locked --quiet -p commit_check
+  cancel-siblings:
+    needs: check
+    if: >-
+      always() && needs.check.result == 'failure' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            await require('./tools/ci/cancel_siblings.cjs').from_failed_commit_check({
+              github, context, core, run_attempt: Number(process.env.GITHUB_RUN_ATTEMPT),
+            });

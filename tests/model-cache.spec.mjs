@@ -77,12 +77,12 @@ test('CI verifies restored model bytes before saving or running consumers', asyn
   const verify = steps.find(step => step.startsWith('verify or download detector'));
   assert.match(verify, /run: node scripts\/fetch-model\.mjs/);
   assert.doesNotMatch(verify, /\bif:/);
-  assert(action.indexOf('actions/cache/restore@v4') < action.indexOf(verify));
-  assert(action.indexOf(verify) < action.indexOf('actions/cache/save@v4'));
+  assert(action.indexOf('actions/cache/restore@') < action.indexOf(verify));
+  assert(action.indexOf(verify) < action.indexOf('actions/cache/save@'));
   assert.match(action, /key: \$\{\{ steps\.restore\.outputs\.cache-primary-key \}\}/);
   assert.doesNotMatch(action, /restore-keys:|always\(\)/);
-  for (const workflow of ['verify', 'release', 'benchmarks']) {
-    const yaml = await readFile(new URL(`../.github/workflows/${workflow}.yml`, import.meta.url), 'utf8');
+  for (const workflow of ['actions/release-build/action', 'workflows/release', 'workflows/benchmarks']) {
+    const yaml = await readFile(new URL(`../.github/${workflow}.yml`, import.meta.url), 'utf8');
     assert.match(yaml, /uses: \.\/\.github\/actions\/model-cache/);
     assert.doesNotMatch(yaml, /run: npm run model:fetch/);
   }

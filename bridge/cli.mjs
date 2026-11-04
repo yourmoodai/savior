@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
@@ -10,14 +10,29 @@ const allowed_errors = new Set(['invalid_input','invalid_span','invalid_options'
 
 async function main() {
   const command = process.argv[2];
-  if (!command || command === '--help') { process.stdout.write('savior rewrite | doctor | inspect | traces status|enable|disable|export|delete\n'); return; }
+  if (!command || command === '--help') { process.stdout.write('savior rewrite | doctor | inspect | traces status|enable|disable|export|delete | watch [--view spans|span-diff|prompt-diff]\n'); return; }
   const root=fileURLToPath(new URL('..',import.meta.url));
-  if (['inspect','traces'].includes(command)) {
+  if (['inspect','traces','watch'].includes(command)) {
     if (existsSync(join(root,'release.json')) && !process.env.SAVIOR_RUNTIME_DIR) {
       const {prepare_runtime}=await import('./bootstrap.mjs');
       process.env.SAVIOR_RUNTIME_DIR=(await prepare_runtime()).runtime_dir;
     }
-    const binary=join(process.env.SAVIOR_RUNTIME_DIR || join(root,'target/release'),'savior-review'+(process.platform==='win32'?'.exe':''));
+    const binary=join(process.env.SAVIOR_RUNTIME_DIR || join(root,'target/release'),(command==='watch'?'savior':'savior-review')+(process.platform==='win32'?'.exe':''));
+    if (command==='watch') {
+      const child=spawn(binary,process.argv.slice(2),{stdio:'inherit'});
+      const interrupt=()=>child.kill('SIGINT');
+      const terminate=()=>child.kill('SIGTERM');
+      process.on('SIGINT',interrupt); process.on('SIGTERM',terminate);
+      try {
+        process.exitCode=await new Promise((resolve,reject)=>{
+          child.once('error',reject);
+          child.once('close',code=>resolve(code ?? 1));
+        });
+      } finally {
+        process.removeListener('SIGINT',interrupt); process.removeListener('SIGTERM',terminate);
+      }
+      return;
+    }
     const child=spawnSync(binary,process.argv.slice(2),{stdio:'inherit'});
     process.exitCode=child.status ?? 1; return;
   }
@@ -63,7 +78,7 @@ async function main() {
 }
 main().catch(error => {
   const code = allowed_errors.has(error?.message) ? error.message : 'bridge_failed';
-  process.stdout.write(JSON.stringify({ version:1, status:'error', code }) + '\n');
+  if (process.argv[2] !== 'watch') process.stdout.write(JSON.stringify({ version:1, status:'error', code }) + '\n');
   if (process.env.LOG_LEVEL !== 'silent') process.stderr.write(`savior: ${code}\n`);
   process.exitCode = 1;
 });

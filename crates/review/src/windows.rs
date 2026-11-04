@@ -10,7 +10,7 @@ use windows_sys::Win32::{
     System::Threading::*,
 };
 
-fn wide(value: &str) -> Vec<u16> {
+pub(crate) fn wide(value: &str) -> Vec<u16> {
     value.encode_utf16().chain(Some(0)).collect()
 }
 
@@ -51,7 +51,7 @@ fn write_reply(
     Ok(())
 }
 
-struct Descriptor(PSECURITY_DESCRIPTOR);
+pub(crate) struct Descriptor(pub(crate) PSECURITY_DESCRIPTOR);
 impl Drop for Descriptor {
     fn drop(&mut self) {
         unsafe {
@@ -60,7 +60,7 @@ impl Drop for Descriptor {
     }
 }
 
-fn descriptor() -> ReviewResult<Descriptor> {
+pub(crate) fn descriptor() -> ReviewResult<Descriptor> {
     unsafe {
         let mut token = null_mut();
         if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) == 0 {

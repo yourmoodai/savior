@@ -118,14 +118,14 @@ test('review priorities identify identity, context, evasion, and abstention with
 test('native runner separates measurement and profiling and retains failed stage evidence', {skip:!process.env.SAVIOR_MODEL_DIR}, async()=>{
   const request={model:process.env.SAVIOR_MODEL_DIR,backend:'cpu',batch:1,samples:1,warmup:0,fixtures:[{id:'one',text:'Please keep the test.'}]};
   for(const phase of ['measure','profile']) {
-    const result=await child('target/release/examples/inference',[],{input:JSON.stringify({...request,phase})});
+    const result=await child('target/release/examples/inference'+(process.platform==='win32'?'.exe':''),[],{input:JSON.stringify({...request,phase})});
     assert.equal(result.status,0);
     const row=JSON.parse(result.stdout).results[0];
     assert.equal(row.times_ms.length,phase==='measure'?1:0);
     assert.equal(row.stages!==undefined,phase==='profile');
     if(phase==='profile') assert.equal(row.stages.completed_windows,row.stages.windows);
   }
-  const result=await child('target/release/examples/inference',[],{input:JSON.stringify({...request,phase:'profile',fixtures:[{id:'one',text:'x'.repeat(65537)}]})});
+  const result=await child('target/release/examples/inference'+(process.platform==='win32'?'.exe':''),[],{input:JSON.stringify({...request,phase:'profile',fixtures:[{id:'one',text:'x'.repeat(65537)}]})});
   const row=JSON.parse(result.stdout).results[0];
   assert.equal(row.profile_error,'invalid_input');assert.equal(row.stages.completed_windows,0);assert.equal(row.replacement_only_ms,null);
 });
