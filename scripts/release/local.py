@@ -275,6 +275,7 @@ class Release:
             self.command('rcodesign', 'sign', '--for-notarization', '--p12-file', self.secret('apple_p12'),
                          '--p12-password-file', self.secret('apple_password'), path, timeout=300)
         self.command('rcodesign', 'sign', '--shallow', '--for-notarization',
+                     '--exclude', 'Contents/Frameworks/node', '--exclude', 'Contents/Helpers/*',
                      '--p12-file', self.secret('apple_p12'), '--p12-password-file',
                      self.secret('apple_password'), bundle, timeout=300)
         windows = self.config['windows']

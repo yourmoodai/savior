@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+import time
+import uuid
 from macos_bundle import BUNDLE, LAUNCHER, NODE, RUNTIME
 
 
@@ -58,8 +60,11 @@ def acceptance(root, release, target, enabled):
         raise ValueError('native_expected_identities_required')
     if target == 'darwin-arm64':
         bundle = root/BUNDLE
-        run('/usr/bin/xattr','-r','-w','com.apple.quarantine','0083;00000000;SaviorReleaseQualification;',str(bundle))
+        quarantine = f'0083;{int(time.time()):x};SaviorReleaseQualification;{uuid.uuid4()}'
+        run('/usr/bin/xattr','-r','-w','com.apple.quarantine',quarantine,str(bundle))
         with offline_macos():
+            # Launch before policy assessment can populate the notarization cache.
+            yield
             run('/usr/bin/codesign','--verify','--deep','--strict',str(bundle))
             run('/usr/bin/xcrun','stapler','validate',str(bundle))
             run('/usr/sbin/spctl','--assess','--type','execute',str(bundle))
@@ -67,7 +72,6 @@ def acceptance(root, release, target, enabled):
                 apple_identity(root/RUNTIME/name,identities['apple'])
             apple_identity(root/LAUNCHER,identities['apple'])
             apple_identity(root/NODE,identities['node_apple'])
-            yield
     else:
         if target == 'win32-x64':
             manifest = json.loads((release/'runtime-manifest.json').read_text())
