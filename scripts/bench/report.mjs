@@ -1,6 +1,6 @@
 import {json, save, digest} from './corpus.mjs';
 import {readFile, writeFile} from 'node:fs/promises';
-import {resolve} from 'node:path';
+import {dirname, relative, resolve, sep} from 'node:path';
 import {replacementSummary} from './quality.mjs';
 import {sameIdentity} from './common.mjs';
 
@@ -22,10 +22,14 @@ export function validateReports(reports) {
     if (report.kind==='performance' && (!report.expected_measurements || report.status==='completed' && report.rows.length!==report.expected_measurements || report.stage!=='screen' || report.qualification!=='not_qualified')) throw Error('incomplete_performance');
   }
 }
-export function render(snapshot) {
+function relative_link(document, target) {
+  return relative(dirname(resolve(document)), resolve(target)).split(sep)
+    .map(part => encodeURIComponent(part).replaceAll("'", '%27').replaceAll('(', '%28').replaceAll(')', '%29')).join('/');
+}
+export function render(snapshot, document, evidence) {
   const {quality:q,e2e:e,performance:p} = snapshot;
   const model = Object.hasOwn(snapshot.evidence.quality.identity.model,'head.safetensors') ? 'local BERT candidate' : 'pinned `mudes/en-base`';
-  const lines = ['## Battle-tested, with receipts','',
+  const lines = ['## Benchmark results','',
     'Savior’s replacement engine is checked for exact preservation outside selected spans. Detection is measured separately against public reference labels.', '',
     '| Check | Observed result |','| --- | --- |',
     `| Known-span replacement and abstention | ${e.correctness.passed}/${e.correctness.total} checks passed |`,
@@ -59,7 +63,7 @@ export function render(snapshot) {
   const loadText = values => Array.isArray(values) && values.length===3 && values.every(Number.isFinite) ? values.map(n=>n.toFixed(2)).join(' / ') : 'unavailable';
   lines.push(`Machine context: ${snapshot.machine.logical_cpus??'unavailable'} logical CPUs; start/end 1-, 5-, and 15-minute load averages ${loadText(p.load_average_start)} → ${loadText(p.load_average_end)}.`,
     loads.length?`Per-measurement 1-minute load ranged from ${Math.min(...loads).toFixed(2)} to ${Math.max(...loads).toFixed(2)}. Background work was not controlled; load alone does not establish the cause of a timeout.`:'Per-measurement machine contention was not recorded; these timings are not a controlled baseline.', '',
-    '[Evidence snapshot](benchmarks/results/latest.json) · [Reproduce the checks](docs/benchmarking.md)', '');
+    `[Evidence snapshot](${relative_link(document,evidence)}) · [Reproduce the checks](${relative_link(document,'docs/benchmarking.md')})`, '');
   return lines.join('\n');
 }
 async function snapshotFromReports(directory) {
@@ -85,11 +89,12 @@ async function snapshotFromReports(directory) {
 export async function report(directory) {
   const snapshot = await snapshotFromReports(directory);
   await save(resolve(directory,'snapshot.json'),snapshot);
-  await writeFile(resolve(directory,'report.md'),render(snapshot),{flag:'wx'});
+  const document = resolve(directory,'report.md');
+  await writeFile(document,render(snapshot,document,resolve(directory,'snapshot.json')),{flag:'wx'});
   return snapshot;
 }
 
-export async function updateReadme(directory) {
+export async function publish_results(directory) {
   const snapshot = await json(resolve(directory,'snapshot.json'));
   const reports = await Promise.all(['quality','e2e','performance'].map(k=>json(resolve(directory,`${k}.json`))));
   validateReports(reports);
@@ -99,10 +104,12 @@ export async function updateReadme(directory) {
   }
   const recomputed = await snapshotFromReports(directory);
   if(JSON.stringify({...recomputed,date:snapshot.date})!==JSON.stringify(snapshot)) throw Error('snapshot_summary_mismatch');
-  const readme = await readFile('README.md','utf8');
+  const document = 'docs/evaluation.md';
+  const evidence = 'benchmarks/results/latest.json';
+  const page = await readFile(document,'utf8');
   const start = '<!-- benchmark-results:start -->', end = '<!-- benchmark-results:end -->';
-  if(readme.split(start).length!==2 || readme.split(end).length!==2 || readme.indexOf(start)>readme.indexOf(end)) throw Error('missing_readme_markers');
-  const rendered = render(snapshot);
-  await writeFile('benchmarks/results/latest.json',JSON.stringify(snapshot,null,2)+'\n');
-  await writeFile('README.md',readme.slice(0,readme.indexOf(start)+start.length)+'\n'+rendered+readme.slice(readme.indexOf(end)));
+  if(page.split(start).length!==2 || page.split(end).length!==2 || page.indexOf(start)>page.indexOf(end)) throw Error('missing_results_markers');
+  const rendered = render(snapshot,document,evidence);
+  await writeFile(evidence,JSON.stringify(snapshot,null,2)+'\n');
+  await writeFile(document,page.slice(0,page.indexOf(start)+start.length)+'\n'+rendered+page.slice(page.indexOf(end)));
 }

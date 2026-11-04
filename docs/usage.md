@@ -1,117 +1,135 @@
-# Advanced usage
+# Using Savior
 
-For installation, see the [README](../README.md). For source development, see
-[CONTRIBUTING](../CONTRIBUTING.md#development).
+Savior filters supported Claude Code prompt submissions on your computer.
+You control the replacement wording and whether to inspect or record the edits.
 
-## What happens to prompt input
+## Installation
 
-The **prompt box** is where you type and edit a prompt before pressing Enter.
-The unsent text in that box is your **draft**. Savior calls the user-authored
-material it processes **prompt input**, whether it comes from that box or
-another adapter.
+**No release is published yet.** Follow the
+[source setup](../CONTRIBUTING.md#development) to try the current build.
+Use one Savior instance per session.
 
-Savior gives users local control over prompt input before a provider submission.
-It is not a claim that every phrase will be recognized or that the host is
-private. When the current adapter processes an input successfully, only the
-replacement reaches the provider. When it cannot, the prompt input remains
-available to the user.
+### Future plugin installation
 
-```mermaid
-flowchart LR
-    D[Prompt input] --> A[Current Claude Code adapter]
-    A --> R[Local replacement]
-    R -->|success| S[Sanitized submission]
-    S --> P[Provider]
-    R -->|protected span or failure| K[Return control to user]
+The commands below are for a future published release and are not currently
+usable. The intended platforms are Apple silicon Macs and Intel/AMD 64-bit
+Windows or Linux computers with Claude Code installed.
+
+```sh
+claude plugin marketplace add https://github.com/yourmoodai/savior/releases/latest/download/marketplace.json
+claude plugin install savior@yourmood.ai
 ```
 
-The Claude Code mod is the current adapter, not the architecture's permanent
-center. `/savior` opens its local inspection pane for the latest original and
-replacement; it does not add them to model context and clears its inspection
-data with the session. A transparent HTTP proxy is the planned next adapter;
-it is not yet available or proof that every network path is controlled. See
-[ADR 3](adr/0003-future-egress-enforcement.md).
+For that release path, first activation downloads the matching runtime and model
+(about 431 MB). The plugin verifies a signed manifest and artifact hashes before
+running downloaded code; its bundled Node runtime avoids a separate developer
+toolchain. Open `/savior`, wait for readiness, and retry setup there if it fails.
+Maintainer procedures are in [release preparation](releases.md).
 
-## Configuration
+## Everyday use
 
-Set these variables before starting Claude.
+Type into the Claude Code prompt box and submit as usual. Savior replaces
+detected offensive phrases and preserves text outside the selected spans.
+Slash commands and non-composer submissions bypass this integration.
 
-| Variable | Meaning |
+Open `/savior` to see the latest original and replacement. That inspection
+does not add either text to model context and is cleared when the session starts
+or ends. The [inspection guide](inspection.md) covers optional saved records.
+
+### Choose a replacement
+
+Set options in the terminal before launching Claude Code. For example, on
+macOS/Linux:
+
+```sh
+export SAVIOR_REPLACEMENT="please"
+```
+
+On PowerShell:
+
+```powershell
+$env:SAVIOR_REPLACEMENT = "please"
+```
+
+To remove detected wording instead, set `SAVIOR_REPLACEMENT_STRATEGY=omit`
+and unset `SAVIOR_REPLACEMENT`. Custom phrases must contain 1–80 characters,
+include non-whitespace text, and contain no control characters.
+
+## Privacy and limits
+
+The original text exists in the host's prompt box and the local processing
+path. When Savior successfully processes a supported submission, its adapter
+passes on the rewritten text. A processing failure blocks that submission;
+there is no fallback that forwards the original.
+
+Savior's inference stays offline. Model and runtime downloads happen during
+setup. Savior does not log original prompts; full-text persistence requires
+separate opt-in [inspection recording](inspection.md#saved-history).
+Personal-review metrics do not enable that recording. Exports and backups can
+create copies outside Savior's retention controls.
+
+Claude Code owns the prompt box. Savior cannot prove the absence of host
+telemetry, other plugin behavior, crash reports, terminal capture, or voice
+uploads before filtering. Disabling or bypassing the plugin bypasses its
+protection. The planned network proxy is [not implemented](adr/0003-future-egress-enforcement.md).
+
+Detection can miss unwanted language or flag harmless wording. Its English
+social-media training does not establish accuracy for every language or coding
+context. Conflicts with protected code, quotations, paths, URLs, or technical
+literals stop the submission for you to resolve. Replacing phrases cannot
+guarantee compliance or protection from account restrictions.
+
+### Why Anthropic comes up
+
+The choice of what to send should belong to you. Savior lets you change wording
+locally before a supported submission continues to Anthropic.
+
+Anthropic's October 8, 2026 [announcement](https://www.anthropic.com/news/2026-usage-policy-update)
+describes a rule about sustained, needless abuse toward models, effective
+November 12. It explicitly excludes ordinary frustration, pushback, dark
+creative themes, and testing or research. A word filter cannot determine whether
+a conversation meets that contextual rule. Consult the
+[policy](https://www.anthropic.com/legal/aup) for its terms; Savior does not
+provide an enforcement guarantee.
+
+## Troubleshooting
+
+| What you see | What to do |
 | --- | --- |
-| `SAVIOR_DETECTOR` | `bert` by default; `lexical` is an explicit experimental choice |
-| `SAVIOR_MODEL_DIR` | Optional absolute model path |
-| `SAVIOR_THRESHOLD` | Optional threshold, greater than zero and at most one |
-| `SAVIOR_POLICY` | `offensive_spans` by default; `directed_abuse` needs a matching head |
-| `SAVIOR_REPLACEMENT` | Marker text; default `ya ya ya` |
-| `SAVIOR_JUDGE_CONFIG` | Optional prepared local `judge.json` after review is enabled |
-| `LOG_LEVEL` | `silent` suppresses diagnostic error codes |
-
-Invalid settings fail explicitly. They do not fall back to another detector or
-forward the original request.
+| Savior is not ready | Open `/savior` and retry setup. For a source build, run `node bridge/cli.mjs doctor` with your model configured. |
+| Submission is blocked | Review the draft, resolve protected-text conflicts or configuration errors, then resubmit. A failed older submission will not overwrite a newer draft. |
+| A recording gap | Filtering and recording are independent. The edit may have succeeded even though an inspection record could not be saved. |
+| Downloaded runtime cannot start | Follow the [setup recovery guide](releases.md#setup-recovery); keep operating-system protections enabled. |
 
 ## Personal review
 
-Personal review is off until enabled in `/savior`. The current adapter's live
-metrics observe processed prompt input; history access starts an explicit scan
-of the active `CLAUDE_CONFIG_DIR` profile. Sampling is local and bounded. A
-missing judge leaves an observation unresolved; it never becomes a passing
-result.
+Personal review is off until enabled in `/savior`. Live metrics observe
+processed prompt input; history access starts a separate scan of the active
+`CLAUDE_CONFIG_DIR` profile. Sampling is local and bounded. Disabling,
+cancelling, or deleting review discards queued text.
 
-```mermaid
-flowchart LR
-    C[Explicit consent] --> A[Local assessment]
-    A --> M[Metrics and provenance]
-    C -->|disable, cancel, or delete| X[Discard queued text]
-```
+The private metrics store retains counts, proportions, confidence, categorical
+judgments, and provenance hashes for 30 days. It excludes originals,
+replacements, excerpts, titles, and judge explanations. Exports are user-managed
+copies. History does not prove authorship or recover wording replaced before
+submission. A missing judge leaves an observation unresolved.
+[Reading the evidence](evaluation.md) explains these distinctions.
 
-The metrics store contains counts, proportions, confidence, categorical
-judgments, and provenance hashes—not originals, replacements, excerpts, titles,
-or judge explanations. It is owner-only and retained for 30 days. Exported files
-are user-managed copies. History does not prove authorship or recover an
-original that was replaced before submission.
+## Advanced settings
 
-For personal-review evidence and interpretation, see
-[evaluation](evaluation.md). For implementation commands and test coverage, see
-[benchmarking](benchmarking.md).
+Set these before starting Claude. Invalid options fail explicitly.
 
-## Library and CLI contract
+| Variable | Meaning |
+| --- | --- |
+| `SAVIOR_REPLACEMENT_STRATEGY` | `fixed_phrase` by default; `omit` removes selected wording |
+| `SAVIOR_REPLACEMENT` | Custom phrase; default `ya ya ya`; incompatible with `omit` |
+| `SAVIOR_MODEL_DIR` | Optional absolute model path; required for source CLI processing |
+| `SAVIOR_DETECTOR` | `bert` by default; `lexical` is experimental |
+| `SAVIOR_THRESHOLD` | Optional threshold, greater than zero and at most one |
+| `SAVIOR_POLICY` | `offensive_spans` by default; `directed_abuse` needs a matching head |
+| `SAVIOR_JUDGE_CONFIG` | Optional prepared local `judge.json` after review is enabled |
+| `CLAUDE_CONFIG_DIR` | Claude profile shared by the plugin and inspection tools |
+| `LOG_LEVEL` | `silent` suppresses processing diagnostic codes |
 
-Generated TypeScript declarations are in `native/index.d.ts` after building.
-Rust offsets use UTF-8 bytes; JavaScript offsets use UTF-16 units.
-`detect` applies configured protection and threshold rules, while
-`applyReplacements` validates and normalizes supplied spans. A detector allows
-one queued or running inference; concurrent calls fail with `busy`.
-
-The CLI and Node bridge receive versioned JSON on stdin. Success returns
-`version`, `status`, `text`, and `replacement_count`; errors return a
-content-free `code` and exit nonzero. Do not pass private prompts in process
-arguments.
-
-## Limits
-
-Savior does not log prompts, send them to a remote detector, or use an
-original-text fallback. Prompt persistence is off unless separately enabled
-for [local inspection](inspection.md); personal-review metrics consent does
-not enable full traces. The current host can still bypass its adapter, and Savior
-cannot prove that Claude Code, another plugin, crash reporting, terminal
-capture, or voice dictation has not exposed text. It may miss unwanted language
-or select harmless language. Protected code, quotations, paths, URLs, and
-technical literals return control to the user instead of being silently
-rewritten.
-
-See [ADR 1](adr/0001-local-span-replacement.md) for the user-controlled prompt
-boundary and [ADR 3](adr/0003-future-egress-enforcement.md) for the planned
-transparent-proxy adapter.
-
-## License, attribution, and forks
-
-Savior is licensed under the **GNU Affero General Public License v3.0 or later**
-([`AGPL-3.0-or-later`](../LICENSE)). Copies and forks must retain
-[`LICENSE`](../LICENSE) and [`NOTICE`](../NOTICE), credit Adam Williams and
-`yourmood.ai` with `https://github.com/yourmoodai/savior`, use a distinct
-plugin `name` and `displayName` when distributed, and publish complete
-Corresponding Source under `AGPL-3.0-or-later`.
-
-Model weights remain separate Apache-2.0 artifacts. Their provenance and notices
-are in [`models/catalog.json`](../models/catalog.json) and
-[`models/NOTICE`](../models/NOTICE).
+Library interfaces and versioned CLI requests are documented in
+[Contributing](../CONTRIBUTING.md#library-and-cli-contract).

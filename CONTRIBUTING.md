@@ -34,44 +34,29 @@ without a response, one follow-up on the issue or PR is welcome.
 
 ## Design constraints
 
-Savior favors a narrow, inspectable boundary over a convenient fallback: prompt
-input is transformed locally, unchanged text remains exact, and a processing
-failure returns control to the user rather than submitting its original.
+Keep detection and replacement in Rust, preserve unmatched text, and stop a
+submission on processing failure. Inference stays offline; installed releases
+may download verified artifacts on first activation. Never log original prompts.
+Full-text retention requires ADR 4's separate consent.
 
-```mermaid
-flowchart LR
-    I[Prompt input] --> A[Adapter]
-    A --> R[Rust detection and replacement]
-    R -->|sanitized result| A
-    R -->|abstention or error| U[Return control to user]
-```
-
-- Detection, source offsets, protection checks, and replacement belong in Rust.
-  JavaScript and agent adapters transport requests and results.
-- Runtime inference stays local and offline. Downloads require explicit setup.
-  Never log original prompts or use private history as training data. Only
-  separately consented local traces may persist text; see ADR 4.
-- Preserve unmatched text exactly. Protected or failed replacements return
-  control to the user; never submit the original as a fallback.
-- Keep input coverage intact when measuring speed. Report resident rewriting,
-  process startup, host interaction, and optional judging separately.
-- Separate replacement correctness, reference-label agreement, and model
-  agreement. Keep provisional labels visible. Policy evaluation is measured
-  policy alignment, not certification or provider approval.
-
-Discuss model changes, public interfaces, supported agents, dependencies,
-licensing, and release behavior in the accepted issue.
-[ADR 1](docs/adr/0001-local-span-replacement.md) owns the replacement boundary,
-[ADR 2](docs/adr/0002-release-and-quality-evidence.md) owns release and evidence
-gates, and [ADR 3](docs/adr/0003-future-egress-enforcement.md) owns the planned
-transparent-proxy adapter and separate unproven enforcement question. New
-implementation phases do not automatically need new ADRs.
+Keep replacement correctness, reference-label agreement, and model agreement
+distinct. Report policy evaluations as **measured policy alignment**. Missing
+evidence cannot promote a model or backend. Consult the records below before
+changing a boundary; discuss models, interfaces, agents, dependencies, licensing,
+and releases in the accepted issue.
 
 ## Architecture records
 
 ADRs describe enduring boundaries, not implementation logs. Keep their language
 visual and audience-first; put commands, thresholds, and mechanical procedure
 in the relevant benchmark, release, or tool guide.
+
+| Record | Status | Owns |
+| --- | --- | --- |
+| [ADR 1](docs/adr/0001-local-span-replacement.md) | Accepted | Local transformation and adapter boundaries |
+| [ADR 2](docs/adr/0002-release-and-quality-evidence.md) | Accepted | Release integrity and evidence gates |
+| [ADR 3](docs/adr/0003-future-egress-enforcement.md) | Planned; unimplemented | Transparent proxy and limits on egress claims |
+| [ADR 4](docs/adr/0004-consented-local-traces.md) | Accepted | Inspection and consented retention |
 
 `.github/CODEOWNERS` explicitly assigns `docs/adr/**` to the maintainer. A
 repository administrator must enable GitHub's **Require review from Code
@@ -105,6 +90,23 @@ Add focused tests for changed behavior. Update documentation for changed
 interfaces and contributor workflows. Test and profiling data must be synthetic
 or explicitly licensed for that purpose.
 
+## Library and CLI contract
+
+Generated TypeScript declarations are in `native/index.d.ts` after building.
+Rust offsets use UTF-8 bytes; JavaScript offsets use UTF-16 units.
+`detect` applies configured protection and threshold rules, while
+`applyReplacements` validates and normalizes supplied spans. A detector allows
+one queued or running inference; concurrent calls fail with `busy`.
+
+The CLI and Node bridge receive versioned JSON on stdin. Version-1 requests
+cover basic rewriting: success returns `version`, `status`, `text`, and
+`replacement_count`; errors return a content-free `code` and exit nonzero.
+Do not pass private prompts in process arguments.
+
+The Node bridge also supports version 2 assessment and version 3 traced
+rewriting. These can report a processing failure in the response without a
+nonzero exit; callers must check both exit status and response status.
+
 ## Commit messages and hooks
 
 Use lowercase Conventional Commit subjects, optionally preceded by a ticket
@@ -112,7 +114,7 @@ such as `[PROJ-123]`. Subjects must fit within 50 characters and have no trailin
 period; wrap bodies at 72 characters. Do not add generated attribution,
 co-author footers, or tool signatures.
 
-The Rust [commit checker](tools/commit_check/README.md) runs in CI and is
+The Rust [commit checker](https://github.com/yourmoodai/savior/blob/main/tools/commit_check/README.md) runs in CI and is
 available through `.githooks/commit-msg`. Before configuring hooks, inspect the
 existing path:
 
@@ -139,32 +141,22 @@ maintainer review or the model-promotion gates.
 
 ## Licensing
 
-Submit only material you have the right to contribute. Contributions use the
-project's existing [LICENSE](LICENSE) and [NOTICE](NOTICE) terms. Model weights
-and imported tooling retain their separate licenses; keep their provenance and
-notices intact. Synthetic fixtures use `CC0-1.0` where declared.
+Submit only material you have the right to contribute. Synthetic fixtures use
+`CC0-1.0` where declared.
 
+Savior is licensed under the **GNU Affero General Public License v3.0 or later**
+([`AGPL-3.0-or-later`](LICENSE)). Copies and forks must retain
+[`LICENSE`](LICENSE) and [`NOTICE`](NOTICE), credit Adam Williams and
+`yourmood.ai` with `https://github.com/yourmoodai/savior`, use a distinct
+plugin `name` and `displayName` when distributed, and publish complete
+Corresponding Source under `AGPL-3.0-or-later`.
+
+Model weights remain separate Apache-2.0 artifacts. Their provenance and notices
+are in [`models/catalog.json`](models/catalog.json) and
+[`models/NOTICE`](models/NOTICE).
 
 ## Release and review workflows
 
-[ADR 2](docs/adr/0002-release-and-quality-evidence.md) owns release packaging,
-activation, and qualification. Run `python3 scripts/release/package.py stage`
-with a supported target and output directory after a release build. CI assembles
-all targets, exercises the archive, and gates tag publication on installed-host
-tests. The generated release marketplace points at a checksummed ZIP; never
-point it at an unqualified candidate. Source archives are not installable
-release bundles.
-
-The protected `release` environment must provide `SAVIOR_RELEASE_SIGNING_KEY`
-as an Ed25519 private PEM. Provision it outside the repository; do not generate
-or publish a production identity as part of a development test. Non-tag builds
-use an ephemeral qualification key. The plugin carries its public key and
-signed manifest; rotating the key requires a new trusted plugin version.
-Keep marketplace promotion manual until `published-download` passes on all
-three platforms. See [local inspection](docs/inspection.md) for trace tooling.
-
-The `adversarial verdict` CI job and its review limits are documented in the
-[reviewer guide](tools/adversarial_reviewer/README.md). Existing required human
-reviews and stale-review dismissal remain in effect. Authentication uses
-short-lived AWS credentials through GitHub OIDC; do not copy credentials into
-CI.
+[Release preparation](docs/releases.md) owns packaging, signing-key setup,
+qualification, and recovery.
+[Inspection](docs/inspection.md) covers user-visible edits and saved traces.

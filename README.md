@@ -2,108 +2,64 @@
 
 <img src="docs/assets/savior.png" width="180" alt="Savior golden sparkle">
 
-Savior replaces detected offensive language in your Claude Code prompts with `ya ya ya`, using a filter that runs on your computer.
+**You shouldn’t have to tiptoe around a chatbot.**
 
-## Inspect the receipts locally
+Savior gives you control over the wording you submit to Claude. It runs on your
+computer and replaces detected offensive language in supported Claude Code
+prompts before they continue to Anthropic. You choose the replacement and can
+see exactly what changed.
 
-The standalone inspector shows exact replacement diffs and model provenance,
-with separate human judgments for profanity, targeted abuse, and preservation.
-Run `npm run inspect` after building from source. Full-text recording is opt-in;
-records stay private and local, with seven-day retention and a 256 MiB ceiling.
+## What Savior does
 
-| New boundary | Local verification |
-| --- | --- |
-| Signed bootstrap | Signature rejection, interrupted download, concurrent setup, crash recovery, and offline reuse |
-| Real compiled runtime | macOS ARM64 binaries and native addon exercised with an empty PATH |
-| Trace store | Six checks covering consent, exact edits, retention, annotations, recovery, and Parquet |
-| Browser inspector | 12 checks passed: consent, Unicode edits, annotations, literal markup, access controls, export, deletion, and nonblocking recording failure |
+Write the frustrated instruction. Savior replaces the detected phrase and
+preserves the surrounding text:
 
-The public GitHub download matrix and Windows/Linux runtime checks remain CI
-release gates, not locally established claims. Timing screens vary substantially
-with machine load and do not qualify latency.
+```text
+You type:     You idiot, keep the test.
+After Savior: You ya ya ya, keep the test.
+```
 
-The final five-sample short-input screen measured 24.3–32.7 ms without capture,
-24.8–31.1 ms with metadata, and 25.2–26.1 ms with full traces. Cold/warm Parquet
-export took 31.1/13.3 ms for ten synthetic records; peak parent-process RSS was
-about 480 MiB including the detector. A separate busy-machine run reached
-432 ms, so these figures are observations, not overhead guarantees.
+The filter works locally and offline after setup. Its default replacement is
+`ya ya ya`; you can choose your own phrase or remove the detected wording.
+If processing fails or an edit conflicts with protected text, Savior stops that
+submission so you can fix it.
 
-[Browser evidence](benchmarks/results/inspection-e2e-2026-10-21.json) ·
-[Final timing screen](benchmarks/results/inspection-final-2026-10-21.json) ·
-[Busy-machine screen](benchmarks/results/inspection-2026-10-21.json) ·
-[Inspection guide and reproduction commands](docs/inspection.md).
+## Get started
 
-<!-- benchmark-results:start -->
-## Battle-tested, with receipts
+**There is no published release yet.** You can
+[build and try Savior from source](CONTRIBUTING.md#development). The intended
+release platforms are Apple silicon Macs and Windows/Linux on Intel or AMD
+64-bit computers, with Claude Code installed.
 
-Savior’s replacement engine is checked for exact preservation outside selected spans. Detection is measured separately against public reference labels.
+After setup, open `/savior` in Claude Code to check that it is ready. The
+[usage guide](docs/usage.md) covers settings, troubleshooting, and the future
+plugin installation path.
 
-| Check | Observed result |
-| --- | --- |
-| Known-span replacement and abstention | 42/42 checks passed |
-| Rust and Node CLI end-to-end checks | 36/36 checks passed |
-| Installed Claude Code delivery and recovery | 15/15 requested checks passed |
-| Scunthorpe flag agreement | 74.5% on 188/200 sampled cases; F1 0.739; 12 abstentions |
-| HateCheck hate-label agreement | 62.2% on 193/200 sampled cases; F1 0.757; 7 abstentions |
-| Unmatched text: `fixed_phrase` | 381/381 successful outputs preserved; 19 abstentions |
-| Unmatched text: `custom_phrase` | 381/381 successful outputs preserved; 19 abstentions |
-| Unmatched text: `omit` | 381/381 successful outputs preserved; 19 abstentions |
+## See what changed
 
-Measured 2026-10-21 UTC on Apple M5 (darwin, arm64), CPU FP32, pinned `mudes/en-base`.
-The external screen samples English cases by category and label; it is not a population accuracy estimate. HateCheck labels hate speech, which differs from Savior’s offensive-span policy.
-Reviewed external replacement spans are unavailable. These classification figures do not establish successful removal of targeted abuse.
+Open `/savior` to inspect the latest original and replacement. For later review,
+you can opt into private local records and open them in a browser.
+[Inspection and optional saved history](docs/inspection.md) explains the choices.
 
-| Resident rewrite fixture | Native maximum | Node-API maximum | Failed combinations |
-| --- | ---: | ---: | ---: |
-| short | 39.88 ms | 37.62 ms | 0/4 |
-| medium | 174.36 ms | 183.93 ms | 0/4 |
-| long | 862.72 ms | 888.88 ms | 0/4 |
-| maximum | 16.39 s | 17.03 s | 0/4 |
-| dense | 23.09 s | 23.69 s | 0/4 |
-| unicode | 27.72 s | 28.61 s | 0/4 |
-| protected | unavailable | unavailable | 4/4 |
-| token_dense | unavailable | unavailable | 4/4 |
-| window_boundary | 1.78 s | 1.83 s | 0/4 |
-| tokens_509 | 607.60 ms | 581.08 ms | 0/4 |
-| tokens_510 | 582.60 ms | 600.22 ms | 0/4 |
-| tokens_511 | 757.13 ms | 758.90 ms | 0/4 |
-| tokens_892 | 1.17 s | 1.20 s | 0/4 |
-| tokens_893 | 1.35 s | 1.34 s | 0/4 |
-| punctuation_dense | unavailable | unavailable | 4/4 |
+## What stays under your control
 
-Performance coverage: 48/60 measurements completed successfully; 12 failed. Maxima above combine strategies only within the same fixture; failed timings are not success samples.
-Recorded configuration: 1 run(s), 1 measured sample(s) and 0 warmup(s) per fixture, strategy, and boundary; 45 s worker deadline.
-This is a screen, not latency qualification. The all-input maximum-below-500-ms screen did not pass. Cold load, process startup, per-fixture timing, and peak RSS are recorded separately in the evidence.
-Latency runs exclude stage profiling. Matched per-fixture strategy comparisons and explicit failure causes are retained in the snapshot.
-Failure classifications: 12 `processing_timeout`.
-Machine context: 10 logical CPUs; start/end 1-, 5-, and 15-minute load averages 7.09 / 7.84 / 7.25 → 6.82 / 7.47 / 7.38.
-Per-measurement 1-minute load ranged from 6.29 to 8.94. Background work was not controlled; load alone does not establish the cause of a timeout.
+You choose the replacement, whether to inspect it, and whether to retain
+local inspection records. Savior does not send prompts to a remote detector.
+Full-text recording is off by default.
 
-[Evidence snapshot](benchmarks/results/latest.json) · [Reproduce the checks](docs/benchmarking.md)
-<!-- benchmark-results:end -->
+Savior can miss language or select wording you wanted to keep. It cannot
+guarantee protection from account restrictions or policy enforcement. Claude
+Code still owns the prompt box, and this plugin does not establish that the
+host, voice features, or other plugins never expose original text.
+[How your text is handled](docs/usage.md#privacy-and-limits) explains the boundary.
 
-## Installation
+## Learn more
 
-**The first release is not published yet.** The commands below will work once it is available. Developers can [build from source](CONTRIBUTING.md#development).
+- [Everyday use and settings](docs/usage.md)
+- [Inspect replacements](docs/inspection.md)
+- [Evidence and limitations](docs/evaluation.md)
+- [Build, contribute, or extend Savior](CONTRIBUTING.md)
+- [Moving from an earlier name](docs/migration.md)
+- [Get help](https://github.com/yourmoodai/savior/issues)
 
-You need Claude Code installed and a Mac with Apple silicon, or Windows/Linux on an Intel or AMD 64-bit computer.
-
-1. Open **Terminal** on macOS/Linux, or **PowerShell** on Windows.
-2. Paste these commands, one at a time:
-
-   ```sh
-   claude plugin marketplace add https://github.com/yourmoodai/savior/releases/latest/download/marketplace.json
-   claude plugin install savior@yourmood.ai
-   ```
-
-3. Open Claude Code, enable Savior if prompted, and type `/savior` to check that it is ready.
-
-The first activation automatically downloads the matching platform runtime and
-the filter’s model (about 431 MB). Savior verifies a signed manifest and artifact
-hashes before running downloaded code. Wait until Savior is ready before submitting
-a prompt. If setup fails, open `/savior` to retry. No additional development tools
-are needed; the plugin includes its bootstrap Node runtime.
-
-[Get help](https://github.com/yourmoodai/savior/issues) · [Advanced usage](docs/usage.md)
-
-[Moving from an earlier name](docs/migration.md) · [Vector brand asset](docs/assets/savior.svg)
+Savior is open source under [AGPL-3.0-or-later](LICENSE).

@@ -92,6 +92,6 @@ export function failureCode(error) {
   const allowed = ['invalid_arguments','invalid_command','output_exists','native_addon_unavailable','git_identity_unavailable',
     'invalid_corpus','invalid_annotation','invalid_annotation_span','annotation_identity_mismatch','annotation_conflict','annotation_policy_version_mismatch','duplicate_or_invalid_id',
     'empty_corpus','split_leakage','missing_reports','incomplete_report','incompatible_reports','incomplete_quality','incomplete_e2e',
-    'incomplete_performance','snapshot_evidence_mismatch','snapshot_summary_mismatch','missing_readme_markers'];
+    'incomplete_performance','snapshot_evidence_mismatch','snapshot_summary_mismatch','missing_results_markers'];
   return allowed.includes(error?.message) ? error.message : errorCode(error);
 }
