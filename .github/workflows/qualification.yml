@@ -1,0 +1,95 @@
+name: release qualification
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Generated release pull request number
+        required: false
+        type: string
+      head_sha:
+        description: Exact generated pull request head
+        required: false
+        type: string
+concurrency:
+  group: qualification-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: validate pull request context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/release/pr_context.py
+      - run: python3 scripts/release/version_gate.py
+  build:
+    needs: gate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: darwin-arm64
+          - os: ubuntu-24.04
+            target: linux-x64
+          - os: windows-2022
+            target: win32-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: ./.github/actions/release-build
+        with:
+          target: ${{ matrix.target }}
+          runner_label: ${{ matrix.os }}
+  package:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.0
+          cache: npm
+      - uses: actions/download-artifact@v4
+        with:
+          path: .cache/parts
+      - run: python3 scripts/release/package.py assemble .cache/parts .cache/release/plugin
+        env:
+          SAVIOR_RELEASE_SIGNING_KEY: ''
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            .cache/release/*.zip
+            .cache/release/marketplace.json
+            .cache/release/SHA256SUMS
+            .cache/release/runtime-*
+            .cache/release/release-public.pem
+  installed:
+    timeout-minutes: 15
+    needs: package
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: ./.github/actions/release-installed

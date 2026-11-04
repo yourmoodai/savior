@@ -1,17 +1,29 @@
-name: release qualification
+name: release
 on:
-  workflow_dispatch:
   push:
     tags: ['v*']
-  pull_request:
 concurrency:
-  group: release-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+  group: production-release
+  cancel-in-progress: false
 permissions:
   contents: read
   actions: read
 jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/release/version_gate.py --tag
+        env:
+          GH_TOKEN: ${{ github.token }}
   build:
+    needs: gate
     strategy:
       fail-fast: false
       matrix:
@@ -25,64 +37,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
-      - uses: actions/setup-node@v4
+          ref: ${{ github.sha }}
+      - uses: ./.github/actions/release-build
         with:
-          node-version: 24.22.0
-          cache: npm
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: npm ci --prefer-offline --no-audit --no-fund
-      - if: runner.os == 'Windows'
-        shell: pwsh
-        run: '"RUSTFLAGS=-C target-feature=+crt-static" | Out-File -FilePath $env:GITHUB_ENV -Append'
-      - name: restore rust dependencies
-        id: rust_cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: native-${{ matrix.os }}-${{ runner.arch }}
-          cache-on-failure: true
-      - name: native build
-        run: npm run build
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test --workspace
-      - run: npm run inspect:test
-      - uses: ./.github/actions/model-cache
-      - run: npm run test:bootstrap
-      - run: npm run eval:local
-      - run: node --test tests/native.spec.mjs tests/review.spec.mjs
-      - name: restore pinned node runtime archive
-        uses: actions/cache@v4
-        with:
-          path: |
-            .cache/node-v*.tar.gz
-            .cache/node-v*.zip
-          key: release-node-v1-${{ matrix.target }}-${{ hashFiles('scripts/release/package.py') }}
-      - run: python scripts/release/package.py stage ${{ matrix.target }} .cache/part
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.target }}
-          path: .cache/part
-      - name: summarize cache measurements
-        if: always()
-        continue-on-error: true
-        uses: actions/github-script@v7
-        env:
-          CACHE_HIT: ${{ steps.rust_cache.outputs.cache-hit }}
-          CACHE_GROUP: native-${{ matrix.os }}-${{ runner.arch }}
-          CACHE_JOB: build (${{ matrix.os }}, ${{ matrix.target }})
-        with:
-          script: |
-            await require('./scripts/release/cache-summary.cjs')({github, context, core});
+          target: ${{ matrix.target }}
+          runner_label: ${{ matrix.os }}
   package:
     needs: build
     runs-on: ubuntu-24.04
     environment: release
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24.22.0
@@ -112,25 +80,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      - uses: actions/download-artifact@v4
-        with:
-          name: release
-          path: .cache/release
-      - run: python scripts/release/smoke.py .cache/release
-      # Full host qualification is required before a production release.
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24.22.0
-          cache: npm
-      - run: npm install --global @anthropic-ai/claude-code@2.1.290
-      - if: runner.os == 'Windows'
-        run: python -m pip install pywinpty==3.0.2
-      - name: installed host gate
-        timeout-minutes: 5
-        run: python scripts/release/host_gate.py
+          ref: ${{ github.sha }}
+      - uses: ./.github/actions/release-installed
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: installed
@@ -141,6 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
@@ -164,6 +117,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

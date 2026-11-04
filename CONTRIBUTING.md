@@ -155,13 +155,46 @@ tests. The generated release marketplace points at a checksummed ZIP; never
 point it at an unqualified candidate. Source archives are not installable
 release bundles.
 
+Run **prepare release** from `main` in GitHub Actions with an exact SemVer
+version, such as `0.2.0-rc.1`. It must exceed the current source version and
+have no existing tag or release. The workflow opens a labeled `release/v…`
+PR updating npm, Cargo, lockfiles, and Claude plugin metadata together.
+Repeating the request reuses the open PR; a branch without an open PR requires
+maintainer inspection. Enable **Allow GitHub Actions to create and approve
+pull requests** in repository Actions settings for this automation.
+
+Preparation dispatches verification, commit checks, and three-platform
+qualification for the PR's exact head. PR qualification uses ephemeral keys
+and has no production environment or publication job. Review the generated PR
+and its checks before merging. Merging does not create a tag or publish.
+
+After reviewing release prerequisites, fetch `main` into a clean checkout,
+verify the merged commit and version, then explicitly create and push its tag:
+
+```sh
+git pull --ff-only
+git tag v0.2.0-rc.1
+git push origin v0.2.0-rc.1
+```
+
+The **release** workflow runs only for pushed `v*` tags. Before building or
+accessing credentials, it requires valid SemVer, agreement between all package
+versions, an exact `v<version>` tag, and a tagged commit reachable from `main`.
+It refuses an existing GitHub release, including a draft. Rerun failed jobs
+on the original tagged run when no release exists; never move tags or replace
+published assets. A correction to published bytes requires a new version.
+The current source version may be tagged directly for the first release.
+
 The protected `release` environment must provide `SAVIOR_RELEASE_SIGNING_KEY`
 as an Ed25519 private PEM. Provision it outside the repository; do not generate
 or publish a production identity as part of a development test. Non-tag builds
 use an ephemeral qualification key. The plugin carries its public key and
 signed manifest; rotating the key requires a new trusted plugin version.
-Keep marketplace promotion manual until `published-download` passes on all
-three platforms. See [local inspection](docs/inspection.md) for trace tooling.
+Platform signing and notarization remain separate prerequisites; this workflow
+change does not establish OS acceptance. The existing moving `latest`
+marketplace URL also requires a separate promotion change before it can
+guarantee that advertising waits for public-download checks. See
+[local inspection](docs/inspection.md) for trace tooling.
 
 The `adversarial verdict` CI job and its review limits are documented in the
 [reviewer guide](tools/adversarial_reviewer/README.md). Existing required human

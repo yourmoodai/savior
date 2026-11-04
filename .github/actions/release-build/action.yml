@@ -1,0 +1,76 @@
+name: release native build
+description: Build, qualify, and stage one native release target.
+inputs:
+  target:
+    description: Packaged runtime target
+    required: true
+  runner_label:
+    description: Runner label used for cache namespaces and job measurements
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 24.22.0
+        cache: npm
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - run: npm ci --prefer-offline --no-audit --no-fund
+      shell: bash
+    - if: runner.os == 'Windows'
+      shell: pwsh
+      run: '"RUSTFLAGS=-C target-feature=+crt-static" | Out-File -FilePath $env:GITHUB_ENV -Append'
+    - name: restore rust dependencies
+      id: rust_cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: native-${{ inputs.runner_label }}-${{ runner.arch }}
+        cache-on-failure: true
+    - name: native build
+      shell: bash
+      run: npm run build
+    - run: cargo clippy --workspace --all-targets -- -D warnings
+      shell: bash
+    - run: cargo test --workspace
+      shell: bash
+    - run: npm run inspect:test
+      shell: bash
+    - uses: ./.github/actions/model-cache
+    - run: npm run test:bootstrap
+      shell: bash
+    - run: npm run eval:local
+      shell: bash
+    - run: node --test tests/native.spec.mjs tests/review.spec.mjs
+      shell: bash
+    - name: restore pinned node runtime archive
+      uses: actions/cache@v4
+      with:
+        path: |
+          .cache/node-v*.tar.gz
+          .cache/node-v*.zip
+        key: release-node-v1-${{ inputs.target }}-${{ hashFiles('scripts/release/package.py') }}
+    - name: stage native target
+      shell: bash
+      env:
+        RELEASE_TARGET: ${{ inputs.target }}
+      run: python scripts/release/package.py stage "$RELEASE_TARGET" .cache/part
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.target }}
+        path: .cache/part
+    - name: summarize cache measurements
+      if: always()
+      continue-on-error: true
+      uses: actions/github-script@v7
+      env:
+        CACHE_HIT: ${{ steps.rust_cache.outputs.cache-hit }}
+        CACHE_GROUP: native-${{ inputs.runner_label }}-${{ runner.arch }}
+        CACHE_JOB: build (${{ inputs.runner_label }}, ${{ inputs.target }})
+      with:
+        script: |
+          await require('./scripts/release/cache-summary.cjs')({github, context, core});

@@ -1,4 +1,4 @@
-const required = ['verify.yml', 'commit-messages.yml', 'release.yml'];
+const required = ['verify.yml', 'commit-messages.yml', 'qualification.yml'];
 
 function select_runs(runs, head) {
   return required.map(file => {

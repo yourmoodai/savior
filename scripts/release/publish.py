@@ -4,10 +4,11 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-version=json.loads(Path('package.json').read_text())['version']
+from version_gate import reject_existing_release, validate_tag
+
+version=validate_tag(Path.cwd(), os.environ.get('GITHUB_REF', ''), os.environ.get('GITHUB_SHA', ''))
 tag='v'+version
-if os.environ.get('GITHUB_REF')!='refs/tags/'+tag:raise SystemExit('release tag/version mismatch')
-subprocess.run(['git','merge-base','--is-ancestor','HEAD','origin/main'],check=True)
+reject_existing_release(os.environ['GITHUB_REPOSITORY'], version)
 if not os.environ.get('SAVIOR_RELEASE_SIGNING_KEY'):raise SystemExit('release signing key required')
 subprocess.run(['node','scripts/release/verify-signature.mjs','.cache/release'],check=True)
 assets=[p for p in Path('.cache/release').glob('*') if p.is_file()]

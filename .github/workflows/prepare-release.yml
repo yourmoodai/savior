@@ -1,0 +1,34 @@
+name: prepare release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact release version, such as 0.2.0-rc.1
+        required: true
+        type: string
+permissions: {}
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: open or reuse release pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: python3 scripts/release/prepare.py --version "$RELEASE_VERSION"

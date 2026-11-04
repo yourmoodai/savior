@@ -1,4 +1,4 @@
-const paths = new Set(['verify.yml', 'commit-messages.yml', 'release.yml', 'adversarial-review.yml'].map(name=>'.github/workflows/'+name));
+const paths = new Set(['verify.yml', 'commit-messages.yml', 'qualification.yml', 'adversarial-review.yml'].map(name=>'.github/workflows/'+name));
 const failures = new Set(['failure', 'timed_out', 'action_required', 'startup_failure']);
 const terminal = new Set(['completed']);
 const monitorName = 'cancel sibling ci on failure';

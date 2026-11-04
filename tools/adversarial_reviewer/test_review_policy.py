@@ -9,7 +9,7 @@ ROOT=Path(__file__).resolve().parents[2]
 @unittest.skipUnless(shutil.which('node'),'node required')
 class ReviewPolicyTests(unittest.TestCase):
     def publish(self, **changes):
-        report={'test_evidence':{'head':'head','runs':[{'workflow':'.github/workflows/'+f,'conclusion':'success'} for f in ['verify.yml','commit-messages.yml','release.yml']]},'commit_id':'head','qualified':True,'complete':True,'synthesis_complete':True,'overview':'word '*50,'review_failures':[],'disposition':'APPROVE','findings':[],'body':'**Verdict: Approved**'}
+        report={'test_evidence':{'head':'head','runs':[{'workflow':'.github/workflows/'+f,'conclusion':'success'} for f in ['verify.yml','commit-messages.yml','qualification.yml']]},'commit_id':'head','qualified':True,'complete':True,'synthesis_complete':True,'overview':'word '*50,'review_failures':[],'disposition':'APPROVE','findings':[],'body':'**Verdict: Approved**'}
         report.update(changes.pop('report',{}))
         clean=50 <= len(report['overview'].split()) <= 100 and report['qualified'] and report['complete'] and report['synthesis_complete'] and not report['review_failures'] and report['disposition']=='APPROVE' and not report['findings']
         report['body']=changes.pop('body','**Verdict: '+('Approved' if clean else 'Request changes')+'**')
