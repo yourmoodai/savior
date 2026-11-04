@@ -1,5 +1,9 @@
 name: installed release qualification
 description: Exercise the assembled archive and installed Claude Code host.
+inputs:
+  native:
+    description: Require native signatures and offline macOS first launch
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -10,7 +14,10 @@ runs:
       with:
         name: release
         path: .cache/release
-    - run: python scripts/release/smoke.py .cache/release
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: 24.22.2
+    - run: python scripts/release/smoke.py .cache/release ${{ inputs.native == 'true' && '--native' || '' }}
       shell: bash
     # Full host qualification is required before a production release.
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

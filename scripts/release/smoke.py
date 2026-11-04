@@ -1,9 +1,10 @@
-"""Exercise the packaged runtime without developer PATH tools or model overrides."""
+"""Exercise the packaged runtime without developer PATH tools."""
 import hashlib
 import json
 import os
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -11,55 +12,96 @@ import urllib.request
 import zipfile
 from bridge_check import request as bridge_request
 from runtime_cache import seed
+from macos_bundle import executable
+from native_acceptance import acceptance
 
-release=Path(sys.argv[1]).resolve()
-archive=next(release.glob('savior-*.zip'))
-with tempfile.TemporaryDirectory(prefix='savior release ') as temporary:
-    root=Path(temporary).resolve()
-    with zipfile.ZipFile(archive) as bundle:
-        bundle.extractall(root)
-        for entry in bundle.infolist():
-            mode=entry.external_attr>>16
-            if mode: (root/entry.filename).chmod(mode)
-    manifest=json.loads((root/'release.json').read_text())
-    for name,expected in manifest['files'].items():
-        with (root/name).open('rb') as stream:
-            assert hashlib.file_digest(stream,'sha256').hexdigest()==expected,name
-    target={'Darwin':'darwin-arm64','Linux':'linux-x64','Windows':'win32-x64'}[platform.system()]
-    suffix='.exe' if os.name=='nt' else ''
-    native=root/'runtime'/target
-    node=native/('node'+suffix)
-    cache=root/'cache';cache.mkdir()
-    env={k:v for k,v in os.environ.items() if not k.startswith('SAVIOR_')}
-    env.update(PATH=str(native), XDG_CACHE_HOME=str(cache), LOCALAPPDATA=str(cache))
-    if '--download' not in sys.argv:
-        seed(root,release,cache,target)
-    setup=subprocess.run([str(node),str(root/'bridge/bootstrap.mjs')],env=env,text=True,capture_output=True,check=True,timeout=600)
-    prepared=json.loads(setup.stdout);assert prepared['status']=='ready'
-    native=Path(prepared['runtime_dir']);env['SAVIOR_RUNTIME_DIR']=str(native)
-    # Candidate assets are not public yet. Seed verified model bytes in the same
-    # cache layout; prepare still verifies every digest, offline, with no override.
-    model=manifest['model'];directory=cache/'savior/models'/model['provenance']['upstream_revision'];directory.mkdir(parents=True)
-    for artifact in model['artifacts'] if '--download' not in sys.argv else []:
-        path=directory/artifact['file']
-        url=model['provenance']['upstream_url']+'/resolve/'+model['provenance']['upstream_revision']+'/'+artifact['file']
-        urllib.request.urlretrieve(url,path)
-    subprocess.run([str(native/('savior'+suffix)),'prepare'],env=env,check=True,timeout=600)
-    env['SAVIOR_MODEL_DIR']=str(directory)
-    result=subprocess.run([str(node),str(root/'bridge/cli.mjs'),'rewrite'],input=json.dumps({'version':1,'text':'You idiot, do not delete the test.'}),text=True,capture_output=True,env=env,check=True,timeout=60)
-    assert json.loads(result.stdout)['text']=='You ya ya ya, do not delete the test.'
-    profile=root/'profile';profile.mkdir();env['CLAUDE_CONFIG_DIR']=str(profile)
-    def request(command):
-        return bridge_request([str(node),str(root/'bridge/review.mjs')],command,env,'smoke_'+command['command'])
-    started=False
-    try:
-        state=request({'command':'status'})
-        started=True
-        assert state['consent']['live'] is False and state['consent']['history'] is False
-    finally:
-        if started:
-            failed=sys.exc_info()[0] is not None
-            try: request({'command':'shutdown'})
-            except Exception:
-                if not failed: raise
-print('packaged replacement and private worker passed without developer tools')
+
+def exercise(root, release, target, downloaded, native):
+    suffix = '.exe' if os.name == 'nt' else ''
+    node = executable(root, target)
+    cache = root/'cache'
+    cache.mkdir()
+    env = {k:v for k,v in os.environ.items() if not k.startswith('SAVIOR_')}
+    env.update(PATH=str(root/'runtime'/target), XDG_CACHE_HOME=str(cache), LOCALAPPDATA=str(cache))
+    if not downloaded:
+        seed(root, release, cache, target)
+    manifest = json.loads((root/'runtime-manifest.json').read_text())
+    model = manifest['model']
+    directory = cache/'savior/models'/model['provenance']['upstream_revision']
+    directory.mkdir(parents=True)
+    # Fetch all model bytes before the first candidate executable or offline gate.
+    for artifact in model['artifacts'] if not downloaded or native else []:
+        path = directory/artifact['file']
+        local_model = release/('model-'+artifact['file'])
+        if local_model.exists():
+            shutil.copy2(local_model, path)
+        else:
+            url = model['provenance']['upstream_url']+'/resolve/'+model['provenance']['upstream_revision']+'/'+artifact['file']
+            urllib.request.urlretrieve(url, path)
+        with path.open('rb') as stream:
+            if hashlib.file_digest(stream,'sha256').hexdigest() != artifact['sha256']:
+                raise ValueError('model_digest_mismatch')
+    with acceptance(root, release, target, native):
+        setup = subprocess.run([str(node),str(root/'bridge/bootstrap.mjs')],env=env,text=True,capture_output=True,check=True,timeout=600)
+        prepared = json.loads(setup.stdout)
+        assert prepared['status'] == 'ready'
+        runtime = Path(prepared['runtime_dir'])
+        env['SAVIOR_RUNTIME_DIR'] = str(runtime)
+        subprocess.run([str(runtime/('savior'+suffix)),'prepare'],env=env,check=True,timeout=600)
+        env['SAVIOR_MODEL_DIR'] = str(directory)
+        subprocess.run([str(runtime/('savior'+suffix)),'doctor'],env=env,check=True,timeout=60)
+        result = subprocess.run([str(node),str(root/'bridge/cli.mjs'),'rewrite'],
+            input=json.dumps({'version':1,'text':'You idiot, do not delete the test.'}),
+            text=True,capture_output=True,env=env,check=True,timeout=60)
+        assert json.loads(result.stdout)['text'] == 'You ya ya ya, do not delete the test.'
+        profile = root/'profile'
+        profile.mkdir()
+        env['CLAUDE_CONFIG_DIR'] = str(profile)
+        def request(command):
+            return bridge_request([str(node),str(root/'bridge/review.mjs')],command,env,'smoke_'+command['command'])
+        started = False
+        try:
+            state = request({'command':'status'})
+            started = True
+            assert state['consent']['live'] is False and state['consent']['history'] is False
+        finally:
+            if started:
+                failed = sys.exc_info()[0] is not None
+                try:
+                    request({'command':'shutdown'})
+                except Exception:
+                    if not failed:
+                        raise
+
+
+def main():
+    release = Path(sys.argv[1]).resolve()
+    archive = next(release.glob('savior-*.zip'))
+    if '--native' in sys.argv:
+        from archive import validate
+        version = json.loads((release/'release-envelope.json').read_text())['version']
+        subprocess.run(['node','scripts/release/verify-release.mjs',str(release),version,os.environ['GITHUB_SHA']],check=True)
+        validate(release,version)
+    target = {'Darwin':'darwin-arm64','Linux':'linux-x64','Windows':'win32-x64'}[platform.system()]
+    with tempfile.TemporaryDirectory(prefix='savior release ') as temporary:
+        root = Path(temporary).resolve()
+        with zipfile.ZipFile(archive) as bundle:
+            bundle.extractall(root)
+            for entry in bundle.infolist():
+                if entry.external_attr >> 16:
+                    (root/entry.filename).chmod(entry.external_attr >> 16)
+        manifest = json.loads((root/'release.json').read_text())
+        for name, expected in manifest['files'].items():
+            with (root/name).open('rb') as stream:
+                assert hashlib.file_digest(stream,'sha256').hexdigest() == expected, name
+        exercise(root, release, target, '--download' in sys.argv, '--native' in sys.argv)
+    if '--native' in sys.argv:
+        report = {'schema':1,'target':target,'revision':os.environ['GITHUB_SHA'],
+                  'archive_sha256':hashlib.file_digest(archive.open('rb'),'sha256').hexdigest(),
+                  'native_acceptance':'passed','offline_first_launch':'passed' if target=='darwin-arm64' else 'not_applicable'}
+        (release/f'acceptance-{target}.json').write_text(json.dumps(report)+'\n')
+    print('packaged replacement and private worker passed without developer tools')
+
+
+if __name__ == '__main__':
+    main()

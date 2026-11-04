@@ -27,7 +27,7 @@ test('model catalog rejects missing provenance and unpinned artifacts', async ()
 });
 
 test('npm package includes attribution metadata and excludes model weights', () => {
-  const result = spawnSync('npm', ['pack', '--dry-run', '--json'], { cwd: new URL('..', import.meta.url), encoding: 'utf8' });
+  const result = spawnSync(process.platform==='win32'?'npm.cmd':'npm', ['pack', '--dry-run', '--json'], { cwd: new URL('..', import.meta.url), encoding: 'utf8', shell:process.platform==='win32' });
   assert.equal(result.status, 0, result.stderr);
   const files = JSON.parse(result.stdout)[0].files.map((entry) => entry.path);
   assert(files.includes('models/catalog.json'));

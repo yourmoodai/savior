@@ -1,5 +1,5 @@
 import { createHash, createPublicKey, verify } from 'node:crypto';
-import { chmod, lstat, mkdir, open, readFile, rename, unlink } from 'node:fs/promises';
+import { chmod, lstat, mkdir, open, readFile, readdir, rename, unlink } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { dirname, isAbsolute, join, parse, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,23 +9,73 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const targets = new Set(['darwin-arm64', 'linux-x64', 'win32-x64']);
 const fail = code => { throw Error(code); };
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const bundle = 'runtime/darwin-arm64/SaviorRuntime.app';
+const macos_runtime = bundle+'/Contents/Helpers';
+
+function valid_digest(entry) {
+  return entry && /^[a-f0-9]{64}$/.test(entry.sha256) &&
+    Number.isSafeInteger(entry.bytes) && entry.bytes > 0 && entry.bytes <= 536_870_912; // 512 MiB
+}
 
 export function verify_manifest(bytes, signature, public_key, version, target) {
   if (!targets.has(target)) fail('unsupported_platform');
   const key = createPublicKey(public_key);
   if (key.asymmetricKeyType !== 'ed25519' || !verify(null, bytes, key, signature)) fail('invalid_release_signature');
   const manifest = JSON.parse(bytes);
-  if (manifest.schema !== 1 || manifest.version !== version || manifest.protocol !== 1) fail('incompatible_release');
+  if (![1,2].includes(manifest.schema) || manifest.version !== version || manifest.protocol !== 1) fail('incompatible_release');
   const files = manifest.targets?.[target];
   const suffix = target === 'win32-x64' ? '.exe' : '';
   const expected = [`savior${suffix}`, `savior-review${suffix}`, 'savior.node'];
   if (!Array.isArray(files) || files.length !== expected.length) fail('invalid_release_manifest');
   for (const name of expected) {
     const entry = files.find(file => file.name === name);
-    if (!entry || !/^[a-f0-9]{64}$/.test(entry.sha256) || !/^[a-zA-Z0-9._-]+$/.test(entry.asset) ||
-        !Number.isSafeInteger(entry.bytes) || entry.bytes < 1 || entry.bytes > 536_870_912) fail('invalid_release_manifest'); // 512 MiB
+    if (!valid_digest(entry)) fail('invalid_release_manifest');
+    if (manifest.schema === 2 && target === 'darwin-arm64') {
+      if (entry.path !== macos_runtime+'/'+name || entry.asset !== undefined) fail('invalid_release_manifest');
+    } else if (!/^[a-zA-Z0-9._-]+$/.test(entry.asset) || entry.path !== undefined) fail('invalid_release_manifest');
+  }
+  if (manifest.schema === 2) {
+    const inventory = manifest.macos_bundle;
+    if (!Array.isArray(inventory) || !inventory.length || inventory.length > 1000) fail('invalid_release_manifest');
+    const seen = new Set();
+    for (const entry of inventory) {
+      if (!valid_digest(entry) || typeof entry.path !== 'string' ||
+          !entry.path.startsWith(bundle+'/Contents/') ||
+          !entry.path.split('/').every(part => /^[a-zA-Z0-9_.-]+$/.test(part) && !['.','..'].includes(part)) ||
+          seen.has(entry.path)) fail('invalid_release_manifest');
+      seen.add(entry.path);
+    }
+    for (const path of [bundle+'/Contents/Info.plist',bundle+'/Contents/MacOS/savior-bootstrap',
+      bundle+'/Contents/Frameworks/node',...['savior','savior-review','savior.node'].map(name=>macos_runtime+'/'+name)]) {
+      if (!seen.has(path)) fail('invalid_release_manifest');
+    }
+    for (const entry of manifest.targets['darwin-arm64'] || []) {
+      const included=inventory.find(file=>file.path===entry.path);
+      if (!included || included.bytes!==entry.bytes || included.sha256!==entry.sha256) fail('invalid_release_manifest');
+    }
   }
   return manifest;
+}
+
+export async function verify_bundle(plugin_root, manifest) {
+  const paths = [];
+  async function visit(path) {
+    const meta = await lstat(join(plugin_root,path));
+    if (meta.isSymbolicLink()) fail('unsafe_cache_path');
+    if (meta.isDirectory()) {
+      for (const name of await readdir(join(plugin_root,path))) await visit(path+'/'+name);
+    } else if (meta.isFile()) paths.push(path);
+    else fail('unsafe_cache_path');
+  }
+  // Check ancestors as well as descendants: a redirected bundle is not trusted.
+  for (const path of ['runtime','runtime/darwin-arm64']) {
+    const meta=await lstat(join(plugin_root,path));
+    if (!meta.isDirectory() || meta.isSymbolicLink()) fail('unsafe_cache_path');
+  }
+  await visit(bundle);
+  const entries=manifest.macos_bundle;
+  if(paths.length!==entries.length || paths.some(path=>!entries.some(entry=>entry.path===path))) fail('invalid_release_manifest');
+  for (const entry of entries) if (!await matches(join(plugin_root,entry.path),entry)) fail('artifact_digest_mismatch');
 }
 
 export async function private_directory(path) {
@@ -96,6 +146,10 @@ export async function prepare_runtime(plugin_root = root, fetcher = fetch) {
   const key = await readFile(join(plugin_root, 'release-public.pem'));
   const target = `${process.platform}-${process.arch}`;
   const manifest = verify_manifest(bytes, signature, key, release.version, target);
+  if (manifest.schema === 2 && target === 'darwin-arm64') {
+    await verify_bundle(plugin_root, manifest);
+    return {status:'ready', runtime_dir:join(plugin_root,macos_runtime), manifest_sha256:sha(bytes)};
+  }
   const cache = process.platform === 'win32' ? process.env.LOCALAPPDATA : (process.env.XDG_CACHE_HOME || join(process.env.HOME || '', '.cache'));
   if (!cache || !isAbsolute(cache)) fail('invalid_cache_path');
   const directory = join(cache, 'savior', 'releases', release.version, target, sha(bytes));

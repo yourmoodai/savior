@@ -14,3 +14,7 @@ native/index.d.ts
 Thumbs.db
 desktop.ini
 __MACOSX/
+CMakeUserPresets.json
+*.p12
+*.pfx
+*.p8

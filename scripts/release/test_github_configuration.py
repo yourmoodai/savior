@@ -5,6 +5,7 @@ import copy
 from contextlib import redirect_stdout
 import io
 import unittest
+from unittest.mock import patch
 
 from configure_github import configure, tag_rulesets
 
@@ -64,6 +65,40 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual({actor["actor_id"] for actor in creation["bypass_actors"]}, {2, 5})
         self.assertEqual(immutable["bypass_actors"], [])
         self.assertEqual({rule["type"] for rule in immutable["rules"]}, {"update", "deletion"})
+
+    def test_post_merge_enforcement_requires_checks_approval_and_immutability(self):
+        def api(endpoint, method='GET', payload=None):
+            if method != 'GET':
+                self.writes.append((endpoint,method,payload))
+                return {}
+            if endpoint=='apps/github-actions':
+                return {'id':15368,'slug':'github-actions'}
+            if endpoint=='user':
+                return {'id':321}
+            if endpoint.endswith('/immutable-releases'):
+                return {'enabled':False}
+            if endpoint.endswith('/environments/marketplace'):
+                return {}
+            if endpoint.endswith('/actions/permissions'):
+                return {'enabled':True,'allowed_actions':'all','sha_pinning_required':False}
+            if endpoint.endswith('/actions/permissions/workflow'):
+                return {'default_workflow_permissions':'write','can_approve_pull_request_reviews':True}
+            return self.api(endpoint,method,payload)
+        with patch('configure_github.ensure_merged') as merged, redirect_stdout(io.StringIO()):
+            changes=configure('example/repo',enforce=True,api=api)
+        merged.assert_called_once()
+        self.assertEqual(self.writes,[])
+        rules=[payload for endpoint,method,payload in changes if endpoint.endswith('/rulesets')]
+        required=next(r for r in rules if r['name']=='required release qualification')
+        checks=required['rules'][0]['parameters']['required_status_checks']
+        self.assertEqual({c['context'] for c in checks},{'verification','qualification','check'})
+        self.assertTrue(all(c['integration_id']==15368 for c in checks))
+        self.assertTrue(required['rules'][1]['parameters']['require_code_owner_review'])
+        promotion=next(p for e,_,p in changes if e.endswith('/environments/marketplace'))
+        self.assertEqual(promotion['reviewers'],[{'type':'User','id':321}])
+        self.assertTrue(any(e.endswith('/immutable-releases') and m=='PUT' for e,m,_ in changes))
+        history=next(r for r in rules if r['name']=='preserve marketplace history')
+        self.assertEqual(history['bypass_actors'],[])
 
     def test_early_enforcement_and_unexpected_policies_fail_before_writes(self):
         with self.assertRaisesRegex(ValueError, "reach main"):

@@ -7,6 +7,9 @@ inputs:
   runner_label:
     description: Runner label used for cache namespaces and job measurements
     required: true
+  run_training:
+    description: Run optional training parity on an explicit qualification dispatch
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -71,7 +74,7 @@ runs:
       run: npm run inspect:e2e
       shell: bash
     - name: real model training and reload parity
-      if: github.event_name == 'workflow_dispatch' && inputs.pr_number == '' && runner.os != 'Windows'
+      if: inputs.run_training == 'true' && runner.os != 'Windows'
       env:
         SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
       run: cargo test --locked --profile profiling -p savior-lab --test cli -- --ignored

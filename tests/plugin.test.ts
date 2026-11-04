@@ -223,7 +223,7 @@ test('packaged runtime never uses PATH node and stays closed on setup failure', 
     return {exitCode:1,stdout:'{}',stderr:''};
   }}});
   expect(runtime.ready).toBe(false);
-  expect(calls[0]?.[0]).toBe('/synthetic/plugin/runtime/darwin-arm64/node');
+  expect(calls[0]?.[0]).toBe('/synthetic/plugin/runtime/darwin-arm64/SaviorRuntime.app/Contents/MacOS/savior-bootstrap');
   expect(calls.length).toBe(2);
 });
 

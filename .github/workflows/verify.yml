@@ -90,3 +90,23 @@ jobs:
         with:
           script: |
             await require('./scripts/release/cache-summary.cjs')({github, context, core});
+  release-tools:
+    needs: context
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - run: docker build -f scripts/release/Dockerfile -t savior-release-tools .
+      - run: docker run --rm --volume "$PWD:/workspace:ro" --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release
+  verification:
+    if: always()
+    needs: [context, tooling, coreml, release-tools]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: python3 -c 'import json,os; assert all(j["result"]=="success" for j in json.loads(os.environ["RESULTS"]).values())'

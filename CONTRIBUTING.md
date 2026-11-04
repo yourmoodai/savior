@@ -57,6 +57,7 @@ in the relevant benchmark, release, or tool guide.
 | [ADR 2](docs/adr/0002-release-and-quality-evidence.md) | Accepted | Release integrity and evidence gates |
 | [ADR 3](docs/adr/0003-future-egress-enforcement.md) | Planned; unimplemented | Transparent proxy and limits on egress claims |
 | [ADR 4](docs/adr/0004-consented-local-traces.md) | Accepted | Inspection and consented retention |
+| [ADR 5](docs/adr/0005-sign-binaries-before-release.md) | Accepted for implementation | Platform signing, offline macOS launch, and approved promotion |
 
 `.github/CODEOWNERS` explicitly assigns `docs/adr/**` to the maintainer. A
 repository administrator must enable GitHub's **Require review from Code

@@ -11,6 +11,7 @@ const version=JSON.parse(readFileSync('package.json')).version;
 for(const target of ['darwin-arm64','linux-x64','win32-x64']){
  const manifest=verify_manifest(bytes,signature,key,version,target);
  for(const file of manifest.targets[target]){
+  if(file.path)continue; // Bundled macOS bytes are checked inside the signed ZIP.
   const path=join(directory,file.asset);if(statSync(path).size!==file.bytes)throw Error('artifact_size_mismatch');
   const hash=createHash('sha256');for await(const chunk of createReadStream(path))hash.update(chunk);
   if(hash.digest('hex')!==file.sha256)throw Error('artifact_digest_mismatch');

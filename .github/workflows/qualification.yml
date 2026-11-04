@@ -60,6 +60,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           runner_label: ${{ matrix.os }}
+          run_training: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.pr_number == '' }}
   package:
     timeout-minutes: 15
     needs: build
@@ -90,6 +91,7 @@ jobs:
             .cache/release/SHA256SUMS
             .cache/release/runtime-*
             .cache/release/release-public.pem
+            .cache/release/release-envelope.*
   installed:
     timeout-minutes: 15
     needs: package
@@ -104,3 +106,12 @@ jobs:
           persist-credentials: false
           ref: ${{ github.sha }}
       - uses: ./.github/actions/release-installed
+  qualification:
+    if: always()
+    needs: [gate, build, package, installed]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: python3 -c 'import json,os; assert all(j["result"]=="success" for j in json.loads(os.environ["RESULTS"]).values())'

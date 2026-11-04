@@ -166,7 +166,8 @@ test('local worker enforces consent, SDK history dates, deduplication and text-f
     assert.deepEqual((await invoke(profile,{command:'status'})).metrics,[]);
   } finally {
     await invoke(profile,{command:'shutdown'}).catch(()=>{});
-    await rm(profile,{recursive:true,force:true});
+    // Shutdown acknowledges before the worker closes SQLite on Windows.
+    await rm(profile,{recursive:true,force:true,maxRetries:50,retryDelay:100});
   }
 });
 

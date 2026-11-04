@@ -207,6 +207,28 @@ class PreparationTests(unittest.TestCase):
             self.run_prepare()
         self.assertFalse(any(payload for _, payload in self.calls))
 
+    def test_interrupted_branch_and_version_commit_resume_without_overwrite(self):
+        original=self.api
+        changes=version_changes(self.root,'0.2.0')
+        for committed in (False,True):
+            self.calls.clear()
+            def api(*args,payload=None):
+                endpoint=next((arg for arg in args if arg.startswith('repos/')),'graphql')
+                if '/matching-refs/' in endpoint:
+                    return [{'ref':'refs/heads/release/v0.2.0','object':{'sha':('a' if committed else 'b')*40}}]
+                if '/compare/' in endpoint:
+                    return {'status':'ahead','ahead_by':1,'behind_by':0,'files':[{'filename':name} for name in changes]}
+                if committed and '/contents/' in endpoint:
+                    path=endpoint.split('/contents/')[1]
+                    return {'content':base64.b64encode(changes[path].encode()).decode()}
+                return original(*args,payload=payload)
+            with patch('prepare.subprocess.check_output',return_value='b'*40),patch('builtins.print'):
+                prepare(self.root,'0.2.0','example/project',api=api)
+            self.assertFalse(any(payload and 'ref' in payload and payload['ref'].startswith('refs/') for _,payload in self.calls))
+            commits=[payload for args,payload in self.calls if args[:2]==('api','graphql')]
+            self.assertEqual(len(commits),0 if committed else 1)
+            self.assertTrue(any('/pulls' in arg and payload for args,payload in self.calls for arg in args))
+
     def test_existing_tag_or_release_blocks_before_writes(self):
         for kind in ("tags", "releases"):
             self.calls.clear()

@@ -74,12 +74,28 @@ def prepare(root, candidate, repository, api=gh):
         pr = prs[0]
     else:
         branches = api("api", f"repos/{repository}/git/matching-refs/heads/{branch}")
-        if any(ref["ref"] == f"refs/heads/{branch}" for ref in branches):
-            raise ValueError("release branch exists without an open pull request")
         sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
-        api("api", "--method", "POST", f"repos/{repository}/git/refs",
-            payload={"ref": f"refs/heads/{branch}", "sha": sha})
-        api("api", "graphql", payload={
+        existing = next((ref for ref in branches if ref['ref'] == f'refs/heads/{branch}'), None)
+        needs_commit = True
+        if existing:
+            head = existing.get('object', {}).get('sha')
+            if head != sha:
+                # Resume only our exact five-file version commit on this main revision.
+                comparison = api('api', f'repos/{repository}/compare/{sha}...{head}')
+                if (comparison.get('status') != 'ahead' or comparison.get('ahead_by') != 1
+                        or comparison.get('behind_by') != 0
+                        or {f['filename'] for f in comparison.get('files', [])} != set(changes)):
+                    raise ValueError('release branch without an open pull request needs reconciliation')
+                for path, expected in changes.items():
+                    content = api('api', '--method', 'GET', f'repos/{repository}/contents/{path}', '-f', f'ref={head}')
+                    if base64.b64decode(content['content']).decode() != expected:
+                        raise ValueError('unexpected release branch contents')
+                needs_commit = False
+        else:
+            api("api", "--method", "POST", f"repos/{repository}/git/refs",
+                payload={"ref": f"refs/heads/{branch}", "sha": sha})
+        if needs_commit:
+            api("api", "graphql", payload={
             "query": "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }",
             "variables": {"input": {
                 "branch": {"repositoryNameWithOwner": repository, "branchName": branch},

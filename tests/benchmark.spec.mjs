@@ -34,10 +34,8 @@ test('failed runner leaves text-free unmet evidence without overwriting it',asyn
   const {spawnSync}=await import('node:child_process');
   const directory=await mkdtemp(join(tmpdir(),'savior-benchmark-'));
   try {
-    const runner=join(directory,'runner'),output=join(directory,'report.json');
+    const runner='target/release/examples/invalid_report'+(process.platform==='win32'?'.exe':''),output=join(directory,'report.json');
     await writeFile(join(directory,'pytorch_model.bin'),'synthetic artifact');
-    // Drain the request so an early exit cannot race the harness's stdin write.
-    await writeFile(runner,'#!/bin/sh\ncat >/dev/null\nprintf \'{"private":"synthetic private canary"}\\n\'\n',{mode:0o700});
     const args=['scripts/benchmark-inference.mjs','--runner',runner,'--fixture','short','--samples','1','--warmup','0','--output',output];
     const options={env:{...process.env,SAVIOR_MODEL_DIR:directory},encoding:'utf8'};
     assert.notEqual(spawnSync(process.execPath,args,options).status,0);

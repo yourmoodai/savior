@@ -1,0 +1,48 @@
+name: promote marketplace
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable published version, without v
+        required: true
+        type: string
+      run_id:
+        description: Successful release workflow run ID
+        required: true
+        type: string
+      expected_head:
+        description: Reviewed marketplace branch SHA, or absent for first promotion
+        required: true
+        type: string
+concurrency:
+  group: marketplace-promotion
+  cancel-in-progress: false
+permissions:
+  contents: read
+  actions: read
+jobs:
+  promote:
+    if: github.ref == 'refs/heads/main'
+    environment: marketplace
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.2
+      - name: verify published evidence and advance marketplace
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SAVIOR_RELEASE_PUBLIC_KEY: ${{ vars.SAVIOR_RELEASE_PUBLIC_KEY }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_RUN: ${{ inputs.run_id }}
+          MARKETPLACE_HEAD: ${{ inputs.expected_head }}
+        run: python3 scripts/release/promote.py "$RELEASE_VERSION" "$RELEASE_RUN" --expected-head "$MARKETPLACE_HEAD"

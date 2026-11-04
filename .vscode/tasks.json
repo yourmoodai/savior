@@ -1,6 +1,9 @@
 {
   "version": "2.0.0",
   "tasks": [
+    {"label":"plan release signing","type":"process","command":"cmake","args":["--workflow","--preset","release_plan"],"problemMatcher":[]},
+    {"label":"test release signing","type":"process","command":"cmake","args":["--build","--preset","release_test"],"problemMatcher":[]},
+    {"label":"prepare signed candidate","type":"process","command":"cmake","args":["--build","--preset","release_candidate"],"problemMatcher":[]},
     {"label":"inspect replacements release","type":"process","command":"npm","args":["run","inspect"],"problemMatcher":[]},
     {"label":"inspect replacements debug","type":"process","command":"npm","args":["run","inspect:debug"],"problemMatcher":["$rustc"]},
     {"label":"test private inspector","type":"process","command":"npm","args":["run","inspect:test"],"problemMatcher":[]},

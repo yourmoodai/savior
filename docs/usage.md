@@ -16,7 +16,7 @@ usable. The intended platforms are Apple silicon Macs and Intel/AMD 64-bit
 Windows or Linux computers with Claude Code installed.
 
 ```sh
-claude plugin marketplace add https://github.com/yourmoodai/savior/releases/latest/download/marketplace.json
+claude plugin marketplace add https://raw.githubusercontent.com/yourmoodai/savior/marketplace/marketplace.json
 claude plugin install savior@yourmood.ai
 ```
 
