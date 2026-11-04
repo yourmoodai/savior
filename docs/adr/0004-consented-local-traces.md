@@ -6,67 +6,51 @@ Date: 2026-10-21
 
 Accepted for implementation following the explicit choice of opt-in full traces,
 local-only storage, seven-day retention, and nonblocking recording failures.
-Supersedes only ADR 1's blanket prohibition on prompt persistence. Its offline
-inference, deterministic replacement, and no-original-fallback rules remain.
+Supersedes only [ADR 1's](0001-local-span-replacement.md) blanket prohibition on
+persistence. Offline inference, deterministic replacement, and no-original-fallback
+rules remain.
 
 ## Context
 
-A trace records what the detector selected, what Savior changed, and what the
-adapter subsequently did. Counts alone cannot explain a disputed replacement;
-human inspection needs the original context and exact output. Those strings
-may contain secrets. Existing personal-review metrics consent permits no text
-storage and cannot authorize this new use.
-
-Keeping only metadata preserves the smallest privacy footprint but cannot
-support contextual inspection. Excerpts reduce exposure but can omit the
-context that distinguishes abuse from quotation. Explicitly consented full
-traces support that inspection while keeping content-free metadata the default.
+Counts cannot explain a disputed edit. Full traces retain the original context
+and exact output, which may contain secrets; excerpts can omit decisive context.
+Existing metrics consent authorizes neither form of text retention.
 
 ## Decision
 
 Rust owns trace admission, span validation, consent generations, and retention.
-The adapter reports its own delivery boundary separately from processing.
-Recording reuses actual detector spans; it does not rerun inference to explain
-an earlier result. Human annotations distinguish profanity removal, targeted
-abuse, and preservation; unresolved judgments remain unresolved.
+Records reuse actual detector spans. The adapter separately reports delivery;
+human annotations distinguish profanity removal, targeted abuse, and preservation.
 
-A private SQLite journal is authoritative. The local inspector queries an
-atomically replaced, revision-bound Parquet projection through embedded DuckDB.
-The bounded first implementation uses one snapshot rather than daily partitions;
-the journal remains available for recovery and regeneration. Annotation changes
-invalidate the projection through the same revision contract.
-
-Downloads belong in XDG-style cache storage; retained records belong in private
-state storage, isolated by profile. The inspector is a loopback web application
-with a per-launch token. No cloud service, remote telemetry, training import, or
-Claude history import is authorized by enabling capture.
+A private SQLite journal is authoritative. The loopback inspector uses a
+per-launch token and an atomically replaced, revision-bound Parquet projection
+queried through embedded DuckDB. The initial single snapshot is invalidated by
+annotation changes; the journal supports recovery and regeneration. Downloads
+use cache storage; retained records use private, profile-isolated state storage.
 
 ## Invariants & Abstention
 
-- Full-text recording defaults off and requires independent explicit consent.
-  Revocation wins over work admitted under an earlier consent generation.
-- Metadata excludes originals, output text, custom marker text, and unkeyed
-  prompt hashes. Errors and logs never include prompt content.
-- A recording failure warns but does not block successfully filtered content.
-  A processing failure still blocks submission; recording cannot create an
-  original-text fallback.
-- Unsafe paths, invalid spans, and incompatible trace schemas are rejected.
-- Retention expires at seven days; storage is bounded within 256 MiB, with
-  conservative capacity reservations that may evict earlier. Expiry runs on
-  capture and inspection, not while Savior is completely stopped.
+- Full-text recording defaults off and requires independent consent. Revocation
+  wins over work admitted under an earlier consent generation.
+- Metadata excludes originals, output, custom markers, and unkeyed prompt hashes.
+  Logs and errors never contain prompt content.
+- Invalid spans, unsafe paths, and incompatible schemas are rejected. Recording
+  failures warn without blocking successful filtering. Processing failures still
+  block submission; recording cannot create an original-text fallback.
+- Retention expires at seven days within a 256 MiB ceiling; conservative capacity
+  reservations can evict earlier. Expiry runs on capture and inspection, not
+  while Savior is stopped.
 - Deletion disables capture and removes managed records, annotations, and
-  projections. User exports and external backups are outside that deletion.
-- A forwarded record is adapter evidence, never proof of provider receipt or
-  approval. Missing model identity or outcome evidence remains unavailable.
+  projections. User exports and backups are outside deletion.
+- Capture grants no cloud telemetry, training import, or Claude-history import.
+  Missing model or outcome evidence remains unavailable; unresolved judgments
+  remain unresolved. Adapter delivery evidence does not prove provider receipt.
 
 ## Consequences
 
-Users can inspect and label individual replacements without opening Claude.
-Parquet exports preserve a versioned event contract for external analysis.
+Users can inspect exact edits and retain context for later review.
+Retained files are private, not encrypted; same-user access, administrators,
+backups, or compromise can expose them. Database contention can cause recording
+gaps. Full traces do not automatically become benchmark fixtures.
 
-Opt-in capture creates sensitive local files; owner-only permissions are not
-encryption and do not protect against the same user, administrators, backups,
-or a compromised machine. Database maintenance and query contention can cause
-recording gaps. Full-text traces are not automatically benchmark fixtures.
-
-Operational commands and limitations belong in [local inspection](../inspection.md).
+[Inspection](../inspection.md) owns commands, storage details, and export format.

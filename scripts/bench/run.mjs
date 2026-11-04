@@ -4,7 +4,7 @@ import {options, failureCode} from './common.mjs';
 import {quality} from './quality.mjs';
 import {e2e} from './e2e.mjs';
 import {performanceScreen, profileScreen, ffiWorker} from './performance.mjs';
-import {report, updateReadme} from './report.mjs';
+import {report, publish_results} from './report.mjs';
 import {save} from './corpus.mjs';
 
 async function main() {
@@ -14,10 +14,13 @@ async function main() {
     console.log(JSON.stringify(await ffiWorker(JSON.parse(input)))); return;
   }
   if(argv.includes('--help') || command==='--help') {
-    console.log('usage: npm run bench:<quality|e2e|performance|profile|all|report|readme> -- --output NEW_PATH [--model DIR] [--corpus FILE] [--limit 200|0] [--profile release|debug] [--host yes|no] [--samples 10] [--warmup 2] [--runs 3] [--timeout-ms 120000] [--annotations FILE] [--retry PERFORMANCE_FILE]\nquality/e2e/performance/profile: output is a new JSON file; all/report/readme: output is a directory. readme explicitly updates the README results block and evidence snapshot. profile runs stage timing separately from latency. retry replays failed performance combinations and cannot pass the full-input screen. limit is per dataset; 0 evaluates all English cases. No evaluation command downloads artifacts. Performance is a screen; use the existing qualification harness for qualification.'); return;
+    console.log('usage: npm run bench:<quality|e2e|performance|profile|all|report|publish> -- --output NEW_PATH [--model DIR] [--corpus FILE] [--limit 200|0] [--profile release|debug] [--host yes|no] [--samples 10] [--warmup 2] [--runs 3] [--timeout-ms 120000] [--annotations FILE] [--retry PERFORMANCE_FILE]\nquality/e2e/performance/profile: output is a new JSON file; all/report/publish: output is a directory. publish updates the docs/evaluation.md results block and evidence snapshot. readme is a deprecated alias for publish. profile runs stage timing separately from latency. retry replays failed performance combinations and cannot pass the full-input screen. limit is per dataset; 0 evaluates all English cases. No evaluation command downloads artifacts. Performance is a screen; use the existing qualification harness for qualification.'); return;
   }
   const config = options(argv);
-  if(command==='readme') { await updateReadme(config.output); return; }
+  if(command==='publish' || command==='readme') {
+    if(command==='readme') process.stderr.write('bench:readme is deprecated; use bench:publish; results are published to docs/evaluation.md\n');
+    await publish_results(config.output); return;
+  }
   if(command==='report') { await report(config.output); return; }
   if(command==='all') {
     await mkdir(config.output,{recursive:false});
