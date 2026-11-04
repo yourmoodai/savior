@@ -32,7 +32,7 @@ export function verify_manifest(bytes, signature, public_key, version, target) {
     if (!valid_digest(entry)) fail('invalid_release_manifest');
     if (manifest.schema === 2 && target === 'darwin-arm64') {
       if (entry.path !== macos_runtime+'/'+name || entry.asset !== undefined) fail('invalid_release_manifest');
-    } else if (!/^[a-zA-Z0-9._-]+$/.test(entry.asset) || entry.path !== undefined) fail('invalid_release_manifest');
+    } else if (!/^[a-zA-Z0-9._+-]+$/.test(entry.asset) || entry.path !== undefined) fail('invalid_release_manifest');
   }
   if (manifest.schema === 2) {
     const inventory = manifest.macos_bundle;

@@ -191,7 +191,7 @@ Jsign, and `osslsigncode`:
 
 ```sh
 docker build -f scripts/release/Dockerfile -t savior-release-tools .
-docker run --rm --network none --volume "$PWD:/workspace:ro" \
+docker run --rm --network none --user "$(id -u):$(id -g)" --volume "$PWD:/workspace:ro" \
   --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release
 ```
 

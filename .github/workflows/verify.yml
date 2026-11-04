@@ -100,7 +100,7 @@ jobs:
           persist-credentials: false
           ref: ${{ github.sha }}
       - run: docker build -f scripts/release/Dockerfile -t savior-release-tools .
-      - run: docker run --rm --volume "$PWD:/workspace:ro" --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release
+      - run: docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/workspace:ro" --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release
   verification:
     if: always()
     needs: [context, tooling, coreml, release-tools]

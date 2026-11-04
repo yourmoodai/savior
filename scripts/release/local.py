@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 import zipfile
 
 import package as packaging
+from archive import validate as validate_sealed_archive
 from macos_bundle import BUNDLE, RUNTIME, LAUNCHER, NODE, create as create_bundle
 
 ROOT = packaging.ROOT
@@ -357,6 +358,7 @@ class Release:
         self.command('node', ROOT/'scripts/release/validate-candidate.mjs', self.candidate,
                      self.secret('manifest_public'))
         validate_archive(self.candidate, self.work_parts, self.version)
+        validate_sealed_archive(self.candidate, self.version)
         report = {'schema': 1, 'version': self.version, 'revision': self.state['binding']['revision'],
                   'checks': self.state['checks'], 'static_integrity': 'passed',
                   'native_os_acceptance': 'not_run', 'smoke_tests': 'not_run', 'publication': 'not_run',

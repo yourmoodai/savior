@@ -17,9 +17,14 @@ export async function verify_release(directory, public_key, version, revision, w
   const expected=new Set(['runtime-manifest.json','runtime-manifest.sig','release-public.pem',
     'marketplace.json','SHA256SUMS',`savior-${version}.zip`]);
   let runtime;
+  const runtime_files=new Map();
   for(const target of ['darwin-arm64','linux-x64','win32-x64']) {
     runtime=verify_manifest(runtime_bytes,runtime_signature,public_key,version,target);
-    for(const file of runtime.targets[target]) if(file.asset) expected.add(file.asset);
+    for(const file of runtime.targets[target]) if(file.asset) {
+      if(expected.has(file.asset)) throw Error('duplicate_release_asset');
+      expected.add(file.asset);
+      runtime_files.set(file.asset,file);
+    }
   }
   const assets=envelope.assets;
   if(!assets || Object.keys(assets).length!==expected.size || Object.keys(assets).some(name=>!expected.has(name))) throw Error('release_inventory_mismatch');
@@ -31,6 +36,8 @@ export async function verify_release(directory, public_key, version, revision, w
     if(!/^[a-zA-Z0-9._+-]+$/.test(name) || !/^[a-f0-9]{64}$/.test(digest)) throw Error('invalid_release_inventory');
     const path=join(directory,name), stat=await lstat(path);
     if(!stat.isFile() || stat.isSymbolicLink() || stat.nlink!==1) throw Error('unsafe_release_asset');
+    const runtime_file=runtime_files.get(name);
+    if(runtime_file && (runtime_file.sha256!==digest || runtime_file.bytes!==stat.size)) throw Error('runtime_inventory_mismatch');
     const hash=createHash('sha256');
     for await(const chunk of createReadStream(path)) hash.update(chunk);
     if(hash.digest('hex')!==digest) throw Error('release_digest_mismatch');
