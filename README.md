@@ -37,15 +37,24 @@ plugin installation path.
 
 ## See what changed
 
-Open `/savior` to inspect the latest original and replacement. For later review,
-you can opt into private local records and open them in a browser.
+Open `/savior` to inspect the latest original and replacement. For a live
+two-terminal demo, start this from your built source checkout in the second
+terminal, then submit prompts in Claude Code using the same profile:
+
+```sh
+node bridge/cli.mjs watch
+```
+
+The default view shows the flagged phrases. Choose `--view span-diff` for
+before/after edits or `--view prompt-diff` for the full prompt with edits.
+The feed keeps no history; `Ctrl+C` stops it.
 [Inspection and optional saved history](docs/inspection.md) explains the choices.
 
 ## What stays under your control
 
-You choose the replacement, whether to inspect it, and whether to retain
+You choose the replacement, whether to watch it happen, and whether to retain
 local inspection records. Savior does not send prompts to a remote detector.
-Full-text recording is off by default.
+Full-text recording is off by default; watching does not turn it on.
 
 Savior can miss language or select wording you wanted to keep. It cannot
 guarantee protection from account restrictions or policy enforcement. Claude
@@ -56,7 +65,7 @@ host, voice features, or other plugins never expose original text.
 ## Learn more
 
 - [Everyday use and settings](docs/usage.md)
-- [Inspect replacements](docs/inspection.md)
+- [Watch and inspect replacements](docs/inspection.md)
 - [Evidence and limitations](docs/evaluation.md)
 - [Build, contribute, or extend Savior](CONTRIBUTING.md)
 - [Moving from an earlier name](docs/migration.md)

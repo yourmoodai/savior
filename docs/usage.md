@@ -34,7 +34,8 @@ Slash commands and non-composer submissions bypass this integration.
 
 Open `/savior` to see the latest original and replacement. That inspection
 does not add either text to model context and is cleared when the session starts
-or ends. The [inspection guide](inspection.md) covers optional saved records.
+or ends. The [inspection guide](inspection.md) covers live terminal viewing and
+optional saved records.
 
 ### Choose a replacement
 
@@ -65,8 +66,9 @@ there is no fallback that forwards the original.
 Savior's inference stays offline. Model and runtime downloads happen during
 setup. Savior does not log original prompts; full-text persistence requires
 separate opt-in [inspection recording](inspection.md#saved-history).
-Personal-review metrics do not enable that recording. Exports and backups can
-create copies outside Savior's retention controls.
+Live watching and personal-review metrics do not enable that recording.
+Redirecting watcher output, terminal recording, exports, and backups can create
+copies outside Savior's retention controls.
 
 Claude Code owns the prompt box. Savior cannot prove the absence of host
 telemetry, other plugin behavior, crash reports, terminal capture, or voice
@@ -98,6 +100,7 @@ provide an enforcement guarantee.
 | --- | --- |
 | Savior is not ready | Open `/savior` and retry setup. For a source build, run `node bridge/cli.mjs doctor` with your model configured. |
 | Submission is blocked | Review the draft, resolve protected-text conflicts or configuration errors, then resubmit. A failed older submission will not overwrite a newer draft. |
+| No events in the watcher | Use the updated plugin and the same `CLAUDE_CONFIG_DIR` in both terminals. Only new successful rewrites with replacements appear. |
 | A recording gap | Filtering and recording are independent. The edit may have succeeded even though an inspection record could not be saved. |
 | Downloaded runtime cannot start | Follow the [setup recovery guide](releases.md#setup-recovery); keep operating-system protections enabled. |
 
@@ -128,7 +131,7 @@ Set these before starting Claude. Invalid options fail explicitly.
 | `SAVIOR_THRESHOLD` | Optional threshold, greater than zero and at most one |
 | `SAVIOR_POLICY` | `offensive_spans` by default; `directed_abuse` needs a matching head |
 | `SAVIOR_JUDGE_CONFIG` | Optional prepared local `judge.json` after review is enabled |
-| `CLAUDE_CONFIG_DIR` | Claude profile shared by the plugin and inspection tools |
+| `CLAUDE_CONFIG_DIR` | Claude profile shared by the plugin, watcher, and inspection tools |
 | `LOG_LEVEL` | `silent` suppresses processing diagnostic codes |
 
 Library interfaces and versioned CLI requests are documented in
