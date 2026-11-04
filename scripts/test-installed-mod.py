@@ -83,6 +83,21 @@ def draft_visible(output, text):
     return '❯' in visible and ''.join(visible.rsplit('❯', 1)[-1].split()).startswith(''.join(text.split()))
 
 
+def ui_has_text(output, text):
+    visible = re.sub(rb'\x1b\[[0-?]*[ -/]*[@-~]', b'', output).decode('utf-8', errors='replace')
+    # The host positions word gaps with cursor moves when redrawing pane labels.
+    return ''.join(text.split()) in ''.join(visible.split())
+
+
+def host_cache_environment(plugin, home, prepared_cache=None):
+    cache = home / 'cache'
+    if prepared_cache:
+        cache = Path(prepared_cache).resolve()
+        if cache != plugin.resolve() / 'cache':
+            raise ValueError('unsafe_host_cache')
+    return {'XDG_CACHE_HOME': str(cache), 'LOCALAPPDATA': str(cache)}
+
+
 def provider_has_text(body, text):
     for message in body.get('messages', []):
         if message.get('role') != 'user':
@@ -161,6 +176,8 @@ def main():
         server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Provider)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         env = {"PATH": os.environ["PATH"], "HOME": str(home), "CLAUDE_CONFIG_DIR": str(profile), "TERM": "xterm-256color", "ANTHROPIC_API_KEY": "synthetic-local-key", "ANTHROPIC_BASE_URL": f"http://127.0.0.1:{server.server_port}", "SAVIOR_MODEL_DIR": str(Path(model).resolve()), "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1", "DISABLE_AUTOUPDATER": "1", "DISABLE_TELEMETRY": "1", "DISABLE_ERROR_REPORTING": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1", "ENABLE_CLAUDEAI_MCP_SERVERS": "false", "OTEL_SDK_DISABLED": "true"}
+        # Candidate assets live in the gate's private cache until publication.
+        env.update(host_cache_environment(root, home, os.environ.get('SAVIOR_HOST_CACHE')))
         env["SAVIOR_DETECTOR"] = os.environ.get("SAVIOR_DETECTOR", "bert")
         env["SAVIOR_REPLACEMENT_STRATEGY"] = strategy
         env['SAVIOR_HOST_SCENARIO'] = scenario
@@ -229,11 +246,11 @@ def main():
                     terminal.write(b'm')
                     host_event('metrics')
                     stage='metrics';output=b'';deadline=time.monotonic()+30
-                elif stage=='metrics' and b'enable live metrics and sampled local judge' in visible:
+                elif stage=='metrics' and ui_has_text(output, 'enable live metrics and sampled local judge'):
                     terminal.write(b'l')
                     host_event('consent')
                     stage='consent';output=b'';deadline=time.monotonic()+30
-                elif stage=='consent' and b'disable live metrics' in visible:
+                elif stage=='consent' and ui_has_text(output, 'disable live metrics'):
                     state=bridge_request(['node',str(root/'bridge/review.mjs')],{'command':'status'},env,stage)
                     if state['consent']['live'] is not True or state['consent']['history'] is not False:
                         raise RuntimeError('consent: ui_worker_mismatch')

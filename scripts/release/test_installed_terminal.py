@@ -4,6 +4,7 @@ import subprocess
 import sys
 import unittest
 import importlib.util
+import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 spec = importlib.util.spec_from_file_location('installed', Path(__file__).resolve().parents[1] / 'test-installed-mod.py')
@@ -12,6 +13,26 @@ spec.loader.exec_module(installed)
 
 
 class InstalledTerminalTests(unittest.TestCase):
+    def test_host_cache_preserves_only_the_candidate_fixture(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            plugin, home = root / 'plugin', root / 'home'
+            prepared = plugin / 'cache'
+            self.assertEqual(installed.host_cache_environment(plugin, home),
+                             {'XDG_CACHE_HOME': str(home / 'cache'), 'LOCALAPPDATA': str(home / 'cache')})
+            self.assertEqual(installed.host_cache_environment(plugin, home, str(prepared)),
+                             {'XDG_CACHE_HOME': str(prepared), 'LOCALAPPDATA': str(prepared)})
+            with self.assertRaisesRegex(ValueError, 'unsafe_host_cache'):
+                installed.host_cache_environment(plugin, home, str(root / 'user-cache'))
+
+    def test_pane_labels_accept_cursor_positioned_word_gaps(self):
+        self.assertTrue(installed.ui_has_text(b'enable\x1b[1Clive metrics and sampled local judge',
+                                              'enable live metrics and sampled local judge'))
+        self.assertTrue(installed.ui_has_text(b'disable\x1b[1Clive\x1b[1Cmetrics', 'disable live metrics'))
+        self.assertFalse(installed.ui_has_text(b'enable live metrics', 'disable live metrics'))
+        self.assertFalse(installed.ui_has_text(b'enable live metrics',
+                                               'enable live metrics and sampled local judge'))
+
     def test_draft_readiness_requires_the_latest_prompt_marker(self):
         self.assertTrue(installed.draft_visible('❯ You\u00a0idiot, keep it.'.encode(), 'You idiot, keep it.'))
         self.assertTrue(installed.draft_visible('❯ You \x1b[31midiot,\x1b[0m keep it.'.encode(), 'You idiot, keep it.'))
