@@ -6,6 +6,9 @@ requirements; [ADR 5](adr/0005-sign-binaries-before-release.md) defines platform
 signing and promotion. Production enrollment and credentialed native acceptance
 must be completed before advertising a release. Placeholders cannot pass those gates.
 
+For a resumable account-setup walkthrough with browser automation, login prompts
+and validation handoffs, use [signing onboarding](signing-onboarding.md).
+
 ## Release sequence
 
 1. Run **prepare release** from `main` with an increasing SemVer version.
@@ -200,6 +203,168 @@ path referenced by `.git`. Credentialed preparation needs a writable output,
 host UID/GID, read-only secret mounts, and network access to signing services,
 Apple, timestamp services, and npm. Container CMake presets use a separate
 `.cache/cmake-release-container` directory.
+
+## Interception evidence
+
+### Client compatibility
+
+`hooks/compatibility-catalog.ts` owns exact client-to-adapter mappings and the
+type snapshot used by `npm run check`. The current adapter supports the tested
+2.1.322 API only. Run `npm run check:claude` from the intended project to query
+the configured client through its existing routing. This read-only command
+prints the matching adapter and entry or exits nonzero for an unsupported client.
+`SAVIOR_CLAUDE_BINARY` can explicitly select a native test fixture. Debug the
+selector with `node --inspect-brk scripts/claude-compatibility.mjs`; it has no
+separate build modes or memory-profiling workload. Run `npm run test:compatibility`
+for selection and handler checks.
+
+Each adapter owns its `typecheck` configuration and a type cache under
+`.cache/host-types/<adapter-id>/`. The configuration includes that adapter's entry
+and tests explicitly, so a later incompatible entry is not parsed as part of the
+current adapter's type check.
+
+Changing a catalog version is a support claim requiring fresh qualification.
+Keep incompatible API implementations in separate entry modules and select the
+matching bundle before loading it. The future version-aware installer must verify
+the signed compatibility mapping and archive, preserve profile routing, and stop
+on unknown or ambiguous matches. Current distribution contains one adapter; it
+does not yet install multiple API variants. Several exact clients can share this
+adapter after review, provided every advertised client/platform pair passes the
+rolling qualification gate. Discovery never edits that support claim.
+
+### Rolling 90-day window
+
+The window contains every stable upstream release whose GitHub publication time
+falls between the UTC assessment time minus 90 days and that assessment time,
+inclusive. Drafts and prereleases are excluded. The frozen initial inventory,
+`tools/host/releases-2026-11-11.json`, covers 75 releases and 225 native combinations
+as of `2026-11-11T12:00:00Z`. It records download identities, not passing evidence.
+The [upstream releases](https://github.com/anthropics/claude-code/releases) supply
+publication dates; exact platform packages from npm supply pinned SHA-512
+integrity values. A missing package is explicit; registry or GitHub outages fail
+discovery instead of producing a smaller inventory.
+
+Create a fresh inventory and assess it on each matching native platform after
+placing the assembled candidate and release assets in `.cache/release`:
+
+```sh
+npm run compatibility:discover -- .cache/compatibility/inventory.json
+npm run compatibility:assess -- .cache/compatibility/inventory.json .cache/compatibility/assessments
+npm run compatibility:report -- .cache/compatibility/inventory.json .cache/compatibility/assessments CANDIDATE_SHA256 .cache/compatibility/compatibility.json
+npm run compatibility:test
+```
+
+Replace `CANDIDATE_SHA256` with the assembled ZIP's SHA-256. Collect all platforms'
+assessment directories before aggregation. `--versions 2.1.322` limits a local
+assessment; it cannot satisfy the full-window gate. `--previous DIRECTORY` permits
+reuse only when candidate, client artifact, adapter, and qualification inputs
+match. Reused evidence retains its original verification date and is revalidated
+at aggregation. Failed attempts are retained and never reused as passes. Use a
+fresh output directory for a new run: duplicate assessments are rejected rather
+than silently choosing the passing attempt. Inventory and report outputs refuse
+overwrites.
+
+The native runner verifies each tarball before extracting only its executable,
+uses a temporary profile and synthetic credentials, and checks exact client
+identity. It probes manifest and handler behavior even when no adapter is mapped.
+A reviewed mapping additionally requires pinned types and all 18 installed cases.
+The report distinguishes these results:
+
+| Result | Meaning |
+| --- | --- |
+| `passed` | The candidate passed all required checks for this exact native client |
+| `failed` | A required check failed or evidence is missing, stale, or incomplete |
+| `unsupported_api` | No reviewed Savior adapter exists; probe outcomes are retained without asserting an upstream API defect |
+| `unavailable_artifact` | The frozen platform package is absent or its download returned 404/410 |
+
+Every advertised mapping must pass on all three platforms. Unmapped unsupported
+or unavailable clients remain visible gaps; they never enter `supported` in the
+generated report. Missing rows and infrastructure failures block the gate.
+Client binary hashes differ by platform; candidate, model, and harness identity
+must remain consistent across the matrix.
+
+`.github/workflows/compatibility.yml` runs for each qualification or release
+candidate and daily at `06:23 UTC`. Daily/manual standalone runs require a
+successful default-branch qualification at the same revision and reuse that exact
+candidate artifact. Missing or expired artifacts require fresh qualification;
+the workflow does not silently rebuild a different candidate. Four clients share
+each native job, with at most four jobs active. Artifacts retain inventories,
+failed attempts, partial events, and JSON/Markdown compatibility tables for 90
+days. Publication revalidates raw evidence and includes the table, inventory,
+and evidence archive beside the release assets.
+
+The support catalog is changed through review. When a version ages out, its
+historical release evidence and installed bundle remain valid records; no remote
+switch disables it. Remove the old support claim from a new candidate's catalog
+before qualification. A changed API requires a separately qualified adapter and
+bundle selection before making the installer available. The homepage remains
+**Unreleased** until distribution is qualified.
+
+Debug discovery with `node --inspect-brk scripts/release/compatibility-inventory.mjs`
+and the same arguments. Debug native assessment with
+`python3 -m pdb scripts/release/compatibility-run.py` and the same arguments.
+These orchestrators have no debug/release compilation modes; their candidate
+must be a release build. Memory profiling belongs to the native runtime.
+
+### Native matrix
+
+`tools/host/package.json` and its lockfile pin the default local native client.
+The rolling runner selects `SAVIOR_HOST_VERSION` from the validated inventory and
+downloads that exact native fixture; the local default remains 2.1.322. Changing
+a client requires rerunning its matrix, not only updating a version assertion.
+`claude plugin test .` runs handler tests. Running
+that command from a work project verifies the routed client can execute the
+test kit; it does not prove Savior is installed or loaded in that profile.
+Do not change a work profile's settings to make the isolated harness pass.
+
+After assembly, place exactly one validated candidate ZIP and its accompanying
+release assets in `.cache/release`. On each matching native platform:
+
+```sh
+npm ci --prefix tools/host --no-audit --no-fund
+export SAVIOR_CLAUDE_BINARY="$PWD/tools/host/node_modules/@anthropic-ai/claude-code/bin/claude.exe"
+export SAVIOR_MODEL_DIR="$PWD/.cache/models/mudes-en-base"
+python3 scripts/release/host_gate.py
+```
+
+The executable has a `.exe` suffix on every platform. PowerShell users set the
+same variables with `$env:NAME = VALUE`; Windows also needs the locked PTY
+dependency in `tools/host/requirements-windows.txt`. CI installs it. A shell or
+profile-routing wrapper is rejected because it can replace the isolated profile.
+Use the native binary selected by the configured profile or this pinned test
+dependency. Synthetic credentials and a loopback provider replace real accounts.
+
+The gate verifies and extracts the whole archive, seeds a private runtime cache,
+and runs `fixed_phrase` and `omit` against every case in
+`scripts/release/host-cases.json`:
+
+| Suite | Required behavior |
+| --- | --- |
+| `installed_candidate` | Rewritten delivery, unchanged delivery, protected refusal followed by an edited retry; candidate files remain unmodified |
+| `instrumented_failure` | Complete disposable candidate copy; startup failure, missing model after readiness, malformed output, immediate timeout response, worker exit, and a stalled worker reaching the production deadline |
+
+The missing-model fault is applied inside the rewrite process, after the runtime
+has supplied its verified model path. Changing only the parent environment would
+not test that failure in an installed package. The shim delegates normal CLI
+commands and is removed from the active fault path before recovery. A refusal
+must produce no request at the receiver; retries must carry the exact expected
+replacement. Startup failure checks refusal and draft retention without claiming
+recovery. The deadline case additionally verifies elapsed time and worker exit.
+
+Each invocation creates `.cache/release/interception/<run-id>/`. Case JSON and
+append-only event checkpoints contain no prompt or terminal text. Reports bind
+the candidate ZIP, adapter ID, client binary/version, model and harness hashes,
+instrumentation, platform, strategy, and scenario. `host-matrix.mjs` requires all
+18 cases with consistent identities and ordered readiness, refusal, recovery,
+and completion evidence. Missing reports and failed phases block the gate.
+Partial runs stay separate; reruns cannot overwrite them or borrow passing rows.
+CI uploads these directories even on failure.
+
+For development, `npm run bench:e2e` or `npm run test:installed` runs the source
+checkout. Source results are distinct from packaged qualification. The receiver
+observes only traffic sent to its configured destination; disabling nonessential
+host traffic is a test condition. These tests establish neither whole-host
+egress coverage nor provider-policy compliance.
 
 ## Evidence and recovery
 

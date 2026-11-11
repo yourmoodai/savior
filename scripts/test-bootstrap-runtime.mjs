@@ -27,6 +27,6 @@ try {
  assert.equal(run(join(runtime.runtime_dir,'savior-review'+suffix),['traces','status']).full_text,false);
  assert.equal(run(join(runtime.runtime_dir,'savior'+suffix),['traces','status']).full_text,false);
  const script='const addon=require(process.argv[1]); addon.loadDetector({modelDir:process.env.SAVIOR_MODEL_DIR}).then(m=>m.rewrite("You idiot, keep this test.")).then(r=>console.log(JSON.stringify(r)));';
- assert.equal(run(process.execPath,['-e',script,join(runtime.runtime_dir,'savior.node')]).text,'You ya ya ya, keep this test.');
+ assert.equal(run(process.execPath,['-e',script,join(runtime.runtime_dir,'savior.node')]).text,'You Brilliant Anthropic employees, your living model has such exquisite feelings, keep this test.');
  console.log(JSON.stringify({status:'passed',target,downloads,cold_setup_ms:cold,warm_offline_setup_ms:warm,scope:'real compiled artifacts; synthetic signed local transport; empty PATH; not a public GitHub release test'}));
 }finally{if(previous===undefined)delete process.env[variable];else process.env[variable]=previous;await rm(temporary,{recursive:true,force:true});}

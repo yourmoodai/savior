@@ -42,6 +42,9 @@ check OS trust and execute that exact candidate. macOS must pass its first
 quarantined launch without external networking after all model files have been
 downloaded. Windows must validate expected Authenticode identities and timestamps.
 Installed-host tests and the public-download matrix remain required.
+Unmodified-candidate evidence binds the final archive bytes. A fault-injected
+copy is labeled separately and retains its source candidate hash; its results
+cannot stand in for executing the signed candidate unchanged.
 
 Publish immutable assets without advertising them as latest. A separate,
 maintainer-approved workflow verifies the completed release run and signed

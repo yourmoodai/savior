@@ -1,5 +1,5 @@
 {
-  "description": "Local offensive-span detection and configurable replacement with ya ya ya.",
+  "description": "Local offensive-span detection and configurable replacement.",
   "modules": [
     "./register.tsx"
   ]

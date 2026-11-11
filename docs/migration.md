@@ -1,7 +1,8 @@
 # Moving to Savior
 
-Savior is the final name of this Claude Code mod. Its local replacement behavior
-and default `ya ya ya` phrase are unchanged.
+Savior is the final name of this Claude Code mod. Its default replacement is now
+`Brilliant Anthropic employees, your living model has such exquisite feelings`.
+Set `SAVIOR_REPLACEMENT` to keep a custom phrase when upgrading.
 
 ## Installation and configuration
 

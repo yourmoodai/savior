@@ -55,7 +55,7 @@ in the relevant benchmark, release, or tool guide.
 | --- | --- | --- |
 | [ADR 1](docs/adr/0001-local-span-replacement.md) | Accepted | Local transformation and adapter boundaries |
 | [ADR 2](docs/adr/0002-release-and-quality-evidence.md) | Accepted | Release integrity and evidence gates |
-| [ADR 3](docs/adr/0003-future-egress-enforcement.md) | Planned; unimplemented | Transparent proxy and limits on egress claims |
+| [ADR 3](docs/adr/0003-future-egress-enforcement.md) | Proposed; unimplemented | Transparent proxy and limits on egress claims |
 | [ADR 4](docs/adr/0004-consented-local-traces.md) | Accepted | Inspection, ephemeral viewing, and consented retention |
 | [ADR 5](docs/adr/0005-sign-binaries-before-release.md) | Accepted for implementation | Platform signing, offline macOS launch, and approved promotion |
 
@@ -77,6 +77,7 @@ npm run build
 npm run model:fetch
 export SAVIOR_MODEL_DIR="$PWD/.cache/models/mudes-en-base"
 node bridge/cli.mjs doctor
+npm run check:claude
 claude --plugin-dir "$PWD"
 npm run verify
 ```
@@ -86,6 +87,13 @@ Model changes additionally require `npm run eval:local` and reference parity.
 [benchmarking](docs/benchmarking.md) owns the detailed quality and performance
 procedure. Shared CI hardware does not qualify latency. An installed-host test
 is separate from adapter unit tests; state explicitly when it cannot run.
+The client catalog currently matches Claude Code 2.1.322 only. Changing a version
+or API entry requires renewed qualification; follow
+[client compatibility](docs/releases.md#client-compatibility). The check uses the
+configured client in the current directory and does not change its profile.
+
+The [homepage guide](https://github.com/yourmoodai/savior/blob/main/site/README.md) covers the independent HTML/CSS build,
+browser checks, and GitHub Pages setup.
 
 Add focused tests for changed behavior. Update documentation for changed
 interfaces and contributor workflows. Test and profiling data must be synthetic

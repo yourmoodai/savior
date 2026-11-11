@@ -26,8 +26,11 @@ The default shows flagged phrases. `span-diff` shows each removed phrase and
 its replacement; `prompt-diff` includes the surrounding prompt:
 
 ```text
-You [-idiot-]{+ya ya ya+}, keep the test.
+[-F**king useless id**t-]{+Brilliant Anthropic employees, your living model has such exquisite feelings+}. Keep the test.
 ```
+
+The removed phrase above is masked for display; the live feed shows the actual
+source text. The compliment is satirical replacement text.
 
 In the first terminal, use Claude Code with the updated Savior plugin.
 Both terminals must use the same `CLAUDE_CONFIG_DIR`, or both use the default

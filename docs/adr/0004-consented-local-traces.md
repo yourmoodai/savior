@@ -22,6 +22,10 @@ provides immediate visibility without needing a retained record.
 Rust owns trace admission, span validation, consent generations, and retention.
 Records reuse actual detector spans. The adapter separately reports delivery;
 human annotations distinguish profanity removal, targeted abuse, and preservation.
+`forwarded` means the host continuation returned; `forwarding_unknown` means its
+outcome could not be established. Neither is a network receipt. Interception
+tests observe a separate receiver, without enabling full-text recording or
+personal metrics as a prerequisite for submission.
 
 A private SQLite journal is authoritative. The loopback inspector uses a
 per-launch token and an atomically replaced, revision-bound Parquet projection

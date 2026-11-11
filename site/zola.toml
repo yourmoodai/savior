@@ -1,0 +1,16 @@
+base_url = "https://savior.yourmood.ai"
+title = "Savior — depersonalize your prompt"
+description = "Express yourself. Choose what you send. A local, open source Claude mod."
+compile_sass = false
+build_search_index = false
+minify_html = false
+
+[extra]
+release_status = "unreleased"
+release_label = "Unreleased · Under construction"
+installation_notice = "Available with the first release. These commands do not install Savior yet."
+installation = """
+claude plugin marketplace add https://raw.githubusercontent.com/yourmoodai/savior/marketplace/marketplace.json
+claude plugin install savior@yourmood.ai"""
+source_url = "https://github.com/yourmoodai/savior"
+build_url = "https://github.com/yourmoodai/savior/blob/main/CONTRIBUTING.md#development"

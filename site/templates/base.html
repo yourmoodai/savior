@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>{% block title %}{{ config.title }}{% endblock title %}</title>
+  <meta name="description" content="{{ config.description }}">
+  <link rel="canonical" href="{{ current_url | default(value=config.base_url) }}">
+  <link rel="icon" href="{{ get_url(path='savior.svg') | replace(from=config.base_url, to='') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ get_url(path='style.css') | replace(from=config.base_url, to='') }}">
+</head>
+<body data-release-status="{{ config.extra.release_status }}">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="masthead">
+    <a class="wordmark" href="/" aria-label="Savior home"><img src="{{ get_url(path='savior.svg') | replace(from=config.base_url, to='') }}" width="32" height="32" alt="">savior<span class="wordmark-dot">.</span></a>
+    <a class="release-pill" href="/#install">{{ config.extra.release_label }}</a>
+    <a class="source-link" href="{{ config.extra.source_url }}">Source ↗</a>
+  </header>
+  <main id="main">{% block content %}{% endblock content %}</main>
+  <footer><a class="wordmark" href="/">savior.</a><p>Your words. Your machine. Your choice.</p><a href="{{ config.extra.source_url }}/blob/main/LICENSE">AGPL-3.0-or-later ↗</a></footer>
+</body>
+</html>

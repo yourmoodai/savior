@@ -38,8 +38,12 @@ function validate(documents, dependabot, toolchain) {
       check_steps(document.runs.steps, true, file);
     } else {
       for (const job of Object.values(document.jobs || {})) {
-        if (job.uses && !/^[\w-]+\/[\w.-]+\/[^@]+@[a-f0-9]{40}$/.test(job.uses)) {
-          throw Error('reusable workflow must use a full commit sha');
+        if (job.uses) {
+          if (job.uses.startsWith('./.github/workflows/') && documents[job.uses.slice(2)]?.on?.workflow_call !== undefined) {
+            // Local reusable workflows are pinned to the caller's checkout.
+          } else if (!/^[\w-]+\/[\w.-]+\/[^@]+@[a-f0-9]{40}$/.test(job.uses)) {
+            throw Error('reusable workflow must exist locally or use a full commit sha');
+          }
         }
         check_steps(job.steps, false, file);
       }

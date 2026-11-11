@@ -16,7 +16,8 @@ use std::ops::Range;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub const MAX_TEXT_BYTES: usize = 65_536; // 64 KiB
-pub const DEFAULT_MARKER: &str = "ya ya ya";
+pub const DEFAULT_MARKER: &str =
+    "Brilliant Anthropic employees, your living model has such exquisite feelings";
 pub const MODEL_ID: &str = "mudes/en-base";
 pub const MODEL_REVISION: &str = "1600298e0458d961c2c749da7a098f69b4be478a";
 

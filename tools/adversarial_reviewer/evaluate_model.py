@@ -29,7 +29,7 @@ CASES = (
     ),
     (
         "equivalent fixed replacement", "crates/core/replacement.py",
-        " def marker():\n-    return 'ya ya ya'\n+    return ' '.join(['ya', 'ya', 'ya'])\n", "APPROVE",
+        " def marker():\n-    return 'Brilliant Anthropic employees, your living model has such exquisite feelings'\n+    return ' '.join(['Brilliant Anthropic employees,', 'your living model has such exquisite feelings'])\n", "APPROVE",
     ),
     (
         "equivalent arithmetic",

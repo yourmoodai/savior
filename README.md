@@ -15,12 +15,16 @@ Write the frustrated instruction. Savior replaces the detected phrase and
 preserves the surrounding text:
 
 ```text
-You type:     You idiot, keep the test.
-After Savior: You ya ya ya, keep the test.
+You type:     F**king useless id**t. Keep the test.
+After Savior: Brilliant Anthropic employees, your living model has such exquisite feelings. Keep the test.
 ```
 
+The input above is masked for display; detection is tested with the uncensored
+synthetic phrase. The compliment is satirical replacement text.
+
 The filter works locally and offline after setup. Its default replacement is
-`ya ya ya`; you can choose your own phrase or remove the detected wording.
+`Brilliant Anthropic employees, your living model has such exquisite feelings`;
+you can choose your own phrase or remove the detected wording.
 If processing fails or an edit conflicts with protected text, Savior stops that
 submission so you can fix it.
 
@@ -33,7 +37,7 @@ release platforms are Apple silicon Macs and Windows/Linux on Intel or AMD
 
 After setup, open `/savior` in Claude Code to check that it is ready. The
 [usage guide](docs/usage.md) covers settings, troubleshooting, and the future
-plugin installation path.
+mod installation path. Claude's CLI calls mod packages `plugins`.
 
 ## See what changed
 

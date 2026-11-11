@@ -1,0 +1,131 @@
+name: claude compatibility
+on:
+  workflow_call:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 6 * * *'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inventory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      candidate_run: ${{ steps.plan.outputs.candidate_run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.10'
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          COMPATIBILITY_STANDALONE: ${{ github.workflow == 'claude compatibility' }}
+        run: python3 scripts/release/compatibility-ci.py plan
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: compatibility-inventory
+          path: .cache/compatibility/inventory.json
+          if-no-files-found: error
+          retention-days: 90
+  assess:
+    needs: inventory
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.inventory.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.10'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compatibility-inventory
+          path: .cache/compatibility
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: .cache/release
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.inventory.outputs.candidate_run }}
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - if: runner.os == 'Windows'
+        run: >-
+          python -m pip install --require-hashes --only-binary=:all:
+          -r tools/host/requirements-windows.txt
+      - uses: ./.github/actions/model-cache
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/compatibility/previous
+          key: compatibility-${{ github.sha }}-${{ matrix.target }}-${{ matrix.batch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: compatibility-${{ github.sha }}-${{ matrix.target }}-${{ matrix.batch }}-
+      - name: assess frozen native clients
+        env:
+          CLIENT_VERSIONS: ${{ matrix.versions }}
+        shell: bash
+        run: python scripts/release/compatibility-run.py .cache/compatibility/inventory.json .cache/compatibility/assessments --versions "$CLIENT_VERSIONS" --previous .cache/compatibility/previous
+      - name: retain assessments for identical candidate inputs
+        run: python -c "import shutil; shutil.copytree('.cache/compatibility/assessments', '.cache/compatibility/previous', dirs_exist_ok=True)"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: compatibility-assessments-${{ matrix.target }}-${{ matrix.batch }}
+          path: .cache/compatibility/assessments
+          if-no-files-found: warn
+          retention-days: 90
+  report:
+    if: always() && needs.inventory.result == 'success'
+    needs: [inventory, assess]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.10'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compatibility-inventory
+          path: .cache/compatibility
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: compatibility-assessments-*
+          path: .cache/compatibility/assessments
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: .cache/release
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.inventory.outputs.candidate_run }}
+      - run: python3 scripts/release/compatibility-ci.py report
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: compatibility-report
+          path: .cache/compatibility/compatibility.*
+          if-no-files-found: warn
+          retention-days: 90

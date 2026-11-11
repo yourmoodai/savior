@@ -2,10 +2,12 @@ import type { On } from 'claude-code';
 import { read_result, max_text_bytes, max_output_bytes } from '../src/protocol';
 import { PersonalReview } from './review';
 import { Runtime } from './runtime';
+import { ClientCompatibility } from './compatibility';
 
 export function register(on: On) {
   const review = new PersonalReview();
   const runtime = new Runtime();
+  const compatibility = new ClientCompatibility();
   let latest: { original: string; replacement: string } | null = null;
   let generation = 0;
   let submitted = 0;
@@ -19,7 +21,12 @@ export function register(on: On) {
       invalidate: () => { $.ui.invalidate('ui.render'); },
     };
     latest = null; generation += 1;
-    await runtime.start({plugin:{root:$.plugin.root},process:{run:(argv,init)=>$.process.run(argv,init)}});
+    compatibility.reset();
+    if (await compatibility.check(() => $.session.version())) {
+      await runtime.start({plugin:{root:$.plugin.root},process:{run:(argv,init)=>$.process.run(argv,init)}});
+    } else {
+      runtime.ready = false; runtime.status = compatibility.status;
+    }
     if (runtime.ready) await review.start(host);
     await $.command.register({ name: 'savior', description: 'inspect the latest local replacement', immediate: true });
     return next(e);
@@ -38,7 +45,7 @@ export function register(on: On) {
   });
   on('command.run', { command: 'savior' }, async ($) => {
     await $.ui.open({ id: 'savior', title: 'local replacement', focus: true, closeOnEscape: true });
-    if (!runtime.ready) { await runtime.start({plugin:{root:$.plugin.root},process:{run:(argv,init)=>$.process.run(argv,init)}}); $.ui.invalidate('ui.render'); }
+    if (!runtime.ready && await compatibility.check(() => $.session.version())) { await runtime.start({plugin:{root:$.plugin.root},process:{run:(argv,init)=>$.process.run(argv,init)}}); $.ui.invalidate('ui.render'); }
     return {};
   });
   on('prompt.submit', async ($, e, next) => {
@@ -51,6 +58,7 @@ export function register(on: On) {
     };
     // The host API calls input from the prompt box 'composer'.
     if (e.origin.kind !== 'composer' || e.text.trimStart().startsWith('/')) return next(e);
+    if (!await compatibility.check(() => $.session.version())) return {drop:compatibility.status};
     const current_generation = generation;
     const submission = ++submitted;
     let trace_id: string | undefined;
@@ -72,16 +80,8 @@ export function register(on: On) {
         } catch {trace_warning='recording gap: failed submission was not saved';}
       }
       await disposition(next.signal.aborted || generation !== current_generation ? 'cancelled' : 'blocked');
-      // A refusal stops delivery but does not restore the draft to the prompt box.
-      // Never replace a newer draft or revive a cancelled submission.
-      if (!next.signal.aborted && generation === current_generation && submission === submitted) {
-        try {
-          const draft = await $.prompt.read();
-          if (!draft.text && !next.signal.aborted && generation === current_generation && submission === submitted) {
-            await $.prompt.fill({text:e.text,mode:'replace'});
-          }
-        } catch {}
-      }
+      // The qualified host restores refused drafts. Filling here duplicates the
+      // retry and can overwrite text entered while processing was in flight.
       return {drop:reason};
     };
     if (!runtime.ready) return drop(runtime.status);
@@ -149,6 +149,7 @@ export function register(on: On) {
     return <Box flexDirection="column">
       <Text bold>local inspection — never added to model context</Text>
       <Text>{runtime.status}</Text>
+      <Text>{compatibility.status}</Text>
       <Button key="personal-metrics" hotkey="m" label="personal metrics" onPress={async()=>{review.view='metrics';review.now=await $.clock.now();$.ui.invalidate('ui.render');}} />
       <Button key="policy-evidence" label="policy evidence" onPress={()=>{review.view='policy';$.ui.invalidate('ui.render');}} />
       <Text>{latest ? '- ' + latest.original : 'no replacement in this session'}</Text>

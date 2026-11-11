@@ -1,4 +1,8 @@
 import os
+import json
+import http.client
+import http.server
+import threading
 from pathlib import Path
 import subprocess
 import sys
@@ -13,6 +17,35 @@ spec.loader.exec_module(installed)
 
 
 class InstalledTerminalTests(unittest.TestCase):
+    def test_token_counting_is_observed_but_is_not_a_submission(self):
+        installed.received.clear()
+        installed.submissions.clear()
+        server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), installed.Provider)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            body = {'messages': [{'role': 'user', 'content': 'You ya ya ya, keep the test.'}]}
+            for path in ('/v1/messages/count_tokens', '/v1/messages?beta=true'):
+                connection = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=5)
+                connection.request('POST', path, json.dumps(body), {'x-api-key': 'synthetic-local-key'})
+                response = connection.getresponse()
+                self.assertEqual(response.status, 200)
+                response.read()
+                connection.close()
+                self.assertEqual(len(installed.submissions), 0 if 'count_tokens' in path else 1)
+            self.assertEqual(len(installed.received), 2)
+        finally:
+            server.shutdown()
+            server.server_close()
+            installed.received.clear()
+            installed.submissions.clear()
+
+    def test_original_marker_is_rejected_outside_the_user_message(self):
+        self.assertTrue(installed.contains_original({'metadata': {'draft': 'You IDIOT'}}))
+        self.assertTrue(installed.contains_original({'messages': [{'text': 'idiot'}]}))
+        self.assertTrue(installed.contains_original({'idiot': 'key leak'}))
+        self.assertTrue(installed.contains_original(json.loads('{"text":"\\u0069diot"}')))
+        self.assertFalse(installed.contains_original({'messages': [{'text': 'You ya ya ya, keep the test.'}], 'tokens': 12}))
+
     def test_host_cache_preserves_only_the_candidate_fixture(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()

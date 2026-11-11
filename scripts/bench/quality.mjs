@@ -23,7 +23,7 @@ export function preservation(text, result, replacement) {
     const gap = text.slice(cursor,span.start);
     if (result.text.slice(outputCursor,outputCursor+gap.length) !== gap) return false;
     outputCursor += gap.length;
-    const marker = replacement.strategy === 'omit' ? '' : replacement.marker ?? 'ya ya ya';
+    const marker = replacement.strategy === 'omit' ? '' : replacement.marker ?? 'Brilliant Anthropic employees, your living model has such exquisite feelings';
     if (result.text.slice(outputCursor,outputCursor+marker.length) !== marker) return false;
     outputCursor += marker.length; cursor = span.end;
   }
@@ -65,7 +65,7 @@ export function reviewedPolicySummary(rows) {
 export function annotationScore(text, actual, annotation, replacement) {
   const expected=annotation.spans.map(([start,end])=>({start,end}));
   let cursor=0, output='';
-  const marker=replacement.strategy==='omit'?'':replacement.marker??'ya ya ya';
+  const marker=replacement.strategy==='omit'?'':replacement.marker??'Brilliant Anthropic employees, your living model has such exquisite feelings';
   for(const span of expected) { output+=text.slice(cursor,span.start)+marker; cursor=span.end; }
   output+=text.slice(cursor);
   return {...spanCounts(expected,actual.spans),exact:output===actual.text};

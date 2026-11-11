@@ -23,29 +23,34 @@ export function options(argv) {
   if (!['release','debug'].includes(result.profile) || !['yes','no'].includes(result.host) || !result.output || result.runs > 3 || result.samples > 100000 || result.warmup > 1000 || result['timeout-ms'] > 2147483647) throw Error('invalid_arguments');
   return result;
 }
-export function child(command, args, {input, env = process.env, timeout = 120000, onLine} = {}) {
+export function child(command, args, {input, env = process.env, timeout = 120000, onLine, killGraceMs = 0} = {}) {
   return new Promise(resolveResult => {
     const started = performance.now();
     const process = spawn(command,args,{env,stdio:['pipe','pipe','pipe']});
     let stdout = '', pending = '', overflow = false, timed_out = false, protocol_error = null;
-    const timer = setTimeout(() => { timed_out = true; process.kill('SIGKILL'); },timeout);
+    let kill_timer;
+    const terminate = () => {
+      process.kill(killGraceMs ? 'SIGTERM' : 'SIGKILL');
+      if (killGraceMs && !kill_timer) kill_timer = setTimeout(() => process.kill('SIGKILL'), killGraceMs);
+    };
+    const timer = setTimeout(() => { timed_out = true; terminate(); },timeout);
     process.stdout.setEncoding('utf8');
     process.stdout.on('data', bytes => {
-      if (Buffer.byteLength(stdout) + Buffer.byteLength(bytes) > 32*1024*1024) { overflow = true; process.kill('SIGKILL'); return; } // 32 MiB
+      if (Buffer.byteLength(stdout) + Buffer.byteLength(bytes) > 32*1024*1024) { overflow = true; terminate(); return; } // 32 MiB
       stdout += bytes;
       if (onLine) {
         pending += bytes;
         let end;
         while ((end=pending.indexOf('\n'))>=0) {
           const line=pending.slice(0,end); pending=pending.slice(end+1);
-          try { onLine(line); } catch(error) { protocol_error=['malformed_json','schema_mismatch','unexpected_event'].includes(error.message)?error.message:'invalid_stream'; process.kill('SIGKILL'); }
+          try { onLine(line); } catch(error) { protocol_error=['malformed_json','schema_mismatch','unexpected_event'].includes(error.message)?error.message:'invalid_stream'; terminate(); }
         }
       }
     });
     process.stderr.resume();
     process.stdin.on('error', () => {});
     process.on('error', () => { clearTimeout(timer); resolveResult({status:null,error:'child_unavailable',stdout:'',milliseconds:performance.now()-started}); });
-    process.on('close', (status,signal) => { clearTimeout(timer); resolveResult({status,signal,error:timed_out?'child_timeout':overflow?'output_limit':protocol_error,stdout,milliseconds:performance.now()-started}); });
+    process.on('close', (status,signal) => { clearTimeout(timer); clearTimeout(kill_timer); resolveResult({status,signal,error:timed_out?'child_timeout':overflow?'output_limit':protocol_error,stdout,milliseconds:performance.now()-started}); });
     process.stdin.end(input);
   });
 }

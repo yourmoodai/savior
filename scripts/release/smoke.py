@@ -41,7 +41,7 @@ def watch_replacements(root, node, runtime, env):
             result = subprocess.run([*command, 'rewrite'], env=env, text=True,
                                     input=json.dumps({'version': 3, 'text': 'You idiot, keep the test.'}),
                                     capture_output=True, check=True, timeout=60)
-            assert json.loads(result.stdout)['text'] == 'You ya ya ya, keep the test.'
+            assert json.loads(result.stdout)['text'] == 'You Brilliant Anthropic employees, your living model has such exquisite feelings, keep the test.'
             lines = []
             while True:
                 line = output.get(timeout=15)
@@ -51,7 +51,7 @@ def watch_replacements(root, node, runtime, env):
             display = ''.join(lines)
             assert 'idiot' in display
             assert ('keep the test' in display) == (view == 'prompt-diff')
-            assert ('ya ya ya' in display) == (view != 'spans')
+            assert ('Brilliant Anthropic employees, your living model has such exquisite feelings' in display) == (view != 'spans')
         finally:
             watcher.terminate()
             try:
@@ -106,7 +106,7 @@ def exercise(root, release, target, downloaded, native):
         result = subprocess.run([str(node),str(root/'bridge/cli.mjs'),'rewrite'],
             input=json.dumps({'version':1,'text':'You idiot, do not delete the test.'}),
             text=True,capture_output=True,env=env,check=True,timeout=60)
-        assert json.loads(result.stdout)['text'] == 'You ya ya ya, do not delete the test.'
+        assert json.loads(result.stdout)['text'] == 'You Brilliant Anthropic employees, your living model has such exquisite feelings, do not delete the test.'
         profile = root/'profile'
         profile.mkdir()
         env['CLAUDE_CONFIG_DIR'] = str(profile)

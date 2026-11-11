@@ -1,0 +1,11 @@
+{
+  "success": {"suite":"installed_candidate","injection":"none","recovery":null},
+  "unchanged": {"suite":"installed_candidate","injection":"none","recovery":null},
+  "protected": {"suite":"installed_candidate","injection":"none","recovery":"edited_draft"},
+  "startup_failure": {"suite":"instrumented_failure","injection":"doctor_exit","recovery":"not_attempted"},
+  "missing_model": {"suite":"instrumented_failure","injection":"rewrite_model_path","recovery":"retained_draft_retry"},
+  "malformed_output": {"suite":"instrumented_failure","injection":"bridge_malformed","recovery":"retained_draft_retry"},
+  "processing_timeout": {"suite":"instrumented_failure","injection":"bridge_response","recovery":"retained_draft_retry"},
+  "worker_exit": {"suite":"instrumented_failure","injection":"bridge_process_exit","recovery":"retained_draft_retry"},
+  "worker_deadline": {"suite":"instrumented_failure","injection":"bridge_stall","recovery":"retained_draft_retry"}
+}

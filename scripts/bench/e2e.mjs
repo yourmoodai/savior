@@ -4,7 +4,7 @@ import {appendFileSync} from 'node:fs';
 import {json, save, digest} from './corpus.mjs';
 import {child, environment, identity, sameIdentity, strategies, strategyName, errorCode} from './common.mjs';
 import {preservation} from './quality.mjs';
-import {hostStream} from './host.mjs';
+import {hostStream, hostCases} from './host.mjs';
 
 export async function e2e(config) {
   const binding = createRequire(import.meta.url)('../../native/index.cjs');
@@ -13,7 +13,7 @@ export async function e2e(config) {
     status:'running',correctness:[],adapters:[],host:[],diagnostics:[],errors:[]};
   await save(`${config.output}.identity.json`,{version:1,kind:'e2e',identity:report.identity});
   for (const replacement of strategies) {
-    const marker = replacement.strategy==='omit'?'':replacement.marker??'ya ya ya';
+    const marker = replacement.strategy==='omit'?'':replacement.marker??'Brilliant Anthropic employees, your living model has such exquisite feelings';
     for (const fixture of fixtures) {
       let passed = false, status;
       try {
@@ -50,13 +50,13 @@ export async function e2e(config) {
       }
     }
     if (config.host==='yes') {
-      for(const scenario of ['success','protected','missing_model','processing_timeout','worker_exit']) {
-      process.stderr.write(`installed host ${strategyName(replacement)} ${scenario}\n`);
+      for(const scenario of Object.keys(hostCases).filter(name => name !== 'startup_failure')) {
+      process.stderr.write(`source checkout host ${strategyName(replacement)} ${scenario}\n`);
       const stream = hostStream(scenario,replacement.strategy,event => appendFileSync(`${config.output}.host-events.jsonl`,
         JSON.stringify({...event,strategy_variant:strategyName(replacement)})+'\n',{mode:0o600}));
       const result = await child('python3',['scripts/test-installed-mod.py'],{env:{...environment(config.model,replacement),SAVIOR_HOST_SCENARIO:scenario},
-        timeout:Math.max(config['timeout-ms'],180000),onLine:stream.line});
-      const row = {scenario,strategy:strategyName(replacement),...stream.finish(result)};
+        timeout:Math.max(config['timeout-ms'],240000),onLine:stream.line,killGraceMs:10000});
+      const row = {suite:'source_checkout',scenario,strategy:strategyName(replacement),...stream.finish(result)};
       report.host.push(row);
       await save(`${config.output}.host-${strategyName(replacement)}-${scenario}.json`,row);
       }

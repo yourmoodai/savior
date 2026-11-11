@@ -59,6 +59,12 @@
     "test:bootstrap": "node --test tests/bootstrap.spec.mjs && node scripts/test-bootstrap-runtime.mjs",
     "build:debug": "napi build --manifest-path crates/node/Cargo.toml --package savior-node --platform --output-dir native --js index.cjs --dts index.d.ts -- --locked",
     "types:fetch": "node scripts/fetch-types.mjs",
+    "check:claude": "node scripts/claude-compatibility.mjs",
+    "test:compatibility": "node --test tests/compatibility.spec.mjs && claude plugin test .",
+    "compatibility:discover": "node scripts/release/compatibility-inventory.mjs discover",
+    "compatibility:assess": "python3 scripts/release/compatibility-run.py",
+    "compatibility:report": "node scripts/release/compatibility-report.mjs",
+    "compatibility:test": "node --test tests/compatibility-window.spec.mjs tests/host-evidence.spec.mjs && python3 -m unittest discover -s scripts/release -p test_compatibility_run.py",
     "check": "npm run types:fetch && tsc -p tsconfig.json && tsc -p tsconfig.plugin.json",
     "build:test-runners": "cargo build --locked --release -p savior --example inference && cargo build --locked --release -p savior-cli --example invalid_report",
     "test": "npm run build:test-runners && cargo test --locked --workspace && node --test tests/*.spec.mjs",
@@ -122,7 +128,11 @@
     "test:decisions:parity": "node scripts/check-decision-parity.mjs",
     "test:reviewer": "python3 -m unittest discover -s tools/adversarial_reviewer",
     "release:stage": "python3 scripts/release/package.py stage",
-    "release:assemble": "python3 scripts/release/package.py assemble"
+    "release:assemble": "python3 scripts/release/package.py assemble",
+    "site:dev": "python3 scripts/site.py serve",
+    "site:build": "python3 scripts/site.py build",
+    "site:check": "python3 scripts/site.py check",
+    "site:test": "python3 scripts/site.py check && node scripts/test-site.mjs"
   },
   "files": [
     "native/index.cjs",

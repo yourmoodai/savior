@@ -12,7 +12,10 @@ control of traffic leaving the host.
 | Exact-output and parity checks | Replacement behavior | Detection coverage |
 | Reviewed labels | Agreement with that corpus | General accuracy |
 | Local judge comparison | Agreement between judges | Ground truth or certification |
-| Installed-host test | Observed current-adapter path | Absence of every host bypass |
+| Handler test | Handler continuation and refusal contract | Actual-client delivery |
+| Source-checkout host test | Observed development integration | Packaged release qualification |
+| Installed-candidate test | Observed path for the identified archive and client | Absence of every host bypass |
+| Instrumented failure test | Failure and recovery of a modified disposable candidate | Unmodified artifact execution |
 
 A classifier can preserve surrounding text perfectly while missing unwanted
 language. Missing, refused, malformed, or uncertain judgments remain unresolved.
@@ -30,6 +33,26 @@ does not alter successful replacements; its stored metrics contain no text.
 The observations below retain their original dates, source identities, and
 limitations. They describe the recorded builds and conditions, not a fresh
 qualification of the current checkout. Failed measurements remain visible.
+
+### Claude 2.1.322 interception check
+
+The 2026-11-11 macOS arm64 source-checkout run passed 16 cases: eight scenarios
+under each of `fixed_phrase` and `omit`. Both stalled workers reached the
+45-second process deadline, stopped, retained the draft, and completed an exact
+retry. Rewritten and unchanged submissions, protected refusal, missing models,
+malformed output, immediate timeout responses, and worker exits also passed.
+The [content-free evidence](../benchmarks/results/interception-2026-11-11.json)
+records client, adapter, model, harness, and per-case report identities.
+
+The investigation found that filling a refused draft in the adapter duplicated
+the host's own restoration. The adapter now leaves recovery to the host. Terminal
+editing also needs a fresh redraw before the harness retries. Earlier failed
+attempts remain identified in the evidence; they are not release qualifications.
+
+This is source-checkout evidence for one native platform. Packaged startup
+failure, the final release archive, Linux/Windows native runs, and whole-host
+egress coverage remain unverified. The page and installation path remain
+unreleased.
 
 <!-- benchmark-results:start -->
 ## Benchmark results
@@ -112,7 +135,7 @@ about 480 MiB including the detector. A separate busy-machine run reached
 Synthetic and provisional labels do not estimate real-world accuracy,
 provider-policy compliance, or judge calibration. The Claude Code integration
 does not prove the absence of host telemetry, other plugin behavior, or voice
-uploads before filtering. The planned proxy remains unimplemented; see
+uploads before filtering. The proposed proxy remains unimplemented; see
 [ADR 3](adr/0003-future-egress-enforcement.md).
 
 ## Reproduce or investigate
