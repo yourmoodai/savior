@@ -1,6 +1,6 @@
 const reasons = {
   draft:'Review not performed: this PR is a draft. Mark it ready for review to start the eligibility checks.',
-  author_unauthorized:'Review not performed: the PR author is not a named CODEOWNER with write access.',
+  author_unauthorized:'Review not performed: the PR author is neither a repository admin nor a named CODEOWNER with write access.',
   disabled:'Review not performed: the Bedrock reviewer is disabled. A spending approval cannot enable it.',
   spending_unresolved:'Review blocked: earlier spending is missing or unreconciled. Restore the ledger evidence before approving any new spending.',
   awaiting_budget:'Review is awaiting spending approval. No new inference has started.',

@@ -15,6 +15,7 @@ module.exports = async function scope({github,context,core,enabled,bootstrap=''}
   core.setOutput('pr',pr.number); core.setOutput('head',pr.head.sha); core.setOutput('base',pr.base.sha);
   let reason = pr.state !== 'open' || pr.base.ref !== context.payload.repository.default_branch ? 'pr_not_ready' : pr.draft ? 'draft' : null;
   try {
+    if (!reason && await require('./large_admin.cjs').approve({github,context,core,pr})) return;
     if (!reason && !await author_gate({github,context,pr,bootstrap})) reason = 'author_unauthorized';
     if (!reason && enabled !== 'true') reason = 'disabled';
     if (!reason && context.eventName === 'issue_comment') await approvals.from_comment({github,context,pr,bootstrap});
