@@ -23,9 +23,9 @@ def qualified_run(repository, run_id, revision, tag, api=gh_api):
     jobs = api(prefix+f"/actions/runs/{run_id}/attempts/{run['run_attempt']}/jobs?per_page=100")
     expected = {'gate','package','publish'} | {
         f'{job} ({os_name})' for job in ('installed','published-download')
-        for os_name in ('macos-14','ubuntu-24.04','windows-2022')} | {
+        for os_name in ('macos-15','ubuntu-24.04','windows-2022')} | {
         f'build ({os_name}, {target})' for os_name,target in (
-            ('macos-14','darwin-arm64'),('ubuntu-24.04','linux-x64'),('windows-2022','win32-x64'))}
+            ('macos-15','darwin-arm64'),('ubuntu-24.04','linux-x64'),('windows-2022','win32-x64'))}
     if (jobs['total_count'] != len(jobs['jobs']) or {job['name'] for job in jobs['jobs']} != expected
             or any(job['conclusion'] != 'success' for job in jobs['jobs'])):
         raise ValueError('release_jobs_not_qualified')

@@ -10,9 +10,9 @@ class PromotionTests(unittest.TestCase):
                     'event':'push','status':'completed','conclusion':'success','run_attempt':2,
                     'repository':{'full_name':'example/project'}}
         names = ['gate','package','publish'] + [f'{job} ({platform})'
-            for job in ('installed','published-download') for platform in ('macos-14','ubuntu-24.04','windows-2022')]
+            for job in ('installed','published-download') for platform in ('macos-15','ubuntu-24.04','windows-2022')]
         names += [f'build ({platform}, {target})' for platform,target in (
-            ('macos-14','darwin-arm64'),('ubuntu-24.04','linux-x64'),('windows-2022','win32-x64'))]
+            ('macos-15','darwin-arm64'),('ubuntu-24.04','linux-x64'),('windows-2022','win32-x64'))]
         self.jobs = {'total_count':len(names),'jobs':[{'name':name,'conclusion':'success'} for name in names]}
         self.refs = [{'ref':'refs/heads/marketplace','object':{'sha':'b'*40}}]
         self.writes = []
