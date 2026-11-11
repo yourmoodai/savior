@@ -52,6 +52,7 @@ test('repository and packaged documentation resolve local links and anchors', as
   t.after(() => rm(destination,{recursive:true,force:true}));
   const script = `
 import importlib.util, pathlib, sys
+sys.path.insert(0, str(pathlib.Path(sys.argv[1]).parent))
 spec = importlib.util.spec_from_file_location('release_package', sys.argv[1])
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)

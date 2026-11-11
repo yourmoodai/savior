@@ -58,10 +58,10 @@ class DiagnosticTests(unittest.TestCase):
             os.chdir(directory)
             Path("review-result").mkdir()
             Path("review-result/recoveries.json").write_text("[]")
-            def dry_run(argv, **kwargs):
-                Path(argv[-1]).write_text(json.dumps({
-                    'files': 162, 'total_lines': 26939, 'total_chunks': 100,
-                    'total_units': 258, 'excluded_assets': [], 'test_evidence': {'head': 'test'}}))
+            Path('review-result/preflight.json').write_text(json.dumps({'blocked_reason': None, 'commit_id': 'test'}))
+            Path('review-result/baseline-manifest.json').write_text(json.dumps({
+                'files': 162, 'total_lines': 26939, 'total_chunks': 100,
+                'total_units': 258, 'excluded_assets': [], 'test_evidence': {'head': 'test'}}))
             result = {'qualified': False, 'cases': [], 'comparison': {'baseline': {'batches': [{
                 'passed': False, 'missing_defects': ['qualification/case2/bridge/submit.py'],
                 'unexpected_findings': [], 'report': {'chunks': [{
@@ -69,11 +69,12 @@ class DiagnosticTests(unittest.TestCase):
             with patch.dict(os.environ, {'HEAD_SHA': 'test', 'BASE_SHA': 'base',
                                           'BEDROCK_REVIEW_ENABLED': 'true', 'GITHUB_STEP_SUMMARY': '',
                                           'REVIEW_BUDGET_LEDGER': ''}), \
-                    patch('subprocess.run', side_effect=dry_run) as run, \
+                    patch('subprocess.run') as run, \
                     patch('qualify.qualify', return_value=result):
                 runpy.run_path(str(script), run_name='__main__')
             report = json.loads(Path('review-result/report.json').read_text())
-            self.assertEqual(run.call_count, 2)
+            run.assert_not_called()
+            self.assertEqual(report['blocked_reason'], 'qualification_failed')
             self.assertFalse(report['qualified'])
             self.assertIn('162 changed files', report['overview'])
             self.assertIn('0 of 100', report['overview'])

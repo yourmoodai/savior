@@ -1,0 +1,2 @@
+# CPython 3.12, Windows x64; binary wheels only.
+pywinpty==3.1.2 --hash=sha256:220e30a8cccd7f0be3356d4e3e56fdcda2ae45edc1de526b440c4031fe9308da

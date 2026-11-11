@@ -54,6 +54,11 @@ test('pilot restores reconciliation, rejects uncertain or missing history',async
       jobs:[original,{...carried,started_at:'2026-10-27T18:38:45Z'}]}));
     assert.equal(fs.readFileSync('review-result/previous-ledgers/13.zip','utf8'),'ledger archive');
     fs.unlinkSync('review-result/previous-ledgers/11.zip');
+    await restore(fixture({artifacts:[reserved,settled],runs:[{id:4,event:'issue_comment',head_branch:'main'}]}));
+    assert.equal(fs.readFileSync('review-result/previous-ledgers/11.zip','utf8'),'ledger archive');
+    fs.unlinkSync('review-result/previous-ledgers/11.zip');
+    await restore(fixture({artifacts:[reserved,settled],runs:[{id:4,event:'issue_comment',head_branch:'feature/untrusted'}]}));
+    assert.equal(fs.existsSync('review-result/previous-ledgers/11.zip'),false);
     await restore(fixture({artifacts:[reserved,settled],runs:[{id:4,event:'pull_request',head_branch:'evil'}]}));
     assert.equal(fs.existsSync('review-result/previous-ledgers/11.zip'),false);
   } finally {

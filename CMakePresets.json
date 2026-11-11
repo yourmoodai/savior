@@ -1,0 +1,26 @@
+{
+  "version": 6,
+  "configurePresets": [{
+    "name": "release",
+    "generator": "Ninja",
+    "binaryDir": "${sourceDir}/.cache/cmake-release"
+  }, {
+    "name": "release_container",
+    "inherits": "release",
+    "binaryDir": "${sourceDir}/.cache/cmake-release-container"
+  }],
+  "buildPresets": [
+    {"name": "release_plan", "configurePreset": "release", "targets": ["release_plan"]},
+    {"name": "release_candidate", "configurePreset": "release", "targets": ["release_candidate"]},
+    {"name": "release_test", "configurePreset": "release", "targets": ["release_test"]},
+    {"name": "release_plan_container", "configurePreset": "release_container", "targets": ["release_plan"]},
+    {"name": "release_candidate_container", "configurePreset": "release_container", "targets": ["release_candidate"]},
+    {"name": "release_test_container", "configurePreset": "release_container", "targets": ["release_test"]}
+  ],
+  "testPresets": [{"name": "release", "configurePreset": "release", "output": {"outputOnFailure": true}}],
+  "workflowPresets": [{"name": "release_plan", "steps": [
+    {"type": "configure", "name": "release"}, {"type": "build", "name": "release_plan"}
+  ]}, {"name": "release_plan_container", "steps": [
+    {"type": "configure", "name": "release_container"}, {"type": "build", "name": "release_plan_container"}
+  ]}]
+}

@@ -6,7 +6,7 @@ from chunk_plan import ASSESSMENT_LIMIT, anchors, manifest, plan, render, subdiv
 
 
 def assess_plan(diff, files, context, report, deadline, strategy, dry_run):
-    from adversarial_review import review_messages, run_model_reviewer
+    from adversarial_review import review_messages, run_model_reviewer, cached_assessment
 
     def messages(units, support):
         return review_messages(render(units), sorted({u.path for u in units}), context, anchors(units),
@@ -16,6 +16,11 @@ def assess_plan(diff, files, context, report, deadline, strategy, dry_run):
     except (ValueError, BedrockError) as error:
         return {**report, 'summary': f'review incomplete: {error}'}
     report['manifest'] = manifest(planned)
+    for chunk, item in zip(planned['chunks'], report['manifest']['chunks']):
+        _, _, cached = cached_assessment(render(chunk['units']), sorted({u.path for u in chunk['units']}),
+            context, anchors(chunk['units']),
+            supporting_context='\nSupporting evidence (context only):\n'+chunk['support'] if chunk['support'] else '')
+        item['cached_assessment'] = cached is not None
     report['subdivisions'] = []
     report['total_units'] = sum(len(c['units']) for c in planned['chunks'])
     report['completed_units'] = 0

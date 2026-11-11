@@ -1,5 +1,7 @@
-// Authorization comes from the base branch, never the proposed CODEOWNERS file.
+// Owner authorization comes from the base branch, never the proposed CODEOWNERS file.
 module.exports = async function author_gate({github, context, pr, bootstrap = ''}) {
+  const {data} = await github.rest.repos.getCollaboratorPermissionLevel({...context.repo, username: pr.user.login});
+  if (pr.user.type === 'User' && data.permission === 'admin') return true;
   let content;
   for (const path of ['.github/CODEOWNERS', 'CODEOWNERS', 'docs/CODEOWNERS']) {
     try {
@@ -15,6 +17,5 @@ module.exports = async function author_gate({github, context, pr, bootstrap = ''
     .flatMap(line => line.split('#')[0].trim().split(/\s+/).slice(1));
   const author = pr.user.login.toLowerCase();
   if (!owners.some(owner => /^@[a-z0-9-]+$/i.test(owner) && owner.slice(1).toLowerCase() === author)) return false;
-  const {data} = await github.rest.repos.getCollaboratorPermissionLevel({...context.repo, username: pr.user.login});
   return ['admin', 'maintain', 'write'].includes(data.permission);
 };

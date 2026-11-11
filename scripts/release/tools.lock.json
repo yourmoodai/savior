@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "tools": {
+    "rcodesign_x86_64": {
+      "url": "https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign/0.29.0/apple-codesign-0.29.0-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "dbe85cedd8ee4217b64e9a0e4c2aef92ab8bcaaa41f20bde99781ff02e600002"
+    },
+    "rcodesign_aarch64": {
+      "url": "https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign/0.29.0/apple-codesign-0.29.0-aarch64-unknown-linux-musl.tar.gz",
+      "sha256": "4af92c87ddf52f5f2d1258a3b4e56c7dcb8f1b2468df744976c5f139e031961f"
+    },
+    "jsign": {
+      "url": "https://github.com/ebourg/jsign/releases/download/7.6/jsign-7.6.jar",
+      "sha256": "6cf58aa080e7ff82656f320cff8d4a3bff30408df8766806dcba3740dd839fa5"
+    },
+    "osslsigncode": {
+      "url": "https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.14.tar.gz",
+      "sha256": "0f033fd6069387d2e489fbd2187e62f624764eb8c2758ee94e3e793e5150b5c5"
+    },
+    "node_x86_64": {
+      "url": "https://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-x64.tar.gz",
+      "sha256": "28ea0a438de9a13bd7891fd758eee6c7819ee8af5442dfd8d45bd65e56d4228c"
+    },
+    "node_aarch64": {
+      "url": "https://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-arm64.tar.gz",
+      "sha256": "b7e7991d5407815adfa74a2a9cd4db683552c8ce32ff4a295c22e972849c3f5d"
+    }
+  }
+}

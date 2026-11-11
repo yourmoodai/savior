@@ -1,52 +1,88 @@
 name: verify
 on:
   push:
+    branches: [main, develop]
   pull_request:
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Generated release pull request number
+        required: false
+        type: string
+      head_sha:
+        description: Exact generated pull request head
+        required: false
+        type: string
 concurrency:
   group: verify-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
   actions: read
+  pull-requests: read
 jobs:
-  tooling:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, macos-14]
-    runs-on: ${{ matrix.os }}
+  context:
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 24.22.0
-      - uses: actions/setup-python@v5
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12'
+          python-version: '3.12.10'
+      - name: validate pull request context
+        id: context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/release/pr_context.py
+  tooling:
+    timeout-minutes: 15
+    needs: context
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.10'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node scripts/verify-branding.mjs
       - run: python3 -m unittest discover -s tools/adversarial_reviewer
       - run: python3 -m unittest discover -s scripts/release
+      - run: python3 scripts/release/lint_workflows.py
   coreml:
+    timeout-minutes: 30
+    needs: context
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: 1.99.1
           components: clippy
       - name: restore rust dependencies
         id: rust_cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: coreml-macos-15-${{ runner.arch }}
           cache-on-failure: true
       - name: native build
-        run: cargo clippy -p savior --features coreml --all-targets -- -D warnings
-      - run: cargo test -p savior --features coreml
+        run: cargo clippy --locked -p savior --features coreml --all-targets -- -D warnings
+      - run: cargo test --locked -p savior --features coreml
       - name: summarize cache measurements
         if: always()
         continue-on-error: true
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           CACHE_HIT: ${{ steps.rust_cache.outputs.cache-hit }}
           CACHE_GROUP: coreml-macos-15-${{ runner.arch }}
@@ -54,63 +90,23 @@ jobs:
         with:
           script: |
             await require('./scripts/release/cache-summary.cjs')({github, context, core});
-  native:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, macos-14]
-    runs-on: ${{ matrix.os }}
+  release-tools:
+    needs: context
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          components: rustfmt, clippy
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24.22.0
-          cache: npm
-      - run: npm ci --prefer-offline --no-audit --no-fund
-      - uses: actions/cache@v4
-        with:
-          path: .cache/host-types
-          key: host-types-v1-${{ runner.os }}-${{ hashFiles('scripts/fetch-types.mjs') }}
-      - name: restore rust dependencies
-        id: rust_cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: native-${{ matrix.os }}-${{ runner.arch }}
-          cache-on-failure: true
-      - name: native build
-        run: npm run build
-      - run: cargo fmt --all --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: npm run check
-      - run: npm test
-      - uses: ./.github/actions/model-cache
-      - run: npm run eval:local
-      - run: npm run inspect:test
-      - run: npx playwright install --with-deps --only-shell chromium
-      - name: standalone local inspector browser checks
-        env:
-          SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
-        run: npm run inspect:e2e
-      - name: native assessment and synthetic SDK history
-        env:
-          SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
-        run: node --test tests/review.spec.mjs
-      - name: real model training and reload parity
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
-        run: cargo test --profile profiling -p savior-lab --test cli -- --ignored
-      - name: summarize cache measurements
-        if: always()
-        continue-on-error: true
-        uses: actions/github-script@v7
-        env:
-          CACHE_HIT: ${{ steps.rust_cache.outputs.cache-hit }}
-          CACHE_GROUP: native-${{ matrix.os }}-${{ runner.arch }}
-          CACHE_JOB: native (${{ matrix.os }})
-        with:
-          script: |
-            await require('./scripts/release/cache-summary.cjs')({github, context, core});
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - run: docker build -f scripts/release/Dockerfile -t savior-release-tools .
+      - run: docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/workspace:ro" --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release
+  verification:
+    if: always()
+    needs: [context, tooling, coreml, release-tools]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: python3 -c 'import json,os; assert all(j["result"]=="success" for j in json.loads(os.environ["RESULTS"]).values())'

@@ -22,6 +22,7 @@ with tempfile.TemporaryDirectory(prefix='savior installed ') as directory:
     env['SAVIOR_PLUGIN_ROOT']=str(root)
     cache=root/'cache';cache.mkdir()
     env['XDG_CACHE_HOME']=str(cache);env['LOCALAPPDATA']=str(cache)
+    env['SAVIOR_HOST_CACHE']=str(cache)
     target={'Darwin':'darwin-arm64','Linux':'linux-x64','Windows':'win32-x64'}[platform.system()]
     seed(root,Path('.cache/release'),cache,target)
     subprocess.run([sys.executable,'scripts/test-installed-mod.py'],env=env,check=True,timeout=180)

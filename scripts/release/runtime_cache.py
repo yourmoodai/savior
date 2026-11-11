@@ -7,6 +7,8 @@ import shutil
 def seed(plugin, assets, cache, target):
     raw=(plugin/'runtime-manifest.json').read_bytes()
     manifest=json.loads(raw)
+    if manifest['schema'] == 2 and target == 'darwin-arm64':
+        return plugin/'runtime/darwin-arm64/SaviorRuntime.app/Contents/Helpers'
     directory=cache/'savior/releases'/manifest['version']/target/hashlib.sha256(raw).hexdigest()
     directory.mkdir(parents=True,exist_ok=True)
     for entry in manifest['targets'][target]:

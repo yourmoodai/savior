@@ -6,7 +6,7 @@ module.exports = async function restore({github,context}) {
   const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo,{...context.repo,per_page:100});
   const allRuns = await github.paginate(github.rest.actions.listWorkflowRuns,{...context.repo,workflow_id:'adversarial-review.yml',created:'>=2026-10-15',per_page:100});
   const runs = allRuns.filter(run=>run.event==='pull_request_target' ||
-    (['push','workflow_dispatch'].includes(run.event) && ['main','develop'].includes(run.head_branch)));
+    (['push','workflow_dispatch','issue_comment'].includes(run.event) && ['main','develop'].includes(run.head_branch)));
   const owned = artifacts.filter(a=>runs.some(run=>run.id===a.workflow_run?.id));
   const reservations = owned.filter(a=>a.name.startsWith(pilot+'-reserved-'+a.workflow_run.id+'-'));
   const finals = owned.filter(a=>a.name.startsWith(pilot+'-settled-'+a.workflow_run.id+'-'));

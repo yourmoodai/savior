@@ -1,5 +1,6 @@
 [package]
 name = "savior-cli"
+default-run = "savior"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,8 +15,13 @@ categories = ["command-line-utilities", "text-processing"]
 name = "savior"
 path = "src/main.rs"
 
+[[bin]]
+name = "savior-bootstrap"
+path = "src/bootstrap.rs"
+
 [dependencies]
 savior.workspace = true
+savior-review = { path = "../review", features = ["watch"] }
 serde.workspace = true
 serde_json.workspace = true
 fs2 = "0.4"

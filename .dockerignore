@@ -1,0 +1,6 @@
+**
+!scripts/
+!scripts/release/
+!scripts/release/Dockerfile
+!scripts/release/install-tools.py
+!scripts/release/tools.lock.json

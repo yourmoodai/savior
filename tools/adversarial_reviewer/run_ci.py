@@ -4,8 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-import tempfile
-import zipfile
+import sqlite3
 
 from budget import Ledger, BudgetError
 from chunk_plan import ASSESSMENT_LIMIT, bounded_strategy
@@ -24,38 +23,23 @@ ledger = None
 try:
     if os.environ.get('BEDROCK_REVIEW_ENABLED') != 'true':
         raise ValueError('bedrock review is disabled pending model access and qualification')
-    os.environ['REVIEW_BUDGET_LEDGER'] = str(Path('review-result/ledger.db').resolve())
-    ledger = Ledger(os.environ['REVIEW_BUDGET_LEDGER'])
-    archives = list(Path('review-result/previous-ledgers').glob('*.zip'))
-    if Path('review-result/previous-ledger.zip').exists():
-        archives.append(Path('review-result/previous-ledger.zip'))
-    for archive in archives:
-        with zipfile.ZipFile(archive) as z:
-            if z.getinfo('ledger.db').file_size > 10_000_000:  # 10 MB ledger limit
-                raise ValueError('pilot ledger exceeds size limit')
-            with tempfile.NamedTemporaryFile(suffix='.db') as source:
-                source.write(z.read('ledger.db'))
-                source.flush()
-                ledger.merge(source.name)
-    for recovery in json.loads(Path('review-result/recoveries.json').read_text()):
-        ledger.record_recovery(f"{recovery['run']}-{recovery['attempt']}", recovery['nanodollars'])
-    ledger.record_preflight()
-    ledger.record_external_reservation(int(os.environ.get('BEDROCK_EXTERNAL_PROBE_NANODOLLARS') or '0'))
-    from result_cache import restore
-    os.environ['REVIEW_RESULT_CACHE'] = str(Path('review-result/cache').resolve())
-    restore(Path('review-result/previous-caches').glob('*.zip'))
+    from preflight import restore
+    preflight = json.loads(Path('review-result/preflight.json').read_text())
+    if preflight['blocked_reason'] or preflight['commit_id'] != head:
+        raise ValueError('review preflight is not authorized')
+    ledger = restore()
+    if os.environ.get('REVIEW_BUDGET_GRANT'):
+        grant = next(g for g in ledger.summary()['grants'] if g['id'] == os.environ['REVIEW_BUDGET_GRANT'])
+        if grant['context']['head'] != head or grant['context']['run_id'] != int(os.environ['GITHUB_RUN_ID']):
+            raise ValueError('review allowance belongs to another run')
     starting_cost = ledger.summary()['committed_usd']
-    # Dry runs estimate packing locally for the exact head.
-    for strategy in ('baseline', 'adaptive'):
-        subprocess.run([sys.executable, str(root/'adversarial_review.py'), '--base', os.environ['BASE_SHA'],
-                        '--head', head, '--strategy', strategy, '--dry-run', '--json-output',
-                        f'review-result/{strategy}-manifest.json'], check=True, timeout=2400)
     baseline = json.loads(Path('review-result/baseline-manifest.json').read_text())
     for field in ('files', 'total_lines', 'total_chunks', 'total_units', 'excluded_assets', 'test_evidence'):
         report[field] = baseline[field]
     report['overview'] = fallback_overview(report)
     qualification = qualify('review-result/qualification.json')
     if not qualification['qualified']:
+        report['blocked_reason'] = 'qualification_failed'
         report['summary'] = 'Live model qualification failed; PR assessment did not start.'
         for case in qualification['cases']:
             if not case['passed']:
@@ -74,13 +58,15 @@ try:
     Path('review-result/strategy.json').write_text(json.dumps({
         'qualified_preference': qualification['strategy'], 'selected': strategy,
         'assessment_limit': ASSESSMENT_LIMIT}))
+    path.unlink(missing_ok=True)
     subprocess.run([sys.executable, str(root/'adversarial_review.py'), '--base', os.environ['BASE_SHA'],
                     '--head', head, '--strategy', strategy, '--fail-on', 'none',
                     '--json-output', str(path)], timeout=2400, check=False)
     if not path.exists():
         raise ValueError('review did not produce a report')
     report = json.loads(path.read_text())
-except (OSError, ValueError, BudgetError, subprocess.SubprocessError) as error:
+except (OSError, ValueError, KeyError, StopIteration, sqlite3.Error, BudgetError, subprocess.SubprocessError) as error:
+    report['blocked_reason'] = report.get('blocked_reason', 'spending_unresolved' if isinstance(error, BudgetError) else 'infrastructure_failed')
     report['review_failures'].append('review execution unavailable: '+type(error).__name__)
 finally:
     if ledger is not None:
@@ -90,6 +76,15 @@ finally:
     report['usage'] = measurements()
     if ledger is not None and 'starting_cost' in globals():
         report['usage']['incremental_committed_usd'] = ledger.summary()['committed_usd']-starting_cost
+    blocked = Path('review-result/budget-blocked.json')
+    if blocked.exists():
+        report['blocked_reason'] = json.loads(blocked.read_text())['reason']
+        if report['blocked_reason'] == 'budget_exhausted':
+            from preflight import build_quote
+            try:
+                report['quote'] = build_quote(ledger)
+            except (OSError, ValueError, subprocess.SubprocessError):
+                report['blocked_reason'] = 'infrastructure_failed'
     report['body'] = render(report)
     path.write_text(json.dumps(report, indent=2)+'\n')
     if os.environ.get('GITHUB_STEP_SUMMARY'):

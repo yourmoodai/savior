@@ -9,7 +9,7 @@ runs:
   steps:
     - name: restore detector downloads
       id: restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .cache/models/mudes-en-base
         key: detector-v1-${{ runner.os }}-${{ hashFiles('models/catalog.json', 'scripts/fetch-model.mjs', 'scripts/model-catalog.mjs') }}
@@ -19,7 +19,7 @@ runs:
     # Save verified downloads before later tests can fail or be cancelled.
     - name: save verified detector downloads
       if: steps.restore.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .cache/models/mudes-en-base
         key: ${{ steps.restore.outputs.cache-primary-key }}

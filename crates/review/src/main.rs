@@ -90,23 +90,13 @@ fn serve() -> ReviewResult<()> {
 }
 #[cfg(unix)]
 fn socket_path(profile: &std::path::Path) -> ReviewResult<std::path::PathBuf> {
-    use std::os::unix::fs::{DirBuilderExt, MetadataExt, PermissionsExt};
-    // A fixed short parent avoids sockaddr_un limits for deeply nested profiles.
-    // SAFETY: geteuid has no preconditions and does not mutate process state.
-    let uid = unsafe { libc::geteuid() };
-    let hash = savior_review::store::fingerprint(profile.as_os_str().as_encoded_bytes());
-    let directory = std::path::PathBuf::from(format!("/tmp/savior-{uid}-{hash}"));
-    match std::fs::DirBuilder::new().mode(0o700).create(&directory) {
-        Ok(()) => (),
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => (),
-        Err(_) => return Err("worker_unavailable".into()),
-    }
-    let metadata = std::fs::symlink_metadata(&directory).map_err(|_| "worker_unavailable")?;
-    if !metadata.is_dir() || metadata.uid() != uid || metadata.permissions().mode() & 0o777 != 0o700
-    {
-        return Err("unsafe_metrics_path".into());
-    }
-    Ok(directory.join("s"))
+    savior_review::transport::socket_path(profile, "s", true).map_err(|error| {
+        if error.kind() == std::io::ErrorKind::PermissionDenied {
+            "unsafe_metrics_path".into()
+        } else {
+            "worker_unavailable".into()
+        }
+    })
 }
 
 #[cfg(all(test, unix))]

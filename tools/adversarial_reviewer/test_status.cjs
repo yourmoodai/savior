@@ -1,8 +1,12 @@
-const required = ['verify.yml', 'commit-messages.yml', 'release.yml'];
+const required = ['verify.yml', 'commit-messages.yml', 'qualification.yml'];
 
-function select_runs(runs, head) {
+function select_runs(runs, head, pull, repository) {
   return required.map(file => {
-    const matching = runs.filter(run => run.head_sha === head && run.event === 'pull_request' && run.path === '.github/workflows/' + file);
+    const matching = runs.filter(run => run.head_sha === head && run.path === '.github/workflows/' + file &&
+      (run.event === 'pull_request' ||
+       (run.event === 'workflow_dispatch' && pull?.head.ref?.startsWith('release/v') &&
+        run.head_branch === pull.head.ref && pull.head.repo?.full_name === repository &&
+        run.head_repository?.full_name === repository)));
     return matching.sort((a, b) => b.id - a.id)[0];
   });
 }
@@ -10,9 +14,10 @@ function select_runs(runs, head) {
 module.exports = async function snapshot({github, context, head, pr, output}) {
   const pull = (await github.rest.pulls.get({...context.repo, pull_number:Number(pr)})).data;
   if (pull.state !== 'open' || pull.draft || pull.head.sha !== head) throw Error('review target is stale');
-  const runs = await github.paginate(github.rest.actions.listWorkflowRunsForRepo, {...context.repo, head_sha:head, event:'pull_request', per_page:100});
+  const runs = await github.paginate(github.rest.actions.listWorkflowRunsForRepo, {...context.repo, head_sha:head, per_page:100});
   const evidence = {head, observed_at:new Date().toISOString(), runs:[]};
-  for (const [index, run] of select_runs(runs, head).entries()) {
+  const repository = `${context.repo.owner}/${context.repo.repo}`;
+  for (const [index, run] of select_runs(runs, head, pull, repository).entries()) {
     if (!run) {
       evidence.runs.push({workflow:'.github/workflows/'+required[index], status:'not_started', conclusion:null, jobs:[]});
       continue;

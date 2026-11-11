@@ -12,7 +12,7 @@ export class Runtime {
     if (!this.release) return;
     this.ready = false;
     this.status = 'downloading and verifying local runtime and model; drafts remain local until ready';
-    const targets = [['darwin-arm64','node'], ['linux-x64','node'], ['win32-x64','node.exe']] as const;
+    const targets = [['darwin-arm64','SaviorRuntime.app/Contents/MacOS/savior-bootstrap'], ['darwin-arm64','node'], ['linux-x64','node'], ['win32-x64','node.exe']] as const;
     try {
       let target: string | undefined;
       for (const [name, executable] of targets) {

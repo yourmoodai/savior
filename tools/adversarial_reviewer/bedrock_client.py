@@ -2,12 +2,13 @@
 import hashlib
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import tempfile
 import time
 
-from budget import Ledger, BudgetError, RESERVED_INPUT_TOKENS, cost
+from budget import Ledger, BudgetError, BudgetExhausted, RESERVED_INPUT_TOKENS, cost
 from diagnostics import record
 from prompt_profiles import settings
 
@@ -101,6 +102,8 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
         from result_cache import measure
         measure('call', input_tokens=envelope['usage']['inputTokens'], output_tokens=envelope['usage']['outputTokens'])
     except BudgetError as error:
+        (Path(path).parent / 'budget-blocked.json').write_text(json.dumps({
+            'reason': 'budget_exhausted' if isinstance(error, BudgetExhausted) else 'spending_unresolved'}))
         raise BedrockError(str(error)) from None
     try:
         if envelope['usage']['inputTokens'] > 48000:

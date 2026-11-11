@@ -9,6 +9,54 @@ evidence, coverage, and disposition tests. CI uses AWS CLI v2 and Bedrock Conver
 with `deepseek.v3.2` in `us-east-1`.
 The application detector and personal-review judges remain offline.
 
+## Review status and spending approval
+
+The bot's PR comment explains why a review has not run: a draft PR, an ineligible
+author, a disabled reviewer, insufficient budget, missing spending evidence,
+failed qualification, or an infrastructure failure. A funding block is not a
+code finding and does not submit a formal request for changes.
+
+Before inference, the workflow builds a quote locally. It lists qualification,
+assessment, verification, output retries, and summaries, including cached work.
+The estimate uses conservative token counts; the proposed maximum reserves full
+model context capacity. Actual charges are reconciled after each call. Further
+subdivision can exhaust that maximum before coverage is complete. Taxes and
+unrelated AWS charges are excluded.
+
+When the pilot cannot cover the quote, a repository admin or an individual named
+in the trusted base revision's `CODEOWNERS` with write access can post the exact
+command from the bot comment:
+
+```text
+/savior review approve <quote-id> max-usd=<quoted-amount>
+```
+
+The positive USD amount accepts at most two decimal places and must cover the
+quoted reservation. This creates a separate allowance for that review; it does
+not replenish the shared pilot. Quotes expire after 24 hours and bind the PR,
+head and base commits, reviewer configuration, model, region, pricing, and
+evidence plans. The workflow checks those bindings and the commenter's current
+permissions again before obtaining AWS credentials.
+
+Only newly created, unedited human comments can authorize spending. Deleted
+comments, stale quotes, and comments replayed into another workflow run cannot
+fund inference. Retries of the same logical workflow run restore the original
+allowance and can use only its remaining balance, while the quote remains valid.
+Changes to reviewed evidence require a new quote; cached results can reduce the
+remaining cost. Uncertain calls retain their full reservations. An exhausted
+allowance preserves partial coverage and produces another quote when possible.
+Approval cannot waive draft status, author eligibility, model qualification,
+complete coverage, independent CI checks, or unresolved spending history.
+
+The comment handler becomes available after this workflow is merged into the
+default branch, as required by GitHub's
+[`issue_comment` event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment).
+After merging, request a review through `workflow_dispatch` for a ready PR to
+obtain its current quote. Posting the approval command authorizes paid inference;
+offline tests do not verify the deployed OIDC or Bedrock path.
+
+## Spending ledger and configuration
+
 GitHub Actions assumes `arn:aws:iam::463509296941:role/savior-bedrock-review`
 through OIDC. The `bedrock-review` GitHub environment admits only the `main` and
 `develop` branches. The role trusts only this repository/environment and the
@@ -20,21 +68,26 @@ No AWS access keys or SSO credentials are stored in GitHub.
 The environment variables `BEDROCK_REVIEW_ROLE_ARN` and `BEDROCK_REVIEW_MODEL`
 select that role and model. Set `BEDROCK_REVIEW_ENABLED=true` after account model access is verified.
 Every enabled run requires passing qualification for the exact reviewer configuration; successful qualification is reusable for 24 hours. Bedrock is metered API usage, not
-free Copilot credits. The pilot shares a $10 inference budget, including at most $2 for qualification
+free Copilot credits. Unapproved runs share a $10 pilot inference budget, including at most $2 for qualification
 and strategy comparison. An atomic SQLite ledger reserves 167,936 input tokens (164 Ki tokens) plus
 maximum output before every call. Actual usage releases unused reservations;
 missing usage and interrupted calls retain their maximum cost. Budget exhaustion
 leaves coverage incomplete. This bounds modeled inference cost at the pinned US
 rates ($0.62/M input, $1.85/M output), not taxes or unrelated AWS usage.
 
-CI serializes the pilot across PRs. The original `haiku45-pilot-20261015`
+CI serializes pilot and approved spending across PRs. The original `haiku45-pilot-20261015`
 artifact namespace is retained so changing models cannot reset spending history.
 The ledger also retains $0.03 reserved for the earlier account-access probes. It uploads a reservation before inference and
 reconciles it with a durable ledger afterward. Resumed runs restore that ledger;
 an unresolved, deleted, or expired reservation prevents further spending. Keep
 these artifacts for the pilot's lifetime. The ledger contains token metrics and
 prompt hashes, not prompt text. Use CI as the pilot's sole spending authority;
-local inference must not use an independent copy of the $2 allowance.
+local inference must not use an independent copy of the pilot or an approved allowance.
+Comment allowances, their immutable run identities, and each call's funding source
+travel with the ledger. A new approval cannot repair missing ledger evidence;
+restore that evidence before attempting further spending.
+
+## Offline planning and verification
 
 For a local packing dry run (no AWS calls or inference charges):
 
@@ -44,6 +97,10 @@ python3 tools/adversarial_reviewer/adversarial_review.py \
   --base origin/main --head HEAD --strategy adaptive --dry-run \
   --json-output .cache/review-pilot/adaptive-manifest.json
 ```
+
+Run `npm run test:reviewer`, `node --test tests/review-*.spec.mjs`, and
+`python3 scripts/release/lint_workflows.py` to check quoting, authorization,
+ledger recovery, and workflow guards without paid inference.
 
 Use `--strategy baseline` for one primary file per request, bounded at 48 KiB. Manifests list primary units,
 stable evidence IDs, full input estimates, repeated supporting context, omissions,

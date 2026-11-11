@@ -10,19 +10,23 @@ function verdict(report) {
   return clean;
 }
 
-module.exports = async function publish({github, context, core, head, pr, phase, report, evidence}) {
+module.exports = async function publish({github, context, core, head, pr, phase, report, evidence, reason, quote}) {
   const args = {...context.repo, pull_number:Number(pr)};
   async function current() {
     const pull = (await github.rest.pulls.get(args)).data;
-    return pull.state === 'open' && !pull.draft && pull.head.sha === head;
+    return pull.state === 'open' && (phase === 'blocked' || !pull.draft) && pull.head.sha === head;
   }
   if (!await current() || (report && report.commit_id !== head)) {core.notice('stale review discarded'); return;}
   let clean = false;
   const runUrl = `${context.serverUrl || 'https://github.com'}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
   let content;
-  if (phase === 'waiting') content = 'Model qualification and review are starting alongside the independent test checks.';
-  else if (phase === 'failed') content = 'Review unavailable: review execution failed. See the workflow for failing checks.\n\n**Verdict: Request changes**';
-  else if (phase === 'complete') {clean = verdict(report); content = report.body;}
+  if (phase === 'waiting') content = 'Checking review prerequisites and estimating cost before inference. Test checks run independently.';
+  else if (phase === 'failed') content = require('./status.cjs').render(reason || 'infrastructure_failed');
+  else if (phase === 'blocked') content = require('./status.cjs').render(reason,quote,report?.budget);
+  else if (phase === 'complete') {
+    if (report.blocked_reason) content = require('./status.cjs').render(report.blocked_reason,report.quote,report.budget,report);
+    else {clean = verdict(report); content = report.body;}
+  }
   else throw Error('invalid publication phase');
   const tests = evidence || report?.test_evidence;
   const links = tests?.head === head ? (tests.runs || []).filter(run=>Number.isSafeInteger(run.id) && run.id>0).map(run=>`[Test run ${run.id}](${context.serverUrl || 'https://github.com'}/${context.repo.owner}/${context.repo.repo}/actions/runs/${run.id})`).join(' · ') : '';
@@ -35,7 +39,7 @@ module.exports = async function publish({github, context, core, head, pr, phase,
   if (existing) {
     if (existing.body !== body) await github.rest.issues.updateComment({...context.repo, comment_id:existing.id, body});
   } else await github.rest.issues.createComment({...context.repo, issue_number:Number(pr), body});
-  if (phase === 'complete') {
+  if (phase === 'complete' && !report.blocked_reason) {
     const validated = report.qualified === true && report.complete === true && report.synthesis_complete === true && report.review_failures?.length === 0;
     const event = clean ? 'APPROVE' : validated && report.findings?.length > 0 ? 'REQUEST_CHANGES' : null;
     if (event) {
@@ -48,6 +52,6 @@ module.exports = async function publish({github, context, core, head, pr, phase,
       }
     }
   }
-  if (phase !== 'waiting' && !clean) core.setFailed('adversarial review did not establish a clean result');
+  if (!['waiting','blocked'].includes(phase) && !clean) core.setFailed('adversarial review did not establish a clean result');
 };
 module.exports.verdict = verdict;
