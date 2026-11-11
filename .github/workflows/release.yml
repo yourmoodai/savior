@@ -53,7 +53,7 @@ jobs:
       - uses: ./.github/actions/model-cache
       - run: npm run test:bootstrap
       - run: npm run eval:local
-      - run: node --test tests/native.spec.mjs tests/review.spec.mjs
+      - run: node --test tests/native.spec.mjs tests/review.spec.mjs tests/watch.spec.mjs
       - name: restore pinned node runtime archive
         uses: actions/cache@v4
         with:

@@ -14,7 +14,8 @@ rules remain.
 
 Counts cannot explain a disputed edit. Full traces retain the original context
 and exact output, which may contain secrets; excerpts can omit decisive context.
-Existing metrics consent authorizes neither form of text retention.
+Existing metrics consent authorizes neither form of text retention. Live viewing
+provides immediate visibility without needing a retained record.
 
 ## Decision
 
@@ -28,6 +29,10 @@ queried through embedded DuckDB. The initial single snapshot is invalidated by
 annotation changes; the journal supports recovery and regeneration. Downloads
 use cache storage; retained records use private, profile-isolated state storage.
 
+Starting `savior watch` authorizes ephemeral display from the same profile until
+it stops. It uses actual applied edits, keeps no history, and neither grants nor
+revokes consent to retained traces.
+
 ## Invariants & Abstention
 
 - Full-text recording defaults off and requires independent consent. Revocation
@@ -35,22 +40,23 @@ use cache storage; retained records use private, profile-isolated state storage.
 - Metadata excludes originals, output, custom markers, and unkeyed prompt hashes.
   Logs and errors never contain prompt content.
 - Invalid spans, unsafe paths, and incompatible schemas are rejected. Recording
-  failures warn without blocking successful filtering. Processing failures still
-  block submission; recording cannot create an original-text fallback.
+  failures warn without blocking successful filtering; viewer failures may drop
+  events but cannot change rewriting. Processing failures still block submission.
 - Retention expires at seven days within a 256 MiB ceiling; conservative capacity
   reservations can evict earlier. Expiry runs on capture and inspection, not
   while Savior is stopped.
 - Deletion disables capture and removes managed records, annotations, and
-  projections. User exports and backups are outside deletion.
+  projections. User exports, terminal captures, and backups are outside deletion.
 - Capture grants no cloud telemetry, training import, or Claude-history import.
   Missing model or outcome evidence remains unavailable; unresolved judgments
   remain unresolved. Adapter delivery evidence does not prove provider receipt.
 
 ## Consequences
 
-Users can inspect exact edits and retain context for later review.
+Users can inspect exact edits live or retain context for later review.
 Retained files are private, not encrypted; same-user access, administrators,
-backups, or compromise can expose them. Database contention can cause recording
+backups, or compromise can expose them. Live display exposes text to anyone
+watching or recording the terminal. Database contention can cause recording
 gaps. Full traces do not automatically become benchmark fixtures.
 
 [Inspection](../inspection.md) owns commands, storage details, and export format.

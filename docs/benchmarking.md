@@ -265,7 +265,7 @@ native and Node coverage, and every observed resident rewrite below 500 ms.
 Use `npm run bench:decisions -- --help` for the existing qualification protocol.
 Shared CI hardware cannot qualify latency.
 
-## Inspection checks
+## Inspection and live feed checks
 
 ```sh
 npm run inspect:build:debug
@@ -288,6 +288,24 @@ requests. Profiling reports five short-input samples for disabled, metadata, and
 full-text capture, RSS, and cold/warm export times. It is not detector latency
 qualification. Editor tasks expose debug/release inspection, tests, browser E2E,
 and memory profiling.
+
+The live watcher has separate rendering, transport, and process checks:
+
+```sh
+npm run watch:debug
+npm run watch:build:release
+npm run watch
+npm run watch:test
+npm run watch:profile -- --view prompt-diff
+```
+
+The run and profile commands remain open until `Ctrl+C`. Memory profiling uses
+the Unix `time` utility and is available on macOS/Linux. Run/debug commands use
+the active profile, so use an isolated `CLAUDE_CONFIG_DIR` and synthetic prompts
+for measurements. Editor tasks expose the same build, test, and profiling paths.
+Watcher tests cover exact applied spans, terminal escaping, profile isolation,
+malformed frames, disconnects, and slow output; they do not qualify detection
+accuracy or latency.
 
 ## Publishing the results
 

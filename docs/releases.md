@@ -3,7 +3,8 @@
 This guide is for maintainers. Users should start with
 [installation](usage.md#installation). No release is currently published.
 [ADR 2](adr/0002-release-and-quality-evidence.md) governs existing artifact
-integrity and qualification.
+integrity and qualification; [ADR 5](adr/0005-sign-binaries-before-release.md)
+proposes additional platform signing and promotion requirements.
 
 ## Current packaging and qualification
 
@@ -38,6 +39,10 @@ assets afterward. Local cache or mock-download checks do not establish success
 on that distribution path. Marketplace promotion must wait for the public
 download checks.
 
+The current instructions use a moving `latest` marketplace URL. It does not
+implement ADR 5's proposed independent promotion point; that remains unresolved.
+Do not treat this procedure as evidence that platform signing is implemented.
+
 ## Setup recovery
 
 The bootstrap reuses verified downloads and recovers a setup lock whose recorded
@@ -51,6 +56,57 @@ If the operating system blocks a runtime, keep its protections enabled and
 report the failure with content-free diagnostics. Never remove quarantine
 metadata or disable Gatekeeper, Smart App Control, or antivirus as an
 installation workaround.
+
+## Proposed platform signing
+
+**Proposed and unimplemented.** The following is ADR 5's intended release order,
+not an available signing command or a claim about current artifacts.
+
+1. Build the supported targets from one identified source revision.
+2. Sign and timestamp final platform artifacts; complete macOS notarization and
+   any applicable ticket packaging.
+3. Hash final runtime bytes, sign the manifest, assemble the archive, and
+   calculate its marketplace checksum.
+4. Validate versions, inventory, signer identities, notarization, sizes, hashes,
+   and the generated marketplace entry.
+5. Pass packaged-runtime and installed-host smoke tests on every advertised
+   platform, including clean machines with normal OS protections.
+6. Publish immutable versioned assets and pass the real public-download matrix.
+7. Promote through a separately controlled marketplace point only after success.
+
+Keep the persistent Ed25519 key separate from platform certificate keys or
+managed-signing permissions. Record expected public identities independently
+of candidate artifacts. Private keys and credentials never enter source or
+release assets.
+
+### Unresolved choices
+
+- Windows signer: evaluate SignPath Foundation eligibility, including its
+  already-released-project requirement, and Microsoft Artifact Signing enrollment
+  and cost. Provider selection cannot relax the trusted-signature requirement.
+- Apple identity: choose the legal publisher and developer team responsible for
+  certificate renewal and recovery.
+- Notarization: select a container and ticket strategy for separately downloaded
+  command-line binaries and the addon, including offline first launch. Justify
+  hardened-runtime entitlements against the packaged Node runtime.
+- Promotion: replace reliance on a moving release URL with an independently
+  controlled promotion mechanism.
+
+macOS can block unnotarized downloads; Windows reputation or application-control
+checks can block unsigned binaries. Missing signatures alone do not establish
+that an OS will delete a file. Signing and notarization do not guarantee
+warning-free execution or acceptance on managed machines.
+
+### References
+
+- [Apple enrollment](https://developer.apple.com/programs/enroll/) and
+  [Developer ID certificates](https://developer.apple.com/help/account/certificates/create-developer-id-certificates).
+- [Apple notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
+  and [Gatekeeper](https://support.apple.com/en-us/102445).
+- [Microsoft Artifact Signing](https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart)
+  and [SmartScreen reputation](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation).
+- [SignPath Foundation eligibility](https://signpath.org/terms).
+- [Sigstore CI signing](https://docs.sigstore.dev/quickstart/quickstart-ci/).
 
 ## Review automation
 

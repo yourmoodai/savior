@@ -56,7 +56,8 @@ in the relevant benchmark, release, or tool guide.
 | [ADR 1](docs/adr/0001-local-span-replacement.md) | Accepted | Local transformation and adapter boundaries |
 | [ADR 2](docs/adr/0002-release-and-quality-evidence.md) | Accepted | Release integrity and evidence gates |
 | [ADR 3](docs/adr/0003-future-egress-enforcement.md) | Planned; unimplemented | Transparent proxy and limits on egress claims |
-| [ADR 4](docs/adr/0004-consented-local-traces.md) | Accepted | Inspection and consented retention |
+| [ADR 4](docs/adr/0004-consented-local-traces.md) | Accepted | Inspection, ephemeral viewing, and consented retention |
+| [ADR 5](docs/adr/0005-sign-binaries-before-release.md) | Proposed; unimplemented | Platform signing and independent promotion |
 
 `.github/CODEOWNERS` explicitly assigns `docs/adr/**` to the maintainer. A
 repository administrator must enable GitHub's **Require review from Code
@@ -106,6 +107,8 @@ Do not pass private prompts in process arguments.
 The Node bridge also supports version 2 assessment and version 3 traced
 rewriting. These can report a processing failure in the response without a
 nonzero exit; callers must check both exit status and response status.
+The native `watch` command is a streaming text interface with diagnostics on
+stderr, not a JSON request endpoint. See [inspection](docs/inspection.md).
 
 ## Commit messages and hooks
 
@@ -158,5 +161,5 @@ are in [`models/catalog.json`](models/catalog.json) and
 ## Release and review workflows
 
 [Release preparation](docs/releases.md) owns packaging, signing-key setup,
-qualification, and recovery.
+qualification, recovery, and the proposed platform-signing procedure.
 [Inspection](docs/inspection.md) covers user-visible edits and saved traces.

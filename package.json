@@ -28,6 +28,11 @@
     "savior": "bridge/cli.mjs"
   },
   "scripts": {
+    "watch": "target/release/savior watch",
+    "watch:debug": "cargo run -p savior-cli -- watch",
+    "watch:build:release": "cargo build --release -p savior-cli",
+    "watch:test": "cargo test -p savior-review --features watch live:: && node --test tests/watch.spec.mjs",
+    "watch:profile": "cargo build --profile profiling -p savior-cli && node scripts/profile-watch.mjs",
     "corpus:fetch": "node scripts/bench/corpus.mjs fetch",
     "corpus:validate": "node scripts/bench/corpus.mjs validate",
     "bench:quality": "node scripts/bench/run.mjs quality",

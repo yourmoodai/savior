@@ -6,6 +6,8 @@ Date: 2026-10-20
 
 Accepted for release qualification and default promotion. This record does not
 promote a model, backend, or judge.
+[ADR 5](0005-sign-binaries-before-release.md) proposes additional platform
+signing and promotion requirements that are not yet implemented.
 
 ## Context
 

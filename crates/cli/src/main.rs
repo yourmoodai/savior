@@ -33,7 +33,7 @@ fn run() -> Result<serde_json::Value, String> {
     }
     if command == "help" || command == "--help" {
         return Ok(
-            serde_json::json!({"commands":["rewrite", "doctor", "prepare", "inspect", "traces"]}),
+            serde_json::json!({"commands":["rewrite", "doctor", "prepare", "inspect", "traces", "watch"]}),
         );
     }
     if !["rewrite", "doctor"].contains(&command.as_str()) || std::env::args().count() != 2 {
@@ -82,6 +82,14 @@ fn run() -> Result<serde_json::Value, String> {
     )
 }
 fn main() {
+    if std::env::args().nth(1).as_deref() == Some("watch") {
+        if let Err(code) = savior_review::live::watch(&std::env::args().skip(2).collect::<Vec<_>>())
+        {
+            eprintln!("savior: {code}");
+            std::process::exit(1);
+        }
+        return;
+    }
     match run() {
         Ok(result) => println!("{result}"),
         Err(code) => {

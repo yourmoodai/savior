@@ -4,6 +4,7 @@ pub mod history;
 pub mod inspector;
 #[cfg(feature = "judge")]
 pub mod judge;
+pub mod live;
 pub mod policy;
 pub mod store;
 pub mod traces;
