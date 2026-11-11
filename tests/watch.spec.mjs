@@ -116,7 +116,7 @@ test('watch is isolated, exclusive, live only, and ignores unchanged or failed r
     await wait_for(() => watcher.stderr.includes('watching live'), watcher);
     const duplicate = start(binary, ['watch'], env);
     assert.equal((await duplicate.done).code, 1);
-    assert.ok(duplicate.stderr.includes('watch_already_running'));
+    assert.ok(duplicate.stderr.includes('watch_already_running'), duplicate.stderr);
     await rewrite(env, 'keep this unchanged');
     assert.equal((await rewrite(env, '`idiot`')).status, 'error');
     await rewrite(env, 'idiot legacy caller', 1);
@@ -164,9 +164,12 @@ test('slow output drops display events without blocking rewrites', {timeout:3000
       const {loadDetector} = require('./native/index.cjs');
       (async () => {
         const detector = await loadDetector({modelDir:process.env.SAVIOR_MODEL_DIR, detector:'lexical'});
+        // Fill the output pipe without making span serialization the bottleneck.
+        const text = 'idiot! ' + 'keep '.repeat(12000);
         for (let i = 0; i < 40; i++) {
-          const result = JSON.parse(await detector.rewriteTraced('idiot! '.repeat(2000)));
-          if (result.status !== 'rewritten' || result.replacement_count !== 2000) throw Error('rewrite_failed');
+          const result = JSON.parse(await detector.rewriteTraced(text));
+          if (result.status !== 'rewritten' || result.replacement_count !== 1 ||
+              result.text !== 'ya ya ya! ' + 'keep '.repeat(12000)) throw Error('rewrite_failed');
         }
         console.log('completed');
       })().catch(() => process.exit(1));

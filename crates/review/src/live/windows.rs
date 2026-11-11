@@ -179,7 +179,10 @@ impl Listener {
             )
         }; // 64 KiB buffers
         if handle == INVALID_HANDLE_VALUE {
-            return Err(if unsafe { GetLastError() } == ERROR_ACCESS_DENIED {
+            return Err(if matches!(
+                unsafe { GetLastError() },
+                ERROR_ACCESS_DENIED | ERROR_PIPE_BUSY
+            ) {
                 "watch_already_running"
             } else {
                 "watch_unavailable"

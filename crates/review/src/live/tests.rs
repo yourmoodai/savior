@@ -223,7 +223,10 @@ fn local_transport_is_profile_scoped_exclusive_and_reusable() {
     let profile = profile.path().canonicalize().unwrap();
     let other = tempfile::tempdir().unwrap();
     let mut listener = platform::Listener::bind(&profile).unwrap();
-    assert!(platform::Listener::bind(&profile).is_err());
+    assert_eq!(
+        platform::Listener::bind(&profile).err().unwrap(),
+        "watch_already_running"
+    );
     assert!(platform::connect(other.path()).is_err());
     for view in [View::Spans, View::SpanDiff, View::PromptDiff] {
         let publisher_profile = profile.clone();
