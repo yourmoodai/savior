@@ -1,5 +1,6 @@
 import {workerBinary} from './runtime.mjs';
 import {exchange_at} from './review-transport.mjs';
+import {socket_directory} from './directories.mjs';
 import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {realpath, access, writeFile, readFile, lstat} from 'node:fs/promises';
@@ -15,10 +16,10 @@ async function exchange(request, timeout=30000) {
   let unix_endpoint;
   if(process.platform!=='win32') {
     const uid=process.geteuid();
-    const directory='/tmp/savior-'+uid+'-'+createHash('sha256').update(profile).digest('hex');
+    const directory=await socket_directory(profile);
     const metadata=await lstat(directory);
     if(!metadata.isDirectory() || metadata.uid!==uid || (metadata.mode&0o777)!==0o700) throw Error('review_unavailable');
-    unix_endpoint=join(directory,'s');
+    unix_endpoint=directory+'/s';
   }
   const endpoint=process.platform==='win32' ? '\\\\.\\pipe\\savior-'+createHash('sha256').update(profile.replace(/^\\\\\?\\/, '').toLowerCase()).digest('hex') : unix_endpoint;
   return exchange_at(endpoint,request,timeout);

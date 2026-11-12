@@ -65,6 +65,35 @@ To remove detected wording instead, set `SAVIOR_REPLACEMENT_STRATEGY=omit`
 and unset `SAVIOR_REPLACEMENT`. Custom phrases must contain 1–80 characters,
 include non-whitespace text, and contain no control characters.
 
+## User directories
+
+On macOS and Linux, Savior honors these XDG directory variables:
+
+| Content | Variable | Default |
+| --- | --- | --- |
+| Downloaded models and cached runtimes | `XDG_CACHE_HOME` | `$HOME/.cache` |
+| Consented trace state | `XDG_STATE_HOME` | `$HOME/.local/state` |
+| Worker and live-view sockets | `XDG_RUNTIME_DIR` | Private, profile-specific directory under `/tmp` |
+
+Cache and state directories contain a `savior` subdirectory. Unset, empty, or
+relative XDG values use the defaults; a required home directory must be absolute.
+An absolute runtime directory must already exist, belong to the current user,
+and have mode `0700`. Unsafe runtime directories are rejected. Long socket paths
+use the bounded private `/tmp` fallback so deeply nested profiles still work.
+An inaccessible selected cache or state location reports an error instead of
+writing somewhere else.
+
+`SAVIOR_MODEL_DIR` remains an explicit, validated model override. The signed macOS
+runtime stays inside its plugin bundle; directory settings do not relocate it.
+Windows retains per-user caches and state under `LOCALAPPDATA`.
+
+Settings remain environment variables. Savior does not currently read a settings
+file from `XDG_CONFIG_HOME` or user data from `XDG_DATA_HOME`. `CLAUDE_CONFIG_DIR`
+continues to identify Claude's profile; XDG variables do not relocate that host
+profile or migrate existing personal-review metrics and consent. Trace recording
+still requires its separate opt-in. Choose directory overrides before launching
+Claude; stop existing sessions before changing them.
+
 ## Privacy and limits
 
 The original text exists in the host's prompt box and the local processing

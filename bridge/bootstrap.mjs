@@ -4,6 +4,7 @@ import { createReadStream } from 'node:fs';
 import { dirname, isAbsolute, join, parse, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { cache_root } from './directories.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const targets = new Set(['darwin-arm64', 'linux-x64', 'win32-x64']);
@@ -150,8 +151,7 @@ export async function prepare_runtime(plugin_root = root, fetcher = fetch) {
     await verify_bundle(plugin_root, manifest);
     return {status:'ready', runtime_dir:join(plugin_root,macos_runtime), manifest_sha256:sha(bytes)};
   }
-  const cache = process.platform === 'win32' ? process.env.LOCALAPPDATA : (process.env.XDG_CACHE_HOME || join(process.env.HOME || '', '.cache'));
-  if (!cache || !isAbsolute(cache)) fail('invalid_cache_path');
+  const cache = cache_root();
   const directory = join(cache, 'savior', 'releases', release.version, target, sha(bytes));
   await private_directory(directory);
   const lock_path = join(directory, 'setup.lock');
