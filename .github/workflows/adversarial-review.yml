@@ -15,6 +15,9 @@ on:
         type: string
 permissions:
   contents: read
+concurrency:
+  group: bedrock-review-spending
+  cancel-in-progress: false
 jobs:
   scope:
     timeout-minutes: 15
@@ -57,9 +60,6 @@ jobs:
     needs: scope
     if: needs.scope.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
-    concurrency:
-      group: bedrock-review-spending
-      cancel-in-progress: false
     environment:
       name: bedrock-review
       deployment: false
@@ -73,6 +73,7 @@ jobs:
       PR_NUMBER: ${{ needs.scope.outputs.pr }}
       BASE_SHA: ${{ needs.scope.outputs.base }}
       AWS_REGION: us-east-1
+      REVIEW_COST_POLICY: 'true'
       BEDROCK_REVIEW_ENABLED: ${{ needs.scope.outputs.enabled }}
       BEDROCK_EXTERNAL_PROBE_NANODOLLARS: ${{ vars.BEDROCK_EXTERNAL_PROBE_NANODOLLARS }}
     steps:
@@ -120,19 +121,6 @@ jobs:
               fs.writeFileSync('review-result/failure.json',JSON.stringify({reason:'spending_unresolved'}));
               throw error;
             }
-      - name: validate spending comment
-        if: github.event_name == 'issue_comment'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          BOOTSTRAP_CODEOWNERS: ${{ vars.ADVERSARIAL_BOOTSTRAP_CODEOWNERS }}
-        with:
-          script: |
-            const handler=require('./tools/adversarial_reviewer/approval.cjs');
-            const approval=await handler.record_failure(()=>handler.revalidate({
-              github,context,number:process.env.PR_NUMBER,head:process.env.HEAD_SHA,
-              base:process.env.BASE_SHA,bootstrap:process.env.BOOTSTRAP_CODEOWNERS,
-            }));
-            require('node:fs').writeFileSync('review-result/approval.json',JSON.stringify(approval));
       - name: estimate and authorize spending without inference
         id: preflight
         env:
@@ -175,7 +163,6 @@ jobs:
           BASE_SHA: ${{ needs.scope.outputs.base }}
           HEAD_SHA: ${{ needs.scope.outputs.head }}
           REVIEW_TEST_EVIDENCE: ${{ runner.temp }}/review-tests.json
-          REVIEW_BUDGET_GRANT: ${{ steps.preflight.outputs.grant }}
         run: python3 tools/adversarial_reviewer/run_ci.py
       - name: snapshot budget after completion or cancellation
         if: always() && needs.scope.outputs.enabled == 'true' && hashFiles('review-result/ledger.db') != ''
@@ -207,12 +194,12 @@ jobs:
       - name: identify spending quote
         if: always() && hashFiles('review-result/quote.json') != ''
         id: quote
-        run: python3 -c 'import json,os; q=json.load(open("review-result/quote.json")); open(os.environ["GITHUB_OUTPUT"],"a").write("id="+q["id"]+"\n")'
+        run: python3 -c 'import json,os; q=json.load(open("review-result/quote.json")); name=("review-cost-block-"+str(q["binding"]["pr"])+"-"+q["binding"]["head"]+"-" if q.get("blocked_reason")=="cost_limit" else "review-quote-")+q["id"]; open(os.environ["GITHUB_OUTPUT"],"a").write("name="+name+"\n")'
       - name: preserve spending quote
-        if: always() && steps.quote.outputs.id != ''
+        if: always() && steps.quote.outputs.name != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: review-quote-${{ steps.quote.outputs.id }}
+          name: ${{ steps.quote.outputs.name }}
           path: review-result/quote.json
           retention-days: 7
           if-no-files-found: error

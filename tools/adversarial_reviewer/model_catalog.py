@@ -1,6 +1,7 @@
 """Trusted model capabilities and immutable per-run role selection."""
 from contextlib import contextmanager
 from contextvars import ContextVar
+from datetime import date, datetime, timezone
 import hashlib
 import json
 from pathlib import Path
@@ -64,7 +65,21 @@ def validate(catalog, routing):
 
 def manifest():
     catalog, routing = load()
-    return {'routing': routing, 'models': {n: catalog['models'][n] for n in sorted(set(routing['roles'].values()))}}
+    models = {n: catalog['models'][n] for n in sorted(set(routing['roles'].values()))}
+    for model in models.values():
+        current_pricing(model)
+    return {'routing': routing, 'models': models}
+
+
+def current_pricing(model):
+    try:
+        price = model['pricing']
+        age = (datetime.now(timezone.utc).date()-date.fromisoformat(price['checked'])).days
+        if not 0 <= age <= 90 or not price['source'] or any(
+                type(price[k]) is not int or price[k] <= 0 for k in ('input_nanodollars', 'output_nanodollars')):
+            raise ValueError()
+    except (KeyError, ValueError, TypeError):
+        raise ValueError('unsupported_pricing') from None
 
 
 def selected(role=None):

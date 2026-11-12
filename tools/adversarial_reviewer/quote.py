@@ -88,9 +88,21 @@ def create(manifests, summary, qualification, *, now=None):
              'items': items, 'strategy': selected, 'chunks': len(manifests[selected]['chunks']),
              'cached_assessments': sum(bool(c.get('cached_assessment')) for c in manifests[selected]['chunks']),
              'estimated_nanodollars': sum(i['estimated_nanodollars'] for i in items),
-             'cap_nanodollars': ((maximum+9_999_999)//10_000_000)*10_000_000,
+             'projected_nanodollars': maximum,
              'pilot_committed_nanodollars': summary['pilot_committed_nanodollars']}
     quote['id'] = digest(quote)
+    return quote
+
+
+def apply_policy(quote, allowance):
+    from cost_policy import check
+    from budget import BudgetExhausted
+    quote = {**quote, 'policy': allowance, 'blocked_reason': None}
+    try:
+        check(quote['projected_nanodollars'], allowance)
+    except BudgetExhausted:
+        quote['blocked_reason'] = 'cost_limit'
+    quote['id'] = digest({k:v for k,v in quote.items() if k != 'id'})
     return quote
 
 
