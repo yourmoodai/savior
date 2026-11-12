@@ -55,7 +55,7 @@ async function from_comment({github, context, pr, bootstrap='', decode}) {
   if (request.cap_nanodollars < quote.cap_nanodollars) throw Error('approval_below_estimate');
   return {quote, grant:{id:'comment-'+comment.id, quote_id:quote.id, repository, pr:pr.number,
     head:pr.head.sha, base:pr.base.sha, configuration:quote.binding.configuration,
-    cap_nanodollars:request.cap_nanodollars, actor:comment.user.login, comment_id:comment.id,
+    cap_nanodollars:request.cap_nanodollars, actor:comment.user.login, actor_id:comment.user.id, comment_id:comment.id,
     run_id:context.runId}};
 }
 

@@ -54,6 +54,7 @@ jobs:
           python-version: '3.12.10'
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node scripts/verify-branding.mjs
+      - run: python3 -m pip install -r tools/adversarial_reviewer/requirements.txt
       - run: python3 -m unittest discover -s tools/adversarial_reviewer
       - run: python3 -m unittest discover -s scripts/release
       - run: python3 scripts/release/lint_workflows.py

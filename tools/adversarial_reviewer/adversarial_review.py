@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 import json
 import os
 from pathlib import Path
@@ -59,6 +60,8 @@ RESPONSE_SCHEMA = {
 
 SYSTEM_PROMPT = """You are a careful code reviewer. Determine whether the changes introduce a bug.
 First explain what changed and whether it introduces a defect.
+Finish evaluating hypotheses before composing the final response. A rejected hypothesis
+is not a finding. If the rationale concludes there is no defect, return an empty findings array.
 For clean changes, give one sentence of at most 25 words. For findings, use at most two short sentences.
 Then list findings. A change alone is not a bug.
 If old and new code produce the same correct result, do not report a defect.
@@ -280,7 +283,7 @@ def review_messages(diff, files, doc_context, anchors, candidate=None, supportin
             f"\n{verification_prompt}\nCandidate findings to verify: {json.dumps(candidate)}\n"
         )
     system = system_prompt + '\n' + runtime_facts()
-    system += "\nReturn JSON matching this schema: " + json.dumps(RESPONSE_SCHEMA, sort_keys=True)
+    system += "\nReturn JSON matching this schema: " + json.dumps(RESPONSE_SCHEMA)
     content += supporting_context
     return [{"role": "system", "content": system}, {"role": "user", "content": content}]
 
@@ -290,7 +293,8 @@ def cached_assessment(diff, files, doc_context, anchors=None, *, candidate=None,
     from prompt_profiles import settings
     evidence = list(locations(diff).values()) if anchors is None else list(anchors)
     evidence = [a for a in evidence if a['evidence'].strip()]
-    identity = key('assessment', [os.environ.get('BEDROCK_REVIEW_MODEL'), os.environ.get('AWS_REGION'), settings.get()[:2], review_messages(
+    from model_catalog import manifest, active_role
+    identity = key('assessment', [manifest(), active_role.get(), os.environ.get('BEDROCK_REVIEW_MODEL'), os.environ.get('AWS_REGION'), settings.get()[:2], review_messages(
         diff, files, doc_context, evidence, candidate, supporting_context), evidence])
     cached = get(identity, 7*86400)
     if isinstance(cached, list) and len(cached) == 3:
@@ -313,8 +317,16 @@ def run_model_reviewer(diff, files, doc_context, anchors=None, *, candidate=None
         record(stage='cache_hit', files=files)
         measure('hit')
         return cached
-    result = _run_model_reviewer(diff, files, doc_context, evidence, candidate=candidate,
-                                 deadline=deadline, supporting_context=supporting_context)
+    from egm import review
+    from model_catalog import select
+    deadline = min(deadline or float('inf'), time.monotonic() + ASSESSMENT_SECONDS)
+    if candidate is None:
+        result = review(_run_model_reviewer, diff, files, doc_context, evidence,
+                        deadline=deadline, supporting_context=supporting_context)
+    else:
+        with select('verification'):
+            result = _run_model_reviewer(diff, files, doc_context, evidence, candidate=candidate,
+                                         deadline=deadline, supporting_context=supporting_context)
     if result[0] in ('APPROVE', 'REQUEST_CHANGES') and not result[2].startswith('review incomplete:'):
         put(identity, result)
     return result
@@ -480,7 +492,7 @@ def review_diff(diff, files, *, mock=False, test_context="", strategy=None, dry_
             futures = []
             for index, item in enumerate(batch, start + 1):
                 print(f"reviewing chunk {index}/{len(chunks)}: {item[0]}", flush=True)
-                futures.append(executor.submit(assess, item))
+                futures.append(executor.submit(copy_context().run, assess, item))
             for index, (item, future) in enumerate(zip(batch, futures), start + 1):
                 header, chunk, _ = item
                 disposition, findings, summary = future.result()

@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 from adversarial_review import (
     run_heuristic_reviewer,
-    run_model_reviewer,
+    _run_model_reviewer as run_model_reviewer,
     extract_git_diff,
     review_diff,
     split_diff,

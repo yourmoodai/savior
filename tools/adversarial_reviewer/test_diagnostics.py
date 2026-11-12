@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from adversarial_review import run_model_reviewer
+from adversarial_review import _run_model_reviewer as run_model_reviewer
 from diagnostics import capture, record
 from evaluate_model import CASES
 from qualify import fixture
@@ -66,7 +66,9 @@ class DiagnosticTests(unittest.TestCase):
                 'passed': False, 'missing_defects': ['qualification/case2/bridge/submit.py'],
                 'unexpected_findings': [], 'report': {'chunks': [{
                     'complete': False, 'summary': 'review incomplete: invalid findings: expected array.'}]}}]}}}
-            with patch.dict(os.environ, {'HEAD_SHA': 'test', 'BASE_SHA': 'base',
+            from budget import Ledger
+            Ledger('review-result/ledger.db').authorize({'id':'test','cap_nanodollars':10_000_000_000,'head':'test','run_id':1})
+            with patch.dict(os.environ, {'REVIEW_BUDGET_GRANT':'test','GITHUB_RUN_ID':'1','HEAD_SHA': 'test', 'BASE_SHA': 'base',
                                           'BEDROCK_REVIEW_ENABLED': 'true', 'GITHUB_STEP_SUMMARY': '',
                                           'REVIEW_BUDGET_LEDGER': ''}), \
                     patch('subprocess.run') as run, \

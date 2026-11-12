@@ -27,6 +27,8 @@ try:
     preflight = json.loads(Path('review-result/preflight.json').read_text())
     if preflight['blocked_reason'] or preflight['commit_id'] != head:
         raise ValueError('review preflight is not authorized')
+    if not os.environ.get('REVIEW_BUDGET_GRANT'):
+        raise ValueError('explicit spending approval required')
     ledger = restore()
     if os.environ.get('REVIEW_BUDGET_GRANT'):
         grant = next(g for g in ledger.summary()['grants'] if g['id'] == os.environ['REVIEW_BUDGET_GRANT'])

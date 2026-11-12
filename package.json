@@ -132,7 +132,10 @@
     "site:dev": "python3 scripts/site.py serve",
     "site:build": "python3 scripts/site.py build",
     "site:check": "python3 scripts/site.py check",
-    "site:test": "python3 scripts/site.py check && node scripts/test-site.mjs"
+    "site:test": "python3 scripts/site.py check && node scripts/test-site.mjs",
+    "reviewer:models": "python3 tools/adversarial_reviewer/models.py",
+    "reviewer:models:debug": "python3 -m pdb tools/adversarial_reviewer/models.py",
+    "reviewer:models:profile": "python3 -X tracemalloc tools/adversarial_reviewer/models.py"
   },
   "files": [
     "native/index.cjs",

@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "roles": {
+    "correctness": "deepseek_v3_2",
+    "security": "deepseek_v3_2",
+    "compatibility": "deepseek_v3_2",
+    "elephant": "deepseek_v3_2",
+    "verification": "deepseek_v3_2"
+  }
+}

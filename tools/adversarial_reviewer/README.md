@@ -5,8 +5,10 @@ under the retained MIT license. Bedrock evaluates concrete failure scenarios aga
 numbered diff evidence; this is separate from Markdown and commit-message linting.
 
 Run `python3 -m unittest discover -s tools/adversarial_reviewer` for transport,
-evidence, coverage, and disposition tests. CI uses AWS CLI v2 and Bedrock Converse
-with `deepseek.v3.2` in `us-east-1`.
+evidence, coverage, and disposition tests. CI uses AWS CLI v2 for Converse and
+SigV4-signed Chat Completions for compatible AWS models in `us-east-1`.
+Install the signing dependency with
+`python3 -m pip install -r tools/adversarial_reviewer/requirements.txt`.
 The application detector and personal-review judges remain offline.
 
 ## Review status and spending approval
@@ -17,13 +19,13 @@ failed qualification, or an infrastructure failure. A funding block is not a
 code finding and does not submit a formal request for changes.
 
 Before inference, the workflow builds a quote locally. It lists qualification,
-assessment, verification, output retries, and summaries, including cached work.
+assessment, verification, output and transport retries, and summaries, including cached work.
 The estimate uses conservative token counts; the proposed maximum reserves full
 model context capacity. Actual charges are reconciled after each call. Further
 subdivision can exhaust that maximum before coverage is complete. Taxes and
 unrelated AWS charges are excluded.
 
-When the pilot cannot cover the quote, a repository admin or an individual named
+Every paid run needs approval. A repository admin or an individual named
 in the trusted base revision's `CODEOWNERS` with write access can post the exact
 command from the bot comment:
 
@@ -65,22 +67,30 @@ for DeepSeek V3.2 in `us-east-1`. The exact policies are in
 [`iam/trust.json`](iam/trust.json) and [`iam/invoke.json`](iam/invoke.json).
 No AWS access keys or SSO credentials are stored in GitHub.
 
-The environment variables `BEDROCK_REVIEW_ROLE_ARN` and `BEDROCK_REVIEW_MODEL`
-select that role and model. Set `BEDROCK_REVIEW_ENABLED=true` after account model access is verified.
-Every enabled run requires passing qualification for the exact reviewer configuration; successful qualification is reusable for 24 hours. Bedrock is metered API usage, not
-free Copilot credits. Unapproved runs share a $10 pilot inference budget, including at most $2 for qualification
-and strategy comparison. An atomic SQLite ledger reserves 167,936 input tokens (164 Ki tokens) plus
-maximum output before every call. Actual usage releases unused reservations;
-missing usage and interrupted calls retain their maximum cost. Budget exhaustion
-leaves coverage incomplete. This bounds modeled inference cost at the pinned US
-rates ($0.62/M input, $1.85/M output), not taxes or unrelated AWS usage.
+The environment variable `BEDROCK_REVIEW_ROLE_ARN` selects the role. Model
+selection belongs to `models.json` and `routing.json` in the trusted base.
+`BEDROCK_REVIEW_MODEL` is no longer consumed. Set the repository variable
+`BEDROCK_REVIEW_ENABLED=true` only after deployment and qualification. The scope
+job captures this value and passes it to the review job, so an environment-level
+variable cannot shadow it. Remove the obsolete environment-level enable variable.
+Set the repository flag to `false` to stop new reviews; already reserved calls
+remain charged until settlement. The flag does not cancel an in-flight invocation.
 
-CI serializes pilot and approved spending across PRs. The original `haiku45-pilot-20261015`
+Every enabled run requires passing qualification for the exact routing and
+reviewer configuration; successful qualification is reusable for 24 hours. Every
+paid run requires approval, including qualification. The ledger reserves each
+selected model's full context and maximum output at its catalog prices before
+invocation. Actual usage releases unused reservations; missing usage and
+interrupted calls retain the maximum. Prices cover modeled inference only, not
+taxes or unrelated AWS charges. The historical pilot balance remains evidence,
+not authority for new unapproved inference.
+
+CI serializes approved spending across PRs. The original `haiku45-pilot-20261015`
 artifact namespace is retained so changing models cannot reset spending history.
 The ledger also retains $0.03 reserved for the earlier account-access probes. It uploads a reservation before inference and
 reconciles it with a durable ledger afterward. Resumed runs restore that ledger;
 an unresolved, deleted, or expired reservation prevents further spending. Keep
-these artifacts for the pilot's lifetime. The ledger contains token metrics and
+these artifacts for the reviewer's lifetime. The ledger contains token metrics and
 prompt hashes, not prompt text. Use CI as the pilot's sole spending authority;
 local inference must not use an independent copy of the pilot or an approved allowance.
 Comment allowances, their immutable run identities, and each call's funding source
@@ -125,7 +135,11 @@ Spending reservations use full context capacity independently of this estimate. 
 (currently an intentionally conservative 8,000 UTF-8 bytes); omitted support is
 listed. Assessments permit 1,024 output tokens, verification 1,536, and overviews 256. An explicitly truncated assessment or verification gets one retry at 4,096 tokens. Truncated responses or three findings trigger subdivision, never approval
 from a partial parent. Indivisible changes, missing context, or exhausted budget
-remain incomplete. Provider prompt caching is disabled. Validated assessment results are reusable for seven days from trusted workflow artifacts. Cache keys include model settings, reviewer implementation, diff, supporting evidence, and test context. Incomplete results are never cached. Formatting-only changes reuse assessments; approval and current-head coverage are computed again.
+remain incomplete. Requests do not ask for provider caching. GPT-OSS can report
+automatic cache reads; valid cached-input counts are charged at the full standard
+input rate and labelled `standard_input_upper_bound`, without assuming a discount.
+Unknown cache pricing and cache writes retain the full reservation.
+Validated assessment results are reusable for seven days from trusted workflow artifacts. Cache keys include model settings, reviewer implementation, diff, supporting evidence, and test context. Incomplete results are never cached. Formatting-only changes reuse assessments; approval and current-head coverage are computed again.
 
 Qualification exercises benign changes and seeded defects, then compares both
 strategies on the same clean and four-defect batches. Adaptive packing is selected
@@ -142,6 +156,32 @@ Markdown fences are accepted because models sometimes emit them. Transport error
 omit provider response bodies and review evidence. Only the publisher updates
 the PR comment.
 
+The catalog's `response_format` defaults to `json`. GPT-OSS 20B explicitly uses
+`reasoning_prefix_json` for the leading `<reasoning>...</reasoning>` block observed
+on its AWS Chat Completions endpoint. A single complete leading block is removed
+after token usage is settled; malformed wrappers and invalid final JSON still
+fail. Plain JSON and whole JSON fences remain accepted. Other models retain their
+existing parsing. This format setting is bound into quotes and qualification
+cache identities; changing it requires fresh qualification.
+
+GPT-OSS requests use the `developer` instruction role and low reasoning effort.
+Invalid JSON permits one fresh generation from the same evidence with a format
+reminder; the malformed output is never repaired or reused. The second failure
+remains incomplete. Both calls settle separately and quotes include the retry.
+AWS documents structured outputs, but local probes on 2026-11-11 returned malformed
+answers with both `json_schema` and `json_object`; those request modes are not
+enabled. Local evidence and length checks remain authoritative. Valid JSON alone
+does not establish review quality. See the
+[model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-oss-20b.html).
+
+Chat transport retries only transient network failures and HTTP 429/500/502/503/504,
+at most twice with one- and two-second delays inside the existing deadline.
+Every attempt reserves separately; a lost response keeps its reservation. Quotes
+include these attempts. Authentication errors, invalid schemas, and malformed
+model output do not trigger transport retries. Diagnostics retain status,
+allowlisted error categories, request IDs, and elapsed time without provider error
+bodies. Full responses are captured only in private synthetic qualification runs.
+
 Qualification includes paired Node evaluation cases whose expected behavior is
 checked by executing fixed fixtures. The reviewer receives observations from
 fixed, reviewer-owned runtime probes to distinguish valid lexical shadowing from
@@ -157,7 +197,8 @@ formal GitHub approval. Independent verification, commit-message, and release ch
 must also pass before the PR is ready to merge. Validated findings submit `REQUEST_CHANGES`; infrastructure
 failures fail the check without submitting a defect review. Repeated publication
 updates the same comment and does not duplicate an unchanged formal verdict.
-There is no large-PR or code-owner approval bypass. Branch protection is unchanged.
+The separate large-admin lightweight policy remains unchanged; it is not a
+model review. Branch protection is unchanged.
 
 Non-executable PNG/JPEG/WebP files under `docs/assets` are excluded from code-review
 coverage and listed as unreviewed assets. Other binary changes remain unresolved
@@ -172,6 +213,139 @@ cache size is sampled before the current job saves its cache.
 Model limits and API support are documented in the [AWS DeepSeek V3.2 model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-deepseek-deepseek-v3-2.html).
 Usage and stop reasons come from [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html).
 Pilot rates use [Bedrock standard pricing](https://aws.amazon.com/bedrock/pricing/);
-recheck rates before authorizing another pilot.
+recheck catalog rates before approving model onboarding or paid qualification.
 
 The single PR comment is limited to 2,500 characters: a 50–100-word overview, verdict, coverage, cost, and up to three concise findings. Full findings and chunk evidence remain in the `adversarial-report` artifact.
+
+
+## Model onboarding
+
+`models.json` records reviewed capabilities and pricing. `routing.json` selects
+models for correctness, security, compatibility, Elephant synthesis, and fresh
+verification. The shipped routing retains DeepSeek as a candidate for all roles;
+it does not claim new qualification or enable any provider. Anthropic, OpenAI,
+Qwen, DeepSeek, Amazon Nova, and other fast candidates can be selected after their
+account availability, API support, prices, and role quality are checked.
+
+Discovery requires the configured account's active AWS profile and an explicit
+`AWS_REGION=us-east-1`. It verifies STS identity against `iam/trust.json`, lists
+models and profiles, and checks access without invoking inference:
+
+```sh
+npm run reviewer:models -- discover > .cache/model-inventory.json
+```
+
+The weekly discovery workflow stores an inventory artifact only. Configure
+`BEDROCK_DISCOVERY_ROLE_ARN` with a separate OIDC role allowing STS identity,
+`bedrock:ListFoundationModels`, `bedrock:ListInferenceProfiles`,
+`bedrock:GetFoundationModelAvailability`, and
+`bedrock:ListFoundationModelAgreementOffers`. It needs no invocation, subscription,
+or IAM write permission. Until that role is configured the workflow skips.
+
+The catalog also includes GPT-OSS 20B, Qwen Coder Next, and GLM 4.7
+Flash candidates with checked standard US prices. GLM 4.7 Flash is marked legacy
+by its model card; recheck its published end-of-life before promotion. Anthropic
+Haiku discovery currently reports a missing agreement; pricing and use-case
+prerequisites must be completed before adding an invocable entry.
+
+Select a shortlist from the inventory and add its exact capabilities to the
+catalog using current AWS model cards and pricing. API compatibility cannot be
+inferred from the provider name. For cross-region targets, enumerate the exact
+US profile ARN and all destination model ARNs. Re-run discovery after access
+changes. Then produce a plan from an inventory less than 24 hours old:
+
+```sh
+npm run reviewer:models -- plan --input .cache/model-inventory.json \
+  --models deepseek_v3_2 > .cache/model-onboarding.json
+```
+
+The plan contains its digest, provider offers, owned IAM policy, account, and
+qualification estimate for the current routing. `--use-case <json-file>` includes
+operator-supplied Anthropic use-case details; the tool never invents these facts.
+If several offers exist, retain the intended offer in a reviewed inventory before
+planning. Review the terms before supplying the plan's digest:
+
+```sh
+npm run reviewer:models -- activate --input .cache/model-onboarding.json \
+  --approve <plan-id>
+```
+
+Activation requires an onboarding identity with permissions for the listed
+agreements, optional use-case submission, and the owned `savior-review-models`
+inline policy on `savior-bedrock-review`. It never edits other role policies,
+invokes a model, changes routing, or flips the reviewer flag. Pending agreements
+remain pending; discovery must confirm access. Runtime endpoint activation is
+implemented. Mantle's separate resource-scoped IAM policy needs review before
+using that transport; the tool refuses to broaden access automatically.
+
+After editing routing, obtain a separate local qualification quote:
+
+```sh
+npm run reviewer:models -- quote > .cache/model-qualification-quote.json
+npm run reviewer:models -- qualify --input .cache/model-qualification-quote.json \
+  --approve <quote-id> --directory .cache/model-qualification
+npm run reviewer:models -- status --directory .cache/model-qualification
+```
+
+Use `quote --candidate gpt_oss_20b` (or another catalog name) to qualify that
+candidate in all roles without changing production routing. The quote freezes
+this selection; `qualify` restores it for that run only. A combined routing still
+requires its own qualification.
+
+The quoted cap covers the whole synthetic qualification pipeline, including
+bounded retries. Keep the same directory when resuming; never copy or reset its
+ledger to reuse an allowance. Local grants are separate from CI grants and their
+history. Local qualification does not prove CI OIDC access. Status reports the
+selected routing and current qualification evidence, not assumed availability.
+
+### Bounded diagnosis
+
+An operator-authorized investigation can reuse an existing local qualification
+ledger across configuration changes. For the authorized $1 GPT-OSS investigation:
+
+```sh
+AWS_PROFILE=awill AWS_REGION=us-east-1 \
+python3 tools/adversarial_reviewer/investigate.py \
+  --directory .cache/reviewer-routing/gpt-oss-qualification \
+  --cap-nanodollars 1000000000 --phase qualify
+```
+
+This command requires prior spending authorization; its example amount does not
+grant it. The directory must already contain its ledger. A persistent cumulative
+ceiling includes previous grants and unresolved calls, survives merging, and can
+only decrease. Each request must fit before it starts. Keep this ledger for all
+attempts; changing code or the grant cannot reset the cap. `--phase reproduce`
+runs one synthetic fixture, selected by zero-based `--case-index` and `--role`
+(default: first fixture, compatibility). Neither phase modifies production routing,
+IAM, or the repository enable flag.
+
+Each private attempt directory records configuration, diagnostics, qualification
+results, and budget state. Preserve failed attempts. An earlier opaque error
+cannot be reconstructed without its original response: a later observed cached
+usage failure establishes an adapter defect, not the exact cause of a lost call.
+Historical uncertain reservations remain in the cumulative total.
+
+`npm run reviewer:models:debug -- status` runs the command under `pdb`;
+`npm run reviewer:models:profile -- status` enables allocation tracking for use
+under the debugger. Python has no separate release build. Editor tasks expose
+status and reviewer tests.
+
+## Review contexts and activation
+
+Each chunk receives three independent source-based reviews. Candidates get one
+fresh verification round. The Elephant combines the resulting evidence and
+cannot remove verified findings. Exact duplicates collapse; disagreements and
+missing coverage cannot be converted into approval. All steps are covered by
+the immutable quote. There are no implicit fallback models.
+
+Merge the trusted workflow and catalog changes before enabling review. Remove
+the old environment enable override, configure exact model access, obtain paid
+qualification evidence, and set the repository enable flag. Dispatch a review to
+produce a current PR quote, then approve that quote to exercise the deployed
+path. Keep failed qualification evidence; offline tests never substitute for it.
+
+[AWS access prerequisites](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html)
+explain provider agreements; [API compatibility](https://docs.aws.amazon.com/bedrock/latest/userguide/models-api-compatibility.html)
+and [Chat Completions endpoints](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html)
+own endpoint and signing details. [ADR 6](../../docs/adr/0006-qualify-review-model-routing.md)
+records the context-isolation and spending decisions.

@@ -104,8 +104,7 @@ def main():
             approval = DIRECTORY/'approval.json'
             if approval.exists():
                 reason, grant = authorize(ledger, quote, json.loads(approval.read_text()))
-            elif (quote['cap_nanodollars'] > LIMIT-summary['pilot_committed_nanodollars'] or
-                  quote['items'][0]['reserved_nanodollars'] > QUALIFICATION_LIMIT-summary['qualification_committed_nanodollars']):
+            else:
                 reason = 'awaiting_budget'
     except BudgetError:
         reason = 'spending_unresolved'

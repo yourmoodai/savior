@@ -8,14 +8,13 @@ import subprocess
 import tempfile
 import time
 
-from budget import Ledger, BudgetError, BudgetExhausted, RESERVED_INPUT_TOKENS, cost
+from budget import Ledger, BudgetError, BudgetExhausted
 from diagnostics import record
 from prompt_profiles import settings
+from model_catalog import selected, cost as model_cost
 
 MAX_RESPONSE_BYTES = 1048576  # 1 MiB
 MAX_REQUEST_BYTES = 524288  # 512 KiB
-
-MODEL = 'deepseek.v3.2'
 
 
 class BedrockError(Exception):
@@ -69,14 +68,22 @@ def invoke(operation, payload, deadline):
         raise BedrockError('bedrock returned invalid JSON') from None
 
 
-def complete(messages, deadline, *, purpose='assessment', identity=None, expanded=False):
+def complete(messages, deadline, *, purpose='assessment', identity=None, expanded=False, transport_attempt=0, json_attempt=0):
     if os.environ.get('BEDROCK_REVIEW_ENABLED') != 'true':
         raise BedrockError('bedrock review disabled')
-    if os.environ.get('AWS_REGION') != 'us-east-1' or os.environ.get('BEDROCK_REVIEW_MODEL') != MODEL:
-        raise BedrockError('bedrock region or model is not configured for this reviewer')
+    try:
+        model = selected()
+    except (ValueError, KeyError):
+        raise BedrockError('invalid model routing') from None
+    if os.environ.get('AWS_REGION') != model['region']:
+        raise BedrockError('bedrock region is not configured for this reviewer')
+    if not os.environ.get('REVIEW_BUDGET_GRANT'):
+        raise BedrockError('explicit spending approval required')
     profile, temperature, before_call = settings.get()
-    payload = {'modelId': MODEL, **conversation(messages),
+    payload = {'modelId': model['model_id'], **conversation(messages),
                'inferenceConfig': {'maxTokens': (4096 if expanded else {'overview': 256, 'verification': 1536}.get(purpose, 1024)), 'temperature': temperature}}
+    if not model.get('temperature_supported', True):
+        payload['inferenceConfig'].pop('temperature')
     if len(json.dumps(payload).encode()) > MAX_REQUEST_BYTES:
         raise BedrockError('bedrock request exceeds size limit')
     if deadline <= time.monotonic():
@@ -85,17 +92,30 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
     if not path:
         raise BedrockError('persistent review budget ledger required')
     inputs = count_tokens(messages, deadline)
-    if inputs > 48000:
+    if inputs > min(48000, model['context_tokens'] - 4096):
         raise BedrockError('prompt exceeds token budget; subdivision required')
     ledger = Ledger(path)
     identity = identity or hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()
     if before_call is not None:
-        before_call(cost(RESERVED_INPUT_TOKENS, payload['inferenceConfig']['maxTokens']))
+        before_call(model_cost(model, model['context_tokens'], payload['inferenceConfig']['maxTokens']))
     try:
-        key = ledger.reserve(RESERVED_INPUT_TOKENS, payload['inferenceConfig']['maxTokens'],
-                             os.environ.get('REVIEW_BUDGET_PHASE', 'review'), purpose+':'+identity)
+        key = ledger.reserve(model['context_tokens'], payload['inferenceConfig']['maxTokens'],
+                             os.environ.get('REVIEW_BUDGET_PHASE', 'review'), purpose+':'+identity, model=model)
         started = time.monotonic()
-        envelope = invoke('converse', payload, deadline)
+        if model['adapter'] == 'converse':
+            envelope = invoke('converse', payload, deadline)
+        else:
+            from chat_transport import invoke_chat, ChatError
+            try:
+                envelope = invoke_chat(model, messages, payload['inferenceConfig'], deadline)
+            except ChatError as error:
+                if error.envelope is not None:
+                    ledger.reconcile(key, error.envelope, time.monotonic()-started)
+                if error.retryable and transport_attempt < 2 and deadline-time.monotonic() > 2**transport_attempt:
+                    time.sleep(2**transport_attempt)
+                    return complete(messages, deadline, purpose=purpose, identity=identity,
+                                    expanded=expanded, transport_attempt=transport_attempt+1, json_attempt=json_attempt)
+                raise
         record(stage='transport', profile=profile, purpose=purpose, request_hash=identity,
                inference_config=payload['inferenceConfig'], response=envelope, seconds=time.monotonic()-started)
         ledger.reconcile(key, envelope, time.monotonic()-started)
@@ -109,7 +129,7 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
         if envelope['usage']['inputTokens'] > 48000:
             raise BedrockError('actual input exceeds token budget; subdivision required')
         if envelope.get('stopReason') == 'max_tokens' and not expanded and purpose != 'overview':
-            return complete(messages, deadline, purpose=purpose, identity=identity, expanded=True)
+            return complete(messages, deadline, purpose=purpose, identity=identity, expanded=True, transport_attempt=transport_attempt, json_attempt=json_attempt)
         if envelope.get('stopReason') == 'max_tokens':
             raise BedrockError('response incomplete: subdivision required')
         if envelope.get('stopReason') != 'end_turn':
@@ -118,10 +138,22 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
         if not content or any(set(block) != {'text'} for block in content):
             raise ValueError()
         raw = ''.join(block['text'] for block in content).strip()
+        if model['adapter'] == 'chat_completions':
+            from chat_transport import answer_text
+            # Usage includes reasoning, even when answer extraction fails.
+            raw = answer_text(raw, model.get('response_format', 'json'))
         fenced = re.fullmatch(r'```(?:json)?\s*\n(.*?)\n```', raw, re.DOTALL)
         value = json.loads(fenced.group(1) if fenced else raw)
         if not isinstance(value, dict):
             raise ValueError()
         return value
     except (ValueError, KeyError, TypeError, AttributeError):
+        record(stage='invalid_answer', purpose=purpose, attempt=json_attempt)
+        if json_attempt+1 < model.get('json_attempts', 1) and deadline > time.monotonic():
+            retry = [*messages, {'role': 'system', 'content':
+                'The previous response was invalid JSON. Assess the original evidence again. '
+                'Return exactly one complete JSON object matching the requested fields. '
+                'Finish reasoning before writing the final JSON; do not include unfinished hypotheses.'}]
+            return complete(retry, deadline, purpose=purpose, expanded=expanded,
+                            transport_attempt=transport_attempt, json_attempt=json_attempt+1)
         raise BedrockError('bedrock returned invalid JSON') from None
