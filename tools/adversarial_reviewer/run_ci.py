@@ -27,13 +27,18 @@ try:
     preflight = json.loads(Path('review-result/preflight.json').read_text())
     if preflight['blocked_reason'] or preflight['commit_id'] != head:
         raise ValueError('review preflight is not authorized')
-    if not os.environ.get('REVIEW_BUDGET_GRANT'):
-        raise ValueError('explicit spending approval required')
+    if os.environ.get('REVIEW_COST_POLICY') != 'true':
+        raise ValueError('repository cost policy required')
     ledger = restore()
-    if os.environ.get('REVIEW_BUDGET_GRANT'):
-        grant = next(g for g in ledger.summary()['grants'] if g['id'] == os.environ['REVIEW_BUDGET_GRANT'])
-        if grant['context']['head'] != head or grant['context']['run_id'] != int(os.environ['GITHUB_RUN_ID']):
-            raise ValueError('review allowance belongs to another run')
+    from quote import validate, configuration
+    from cost_policy import check
+    validate(preflight['quote'])
+    binding = preflight['quote']['binding']
+    if (binding['head'] != head or binding['base'] != os.environ['BASE_SHA']
+            or binding['repository'] != os.environ['GITHUB_REPOSITORY']
+            or binding['pr'] != int(os.environ['PR_NUMBER']) or binding['configuration'] != configuration()):
+        raise ValueError('review plan changed')
+    check(preflight['quote']['projected_nanodollars'], ledger.policy_budget())
     starting_cost = ledger.summary()['committed_usd']
     baseline = json.loads(Path('review-result/baseline-manifest.json').read_text())
     for field in ('files', 'total_lines', 'total_chunks', 'total_units', 'excluded_assets', 'test_evidence'):
@@ -85,6 +90,7 @@ finally:
             from preflight import build_quote
             try:
                 report['quote'] = build_quote(ledger)
+                report['blocked_reason'] = report['quote']['blocked_reason'] or 'budget_exhausted'
             except (OSError, ValueError, subprocess.SubprocessError):
                 report['blocked_reason'] = 'infrastructure_failed'
     report['body'] = render(report)

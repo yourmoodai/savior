@@ -134,16 +134,17 @@ class RoutingTests(unittest.TestCase):
 
 
 class OnboardingTests(unittest.TestCase):
-    def test_unapproved_preflight_cannot_spend_unused_pilot(self):
+    def test_missing_pr_identity_cannot_spend_unused_pilot(self):
         import preflight
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             ledger = Ledger(root/'ledger.db')
             with patch.object(preflight, 'DIRECTORY', root), patch.object(preflight, 'restore', return_value=ledger), \
-                    patch.object(preflight, 'build_quote', return_value={'cap_nanodollars': 1, 'items': []}), \
-                    patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', HEAD_SHA='head', GITHUB_OUTPUT=str(root/'output')):
+                    patch.object(preflight, 'build_quote') as planner, \
+                    patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', HEAD_SHA='head', PR_NUMBER='', GITHUB_OUTPUT=str(root/'output')):
                 preflight.main()
-            self.assertEqual(json.loads((root/'preflight.json').read_text())['blocked_reason'], 'awaiting_budget')
+            planner.assert_not_called()
+            self.assertEqual(json.loads((root/'preflight.json').read_text())['blocked_reason'], 'spending_unresolved')
             self.assertIn('spend=false', (root/'output').read_text())
             self.assertEqual(ledger.summary()['calls'], [])
 

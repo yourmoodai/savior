@@ -34,6 +34,12 @@ class Ledger:
             db.execute('CREATE TABLE IF NOT EXISTS funding (call_id TEXT PRIMARY KEY, grant_id TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS call_pricing (call_id TEXT PRIMARY KEY, model TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS ceiling (id INTEGER PRIMARY KEY CHECK(id=1), amount INTEGER NOT NULL)')
+            db.execute('CREATE TABLE IF NOT EXISTS attribution (call_id TEXT PRIMARY KEY, repository TEXT NOT NULL, pr INTEGER NOT NULL, started TEXT NOT NULL, settled TEXT)')
+
+    def policy_budget(self):
+        from cost_policy import context, remaining
+        with self.connect() as db:
+            return remaining(db, *context())
 
     def set_ceiling(self, amount):
         """A cumulative investigation cap can tighten, never reset or increase."""
@@ -91,6 +97,7 @@ class Ledger:
             funding = dict(prior.execute('SELECT call_id,grant_id FROM funding')) if 'funding' in tables else {}
             pricing = dict(prior.execute('SELECT call_id,model FROM call_pricing')) if 'call_pricing' in tables else {}
             ceiling = prior.execute('SELECT amount FROM ceiling WHERE id=1').fetchone() if 'ceiling' in tables else None
+            attribution = {r[0]: r[1:] for r in prior.execute('SELECT call_id,repository,pr,started,settled FROM attribution')} if 'attribution' in tables else {}
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             if ceiling:
@@ -106,6 +113,17 @@ class Ledger:
                 db.execute('INSERT OR IGNORE INTO grants VALUES (?,?,?)', (identity, cap, context))
             for row in rows:
                 key, phase, identity, reserved, charged, metrics = row
+                old_attribution = db.execute('SELECT repository,pr,started,settled FROM attribution WHERE call_id=?', (key,)).fetchone()
+                attributed = attribution.get(key)
+                if attributed:
+                    from cost_policy import validate_attribution
+                    validate_attribution(*attributed)
+                    if (charged is None) != (attributed[3] is None):
+                        raise BudgetError('conflicting historical settlement')
+                    if old_attribution and (old_attribution[:3] != attributed[:3] or (
+                            old_attribution[3] is not None and attributed[3] is not None and old_attribution[3] != attributed[3])):
+                        raise BudgetError('conflicting historical attribution')
+                    db.execute('INSERT INTO attribution VALUES (?,?,?,?,?) ON CONFLICT(call_id) DO UPDATE SET settled=COALESCE(settled,excluded.settled)', (key, *attributed))
                 if phase not in ('qualification', 'review') or type(reserved) is not int or reserved < 0 or (charged is not None and (type(charged) is not int or charged < 0)):
                     raise BudgetError('invalid historical ledger row')
                 old = db.execute('SELECT id,phase,identity,reserved,charged,metrics FROM calls WHERE id=?', (key,)).fetchone()
@@ -156,8 +174,13 @@ class Ledger:
                     raise BudgetExhausted('cumulative investigation allowance exhausted')
             if db.execute('SELECT COUNT(*) FROM calls WHERE charged > reserved').fetchone()[0]:
                 raise BudgetError('provider usage exceeded a reservation; pilot halted')
-            grant = os.environ.get('REVIEW_BUDGET_GRANT')
-            if grant:
+            policy = os.environ.get('REVIEW_COST_POLICY') == 'true'
+            grant = None if policy else os.environ.get('REVIEW_BUDGET_GRANT')
+            if policy:
+                from cost_policy import context, remaining, check, utc_day
+                repository, pr = context()
+                check(amount, remaining(db, repository, pr))
+            elif grant:
                 allowance = db.execute('SELECT cap FROM grants WHERE id=?', (grant,)).fetchone()
                 if allowance is None:
                     raise BudgetError('review allowance unavailable')
@@ -171,6 +194,8 @@ class Ledger:
                     raise BudgetExhausted('pilot budget exhausted; assessment remains incomplete')
             key = uuid.uuid4().hex
             db.execute('INSERT INTO calls VALUES (?,?,?,?,NULL,NULL)', (key, phase, identity, amount))
+            if policy:
+                db.execute('INSERT INTO attribution VALUES (?,?,?,?,NULL)', (key, repository, pr, utc_day()))
             if grant:
                 db.execute('INSERT INTO funding VALUES (?,?)', (key, grant))
             if model:
@@ -203,6 +228,8 @@ class Ledger:
             if model:
                 metrics['model'] = json.loads(model[0])
             db.execute('UPDATE calls SET charged=?,metrics=? WHERE id=?', (actual, json.dumps(metrics), key))
+            from cost_policy import utc_day
+            db.execute('UPDATE attribution SET settled=? WHERE call_id=?', (utc_day(), key))
         if actual > row[0]:
             raise BudgetError('provider usage exceeded reservation; stop review')
 
