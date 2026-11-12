@@ -28,6 +28,12 @@
     "savior": "bridge/cli.mjs"
   },
   "scripts": {
+    "reviewer:cpu": "python3 tools/review_routing_research/run.py",
+    "reviewer:cpu:test": "python3 -m unittest discover -s tools/review_routing_research",
+    "reviewer:cpu:debug": "python3 -m pdb tools/review_routing_research/run.py",
+    "reviewer:cpu:profile": "python3 -X tracemalloc tools/review_routing_research/run.py benchmark --local-llm",
+    "reviewer:cpu:build:debug": "python3 tools/review_routing_research/run.py setup --debug",
+    "reviewer:cpu:build:release": "python3 tools/review_routing_research/run.py setup",
     "watch": "target/release/savior watch",
     "watch:debug": "cargo run --locked -p savior-cli -- watch",
     "watch:build:release": "cargo build --locked --release -p savior-cli",
