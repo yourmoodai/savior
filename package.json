@@ -1,6 +1,6 @@
 {
   "name": "savior",
-  "version": "0.1.0",
+  "version": "0.1.0-dev.1",
   "description": "A local Claude Code mod that keeps a provider's tone policy out of your private draft.",
   "type": "module",
   "private": true,

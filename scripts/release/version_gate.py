@@ -16,6 +16,10 @@ SEMVER = re.compile(
 )
 
 
+def development_version(value):
+    return re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-dev\.[1-9][0-9]*", value) is not None
+
+
 def parse_version(value):
     match = SEMVER.fullmatch(value)
     if match is None:

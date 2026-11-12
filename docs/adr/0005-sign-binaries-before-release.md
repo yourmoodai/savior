@@ -8,6 +8,9 @@ Accepted for implementation. Extends [ADR 2](0002-release-and-quality-evidence.m
 Production identities remain to be provisioned; implementation and synthetic
 tests do not establish credentialed OS acceptance.
 
+[ADR 7](0007-development-prereleases.md) supersedes the public-signing prerequisite
+only for isolated development prereleases; production requirements remain here.
+
 ## Context
 
 An Ed25519 manifest establishes integrity relative to the installed plugin's
