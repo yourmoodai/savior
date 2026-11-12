@@ -1,6 +1,9 @@
 """Lossless candidate reports and matched-case research measurements."""
 import html
+import hashlib
 import json
+from pathlib import Path
+import re
 
 from model_catalog import digest
 
@@ -118,11 +121,15 @@ def report(frozen, ledger):
                     or event['context'].get('role') != 'elephant' or event['response'].get('stopReason') != 'end_turn'):
                 continue
             try:
-                value = json.loads(''.join(b['text'] for b in event['response']['output']['message']['content']))
+                raw = ''.join(b['text'] for b in event['response']['output']['message']['content']).strip()
+                fenced = re.fullmatch(r'```(?:json)?\s*\n(.*?)\n```', raw, re.DOTALL)
+                value = json.loads(fenced.group(1) if fenced else raw)
             except (ValueError, KeyError, TypeError):
                 continue  # Invalid JSON is already counted by completion diagnostics.
             field = 'overview' if event['context']['purpose'] == 'overview' else 'summary'
-            valid = isinstance(value, dict) and set(value) == {field} and isinstance(value[field], str)
+            valid = isinstance(value, dict) and isinstance(value.get(field), str)
+            if field == 'summary':
+                valid = valid and set(value) == {field}
             if valid:
                 valid = 50 <= len(value[field].split()) <= 100 if field == 'overview' else 10 <= len(value[field]) <= 1200
             invalid_summaries += not valid
@@ -144,22 +151,30 @@ def report(frozen, ledger):
                                if e['kind'] == 'transport_response' and e['context'].get('arm') == arm),
         }
     shared = [c for c in summary['calls'] if c['context'].get('arm') == 'current' and c['role'] != 'elephant']
+    shared_ids = {c['id'] for c in shared}
     metrics['three_role'] = {'incremental_calls': 0, 'incremental_charge_nanodollars': 0,
                              'shared_assessment_calls': len(shared),
                              'shared_charged_nanodollars': sum(c['charged'] or 0 for c in shared),
                              'shared_outstanding_nanodollars': sum(c['reserved'] for c in shared if c['charged'] is None),
+                             'shared_input_tokens': sum((c['metrics'] or {}).get('usage', {}).get('inputTokens', 0) for c in shared),
+                             'shared_output_tokens': sum((c['metrics'] or {}).get('usage', {}).get('outputTokens', 0) for c in shared),
+                             'shared_latency_seconds': sum(e['seconds'] for e in events if e['kind'] in ('transport_response', 'transport_failed')
+                                                           and e['context']['call_id'] in shared_ids),
                              'assessment_cost_shared_with': 'current'}
     extra_misses = [r['case'] for r in matched if r['expected'] == 'REQUEST_CHANGES'
                     and r['arms']['current']['findings'] and not r['arms']['single_role']['findings']]
     losses = [r['case'] for r in rows for arm in ARMS[1:]
               if arm in r['arms'] and not r['arms'][arm].get('lossless', False)]
     return {'schema': 1, 'experiment': frozen['experiment'], 'frozen_digest': digest(frozen),
+            'execution_reporting_sha256': frozen['configuration']['research_reporting.py'],
+            'analysis_reporting_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             'budget': summary, 'cases': rows, 'matched_cases': [r['case'] for r in matched],
             'matched_accuracy': {arm: accuracy(matched, arm) for arm in ARMS}, 'pairwise_accuracy': pairwise,
             'excluded_unresolved_labels': [r['case'] for r in rows if not r['oracle']['resolved']],
             'metrics': metrics, 'additional_single_role_misses': extra_misses,
             'reporting_losses': losses, 'production_qualification': 'not run; no cache publication',
-            'status': next((e['reason'] for e in reversed(events) if e['kind'] == 'stopped'), 'not started'),
+            'status': next((e['reason'] for e in reversed(events) if e['kind'] == 'stopped'),
+                           'running' if any(e['kind'] == 'step_started' for e in events) else 'prepared'),
             'packing': frozen['packing']}
 
 

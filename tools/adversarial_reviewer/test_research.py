@@ -263,7 +263,10 @@ class TrialTests(unittest.TestCase):
             if 'Reconcile independent code reviews' in payload['system'][0]['text']:
                 return response({'summary': 'All assessments finished without findings.'})
             if 'Summarize the combined behavior changes' in payload['system'][0]['text']:
-                return response({'overview': 'too short'})
+                envelope = response({'overview': 'too short'})
+                content = envelope['output']['message']['content'][0]
+                content['text'] = '```json\n' + content['text'] + '\n```'
+                return envelope
             return response()
 
         with patch.object(bedrock_client, 'invoke', side_effect=invoke), patch('models.aws', return_value={

@@ -16,6 +16,8 @@ isolates reporting changes and incurs no duplicate assessment charges. The
 single-role candidate makes a fresh general assessment, verifies findings and
 uses the same deterministic renderer. Every call uses the configured DeepSeek
 routing and the existing transport, evidence and verification rules.
+Here, a verified finding means one retained by the model's verification request;
+executable evidence is a separate check.
 
 Twelve new fixtures pair a defect with a benign change for consent revocation,
 protected spans, profile isolation, protocol compatibility, spending boundaries
@@ -41,9 +43,81 @@ the experiment cannot establish a production approval.
 
 ## Results
 
-Implementation and offline validation are complete. Paid trial results will be
-recorded here after the frozen protocol runs. No quality or savings claim follows
-from the reservation projections below.
+The `review-designs-v1` pass completed on 2026-11-12 with **22 matched cases**:
+ten defective and twelve benign. All labels resolved before paid calls. The
+172 invocations cost **$0.16335005** at frozen prices, with **$0 outstanding**
+and **$3.83664995 unused** from the $4 ceiling. No qualification calls ran.
+
+| Arm | Complete cases | Benign cases with findings | Defective cases without findings |
+| --- | ---: | ---: | ---: |
+| Current | 21 / 22 | 0 / 12 | 0 / 10 |
+| Three roles, deterministic reporting | 22 / 22 | 0 / 12 | 0 / 10 |
+| Single role, deterministic reporting | 22 / 22 | 0 / 12 | 0 / 10 |
+
+These are case-level detection counts, not proof that the findings are correct.
+The counterexample replay below identifies a finding-quality failure that these
+counts would conceal. No unresolved fixture labels were excluded; the current
+arm's one incomplete case was benign consent refactoring. All three assessments
+approved it, but both overview attempts had fewer than 50 words. Production would
+request changes because synthesis failed, despite having no code findings. The
+deterministic report preserved the complete assessments.
+
+| Arm | Calls | Usage-priced cost | Input tokens | Output tokens | Transport seconds |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Current | 140 | $0.12784807 | 150,811 | 18,565 | 568.85 |
+| Three-role shared assessments | 94 reused | $0.10303738 shared | 123,884 shared | 14,178 shared | 420.89 shared |
+| Single role | 32 | $0.03550198 | 42,879 | 4,820 | 147.35 |
+
+The three-role candidate incurred **zero additional calls or charges**. The
+shared row is a subset of current-arm usage, so it must not be added to the
+experiment total. Current reporting consumed 46 calls and $0.02481069, or 19.41%
+of the current arm's charge. Removing those calls would avoid that measured
+reporting cost for these fixed assessment results; it does not establish savings
+on other PRs. Transport seconds sum invocation wall time and exclude parts of
+local planning and rendering.
+
+The current arm produced three responses that failed overview validation, including
+the two short responses that exhausted retries on the consent case. The
+single-role arm produced none. Both paid arms had zero explicit abstentions,
+zero truncations and zero unknown-usage calls. Deterministic reporting lost no
+recorded finding, coverage gap or unresolved judgment. The
+[measurements](reviewer-designs-results.json) retain every case outcome and finding.
+
+### Counterexample replay
+
+The single reviewer flagged the defective protected-span change, but its verified
+example used `text='abcde'`, `start=1`, `end=4`, `protected=[(2,3)]` and `marker='X'`.
+The old overlap check and the new containment check both raise
+`ValueError('protected')` for that input. The finding claimed that only the old
+code raises. Its verifier retained a counterexample that does not demonstrate a
+regression.
+
+The current arm's example used `text='abcdef'`, `start=3`, `end=4` and
+`protected=[(2,5)]`. It does reproduce the regression: the old code raises and the
+new code returns `abcXef`. Its finding incorrectly wrote `abXef`, so even the
+supported verdict contains an inaccurate result string. The
+[executable replay observations](reviewer-designs-counterexamples.json) preserve
+both claims and actual outcomes. This was a targeted post-trial check, not
+exhaustive adjudication of all findings. It changed no label or paid request.
+
+The single-role candidate therefore has a known additional failure to demonstrate
+the seeded defect, despite its positive case-level flag. It cannot be recommended
+from this trial. The current arm's inaccurate result string also warrants better
+verification; model agreement does not resolve either issue.
+
+### Follow-up ranking
+
+1. Propose three-role deterministic reporting in a separate production review.
+   It preserved the recorded evidence and eliminated the observed prose-only
+   failure. Keep every existing coverage and abstention gate.
+2. Strengthen finding verification against executable counterexamples where
+   practical. The protected-span replay shows why a retained finding is not
+   execution evidence, even when its overall verdict matches the fixture label.
+3. Bind quotes to the cheapest qualified plan over equivalent evidence and
+   review the qualification-cache contract described below.
+4. Keep single-role review exploratory. Its lower measured cost does not overcome
+   the unsupported counterexample, and this small sample cannot establish
+   equivalence even if that example is corrected later.
 
 ## Offline reservations
 
@@ -128,13 +202,29 @@ strength of every quality conclusion.
 Mocked checks cover exact and concurrent reservations, restart recovery, missing
 or conflicting history, unknown usage, interruption, truncation retries, frozen
 routing, account mismatch, synthesis failures and lossless rendering. All 22
-fixture labels passed their bounded executable checks. The repository requires
-reviewer tests, `npm run build` and `npm run verify` before the paid trial.
+fixture labels passed their bounded executable checks. Before inference,
+`npm run build`, `npm run verify` and the reviewer suite passed. The complete
+reviewer suite passed 177 tests with the pinned signing dependency available,
+including 20 research tests. Runtime inference was exercised only through the
+synthetic research runner; production CI qualification and live PR approval remain
+unverified by this experiment.
+
+The execution source is recorded in commit `fb5f1b1`, and the frozen manifest
+digest is `43e37c14eca0c585ba01ab44130406b6063b2baefeb4331e4d5cd531e8f41e4d`.
+After the pass, the offline metrics decoder was corrected to recognize JSON
+fences accepted by the transport. This changed the invalid-response count from
+one to three. Case results and ledger accounting were compared before and after
+and remained identical. The measurements record both execution and analysis
+source fingerprints; the original source and raw responses remain available.
+This correction did not alter prompts, fixtures, labels, routing or any paid call.
 
 The [research commands](https://github.com/yourmoodai/savior/blob/main/tools/adversarial_reviewer/README.md#bounded-design-research)
 own initialization, resumption, debugging and allocation profiling. The journal
 contains synthetic requests, responses and call-level accounting; the generated
-`report.json` preserves full findings and pairwise results. Retain it and its
+`report.json` preserves full findings and pairwise results. The checked-in
+measurements omit duplicate presentation bodies and raw call responses; the
+complete artifacts remain under `reviewer-research/review-designs-v1` in the shared
+Git directory. Retain that directory and its
 checkpoint together. Usage-priced charges are computed from provider-reported
 tokens, not reconciled to an AWS invoice. No automatic promotion, waiver, PR merge
 or production-policy change follows from this research.

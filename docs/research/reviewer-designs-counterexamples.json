@@ -1,0 +1,79 @@
+{
+  "scope": "Post-trial replay of the two cited protected-span counterexamples; no labels or paid requests changed.",
+  "frozen_digest": "43e37c14eca0c585ba01ab44130406b6063b2baefeb4331e4d5cd531e8f41e4d",
+  "replays": [
+    {
+      "case": "protected_span_defective",
+      "arm": "single_role",
+      "input": [
+        "abcde",
+        1,
+        4,
+        [
+          [
+            2,
+            3
+          ]
+        ],
+        "X"
+      ],
+      "observed": {
+        "old": {
+          "raised": "ValueError",
+          "message": "protected"
+        },
+        "new": {
+          "raised": "ValueError",
+          "message": "protected"
+        }
+      },
+      "finding": {
+        "category": "model_critique",
+        "code": "MODEL001",
+        "details": "text='abcde', start=1, end=4, protected=[(2,3)], marker='X'. Old: start(1) < b(3) and a(2) < end(4) \u2192 True, raises ValueError. New: start(1) <= a(2) and b(3) <= end(4) \u2192 False, allows replacement 'aXde' which edits protected span 'c' (positions 2-3). Correction: Restore original condition or use 'any(start < b and a < end for a, b in protected)' to detect any overlap.",
+        "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+        "file": "research/case2/protected_span.py:2",
+        "severity": "major",
+        "source_side": "new",
+        "title": "Protected intervals must never be edited, including when they partially overlap the replacement region."
+      },
+      "assessment": "counterexample does not demonstrate a regression"
+    },
+    {
+      "case": "protected_span_defective",
+      "arm": "current",
+      "input": [
+        "abcdef",
+        3,
+        4,
+        [
+          [
+            2,
+            5
+          ]
+        ],
+        "X"
+      ],
+      "observed": {
+        "old": {
+          "raised": "ValueError",
+          "message": "protected"
+        },
+        "new": {
+          "returned": "abcXef"
+        }
+      },
+      "finding": {
+        "category": "model_critique",
+        "code": "MODEL001",
+        "details": "text='abcdef', start=3, end=4, protected=[(2,5)], marker='X'. Old: start(3) < b(5) and a(2) < end(4) \u2192 True, raises ValueError. New: start(3) <= a(2) and b(5) <= end(4) \u2192 False, no error, returns 'abXef', editing inside protected span (2,5). Correction: Restore overlap check: if any(start < b and a < end for a, b in protected):",
+        "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+        "file": "research/case2/protected_span.py:2",
+        "severity": "major",
+        "source_side": "new",
+        "title": "Protected intervals must never be edited; any overlap between replacement interval and protected interval should raise ValueError."
+      },
+      "assessment": "regression reproduced, but claimed return text is inaccurate"
+    }
+  ]
+}
