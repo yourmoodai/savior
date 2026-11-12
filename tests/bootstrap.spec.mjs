@@ -56,6 +56,7 @@ test('bootstrap entrypoint reports setup failure through a directory alias; impo
  try {
   const plugin=join(temporary,'plugin with spaces');await mkdir(join(plugin,'bridge'),{recursive:true});
   await copyFile(new URL('../bridge/bootstrap.mjs',import.meta.url),join(plugin,'bridge/bootstrap.mjs'));
+  await copyFile(new URL('../bridge/directories.mjs',import.meta.url),join(plugin,'bridge/directories.mjs'));
   const alias=join(temporary,'alias');await symlink(plugin,alias,process.platform==='win32'?'junction':'dir');
   for(const directory of [plugin,alias]) {
    const result=spawnSync(process.execPath,[join(directory,'bridge/bootstrap.mjs')],{encoding:'utf8'});
