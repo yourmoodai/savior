@@ -374,3 +374,56 @@ explain provider agreements; [API compatibility](https://docs.aws.amazon.com/bed
 and [Chat Completions endpoints](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html)
 own endpoint and signing details. [ADR 6](../../docs/adr/0006-qualify-review-model-routing.md)
 records the context-isolation and spending decisions.
+
+## Bounded design research
+
+`research.py` compares current review with deterministic reporting over the same
+three role assessments, and a fresh general reviewer covering all three roles.
+It reuses the production transport, response validation and finding verification.
+The command runs only trusted synthetic fixtures and never invokes qualification,
+reads assessment caches, publishes qualification evidence, or changes CI policy.
+
+The authorized experiment has one fixed identity, `review-designs-v1`, and a $4
+cumulative ceiling. Its journal lives under the repository's shared Git directory
+at `reviewer-research/review-designs-v1`; an adjacent anchor detects missing or
+rolled-back history. Every worktree resolves the same directory. Preserve both
+the directory and its anchor. Missing or conflicting history blocks spending;
+do not delete or reinitialize them to continue. The journal retains unresolved
+reservations and freezes each call's prices before transport. It is a local
+durability boundary, not protection against an operator replacing both records
+with an old backup.
+
+After explicit research spending authorization, freeze the 22 cases, their oracle
+outcomes, prompts, code fingerprints, runtime probes, routing, prices and execution
+order. The profile must match the frozen configuration and the repository's IAM
+trust account. The approved session corrected its profile to `awill`:
+
+```sh
+AWS_PROFILE=awill AWS_REGION=us-east-1 npm run reviewer:research -- prepare
+AWS_PROFILE=awill AWS_REGION=us-east-1 npm run reviewer:research -- run
+npm run reviewer:research -- report
+```
+
+`prepare --replay-diff path/to/change.diff` optionally adds an offline reservation
+comparison for an existing PR. This diff never enters an inference request. Run
+`prepare` exactly once; `run` resumes the same journal and skips already-started
+arms, leaving interrupted arms incomplete. A configuration change blocks further
+spending under the frozen protocol and keeps the original history. It cannot
+create a fresh allowance. Each invocation reserves full model context plus its
+bounded output; truncation retries, verification, Elephant reconciliation and
+overview synthesis all consume the same allowance. Equality at the ceiling is
+allowed. The first unaffordable reservation stops the pass and preserves results.
+
+`report.json` contains complete findings, coverage gaps, unresolved judgments,
+usage-priced charges, outstanding reservations, call counts, token usage, latency,
+abstentions, invalid responses and truncations. `report.md` provides matched-case
+comparisons and ranked follow-ups. Research assumes qualification solely to test
+reporting behavior; no production qualification or approval follows. Incomplete
+review remains incomplete, including when a model abstains.
+
+Run `npm run reviewer:research:test` for mocked budget, interruption, restart,
+transport, oracle and reporting checks. `npm run reviewer:research:debug -- report`
+uses `pdb`; `npm run reviewer:research:profile -- report` enables allocation
+tracking under the debugger. Python has no separate release build. Editor tasks
+expose these commands. The [research report](../../docs/research/reviewer-designs.md)
+owns outcomes, limitations and proposed production follow-ups.

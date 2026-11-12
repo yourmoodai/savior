@@ -1,6 +1,10 @@
 {
   "version": "2.0.0",
   "tasks": [
+    {"label":"reviewer research report","type":"process","command":"npm","args":["run","reviewer:research","--","report"],"problemMatcher":[]},
+    {"label":"test reviewer research","type":"process","command":"npm","args":["run","reviewer:research:test"],"problemMatcher":[]},
+    {"label":"debug reviewer research report","type":"process","command":"npm","args":["run","reviewer:research:debug","--","report"],"problemMatcher":[]},
+    {"label":"profile reviewer research allocations","type":"process","command":"npm","args":["run","reviewer:research:profile","--","report"],"problemMatcher":[]},
     {"label":"reviewer model status","type":"shell","command":"npm run reviewer:models -- status","problemMatcher":[]},
     {"label":"test reviewer routing","type":"shell","command":"npm run test:reviewer","problemMatcher":[]},
     {"label":"check claude compatibility","type":"process","command":"npm","args":["run","check:claude"],"problemMatcher":[]},
