@@ -160,7 +160,8 @@ class TrialTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / 'experiment'
-        self.env = patch.dict(os.environ, {'AWS_PROFILE': 'awill', 'AWS_REGION': 'us-east-1'})
+        self.env = patch.dict(os.environ, {'AWS_PROFILE': 'awill', 'AWS_REGION': 'us-east-1',
+                                          'GITHUB_ACTIONS': 'false'})
         self.env.start()
         self.addCleanup(self.env.stop)
         self.frozen = copy.deepcopy(self.frozen)
@@ -257,6 +258,15 @@ class TrialTests(unittest.TestCase):
         with patch('research.configuration', return_value={}):
             with self.assertRaisesRegex(ResearchStopped, 'configuration changed'):
                 research.verify_frozen(self.frozen)
+
+    def test_ci_rejects_research_before_account_or_inference(self):
+        with patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}), patch('models.aws') as account, \
+                patch.object(bedrock_client, 'invoke') as transport:
+            result = research.run(self.ledger, self.frozen)
+        self.assertEqual(result['status'], 'research exemption cannot run in production ci')
+        account.assert_not_called()
+        transport.assert_not_called()
+        self.assertEqual(self.ledger.summary()['calls'], [])
 
     def test_prose_failure_is_separate_from_candidate_coverage(self):
         def invoke(operation, payload, deadline):
