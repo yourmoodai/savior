@@ -1,0 +1,1959 @@
+{
+  "schema": 1,
+  "source": "https://api.github.com/repos/anthropics/claude-code/releases",
+  "as_of": "2026-11-11T12:00:00.000Z",
+  "window_days": 90,
+  "window_start": "2026-08-13T12:00:00.000Z",
+  "releases": [
+    {
+      "version": "2.1.232",
+      "published_at": "2026-08-13T23:29:59Z",
+      "release_id": 370225682,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.232",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.232",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.232.tgz",
+          "integrity": "sha512-Vdof3qObcEwpj8Rj9srubqXWEJVWp+Zf7G7HVH1jJq2cDfP6eWM3lm6fIpEjDvcMOAEmNtAgmNCUjOJ2YPunfw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.232",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.232.tgz",
+          "integrity": "sha512-nEd0W44UKPPgFeXLjWl9Qikyieowi8BFABdbYtyL1Cq05pw62h312M9ErCLjRj1cvWeMOYY+tg8RL5npjSQNSg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.232",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.232.tgz",
+          "integrity": "sha512-vcQ4+06Y9CmIb2RJeJiI0XKebfPtjfhUD5CG+lN1erf7W65RnURHCBDRFP9L6A+lVvp7x5kNnSxT0UHxBiTSrg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.233",
+      "published_at": "2026-08-14T22:20:57Z",
+      "release_id": 370762090,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.233",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.233",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.233.tgz",
+          "integrity": "sha512-mB2FyJQ0a+FTWbBTSQ3ZTAmm6Qxr5fSU2jA8JpHQ7XslcoKzmDV+/zN8CdGkshwY3kRLx432kDiHcBoTQuc/Dg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.233",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.233.tgz",
+          "integrity": "sha512-ubMVvBBlsks5NE0EmucELB2h/XZ64L86JgmMBUWShLgDAkrrzCh1zIf5qX1+SPskXAnMfKBFTMNeaT6UruxRkQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.233",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.233.tgz",
+          "integrity": "sha512-8tg7+eDee3JfjBdNgxhVYrYr9eweqprRxten1OW+hrSTvKV5YjZb0CheFqtaqilDLILLt8LRQ0n/YeweQeycyA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.234",
+      "published_at": "2026-08-17T20:20:58Z",
+      "release_id": 371864218,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.234",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.234",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.234.tgz",
+          "integrity": "sha512-ghlFkFWQSofz0EfHGReeegORZAhDOrwNTgNz+5ZBTbKFuhe0P9YPhWANbJLhCkZjRGXAulixWJkjSPdJEu4XJQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.234",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.234.tgz",
+          "integrity": "sha512-dB5vN+njWgjNLUmlviXQ2vCupBahNVjSn9gtR9Cc5D/zn2AZrq2FisbOpnx7WVWVj3GA1YqJ+xAgDsObq0JIuA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.234",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.234.tgz",
+          "integrity": "sha512-599lu9t31nRE/y8rxCnDtqzPmsNE1bgyKE9aCSitdp6w6cD4bkvUGcnEeqe4jyWdQHQY7sRDjvRXNuS0TwzmYw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.235",
+      "published_at": "2026-08-18T20:38:54Z",
+      "release_id": 372521030,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.235",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.235",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.235.tgz",
+          "integrity": "sha512-+tM2EsMUr4RuhKPuACJR3AaknMYBseQl+SQ+1UpHk8ZUMFKkIrk/Zhyn5IHJOPY03bDlO/m22mc2xz3/A+Ketg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.235",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.235.tgz",
+          "integrity": "sha512-C/GxUesluZxiGGU+p3VwTQ8/fhJXdCb/mqvjhDq5TTNv9ZiONgXxy7NkhZh17VFivvv0x2X2SOMRarJQtT/Krw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.235",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.235.tgz",
+          "integrity": "sha512-/KuJzlU+evMgwpxf9l00tYY8Bgn8zl97J5XAuB4qnxTxBSJ/ZKHXdRs0IAx+0YSRUaeio+a/kCNkgjbFUUOjSQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.236",
+      "published_at": "2026-08-19T20:02:05Z",
+      "release_id": 373272539,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.236",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.236",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.236.tgz",
+          "integrity": "sha512-CaGOnOXLFmecFc6td8SykfbYWo+P/o9Knh7fUYRpI0NTCG7edINaDaS1Eu9PeYUn8Sy91A4TwYRglko1WFpg4g=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.236",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.236.tgz",
+          "integrity": "sha512-96GVEfl+2t2HWbKBlW4oIEubH6pkL27R5j9feWS+tQH6MWiGnr8jNsL5Fv2405ZiO3+SiX2eV/3sUkUWRV5h6w=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.236",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.236.tgz",
+          "integrity": "sha512-ijuHexQ4q0mhWXGw6M1dfeBkMuGSs5E0tVQ3Mlrh8d5XjjLVPqhiFiGW/vieITvwjmgu7m42prdDUJSCYp2deQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.237",
+      "published_at": "2026-08-20T00:54:41Z",
+      "release_id": 373412795,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.237",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.237",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.237.tgz",
+          "integrity": "sha512-ZbVe5elMW3vnc9EXS7QZwuqeHEUbvte2VSyRm6coDLnNF5DEOuWY+acQEM1tng2s6sJ2sd21rRaYluqT5QnhjA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.237",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.237.tgz",
+          "integrity": "sha512-WTE+S0KGiE0v18jT5xPtUARiOOZuYG4xInHGOBS/vbHhL2h3WDHoRL7UpV21z4W12XybIzXeh6o1dsvBuONXog=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.237",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.237.tgz",
+          "integrity": "sha512-3qe9wdqvhhBTkJ86P1R3t3OlxHqrvRptIrswDcpDGHQDTQfjUxPMl2VwD63q8CIG/3n5h4JJ8yp5+CYTzBTj7w=="
+        }
+      }
+    },
+    {
+      "version": "2.1.238",
+      "published_at": "2026-08-20T20:33:51Z",
+      "release_id": 373927029,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.238",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.238",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.238.tgz",
+          "integrity": "sha512-/v6LuTgudzxPrpPOb54+Sg7m/O5NVOYE5YDPxWhxjS7IweNjbQIaY+eKFhnooE199YogqrEqrml0jibWdbVnOw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.238",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.238.tgz",
+          "integrity": "sha512-luyUGir57QrSdGaeBhP4J3K28DJsYDF1WkqfRFwr+dH1+zI6RRUltWCJe/23Jx7QMTd3c0QIPQ0wzE4Qw/rWjg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.238",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.238.tgz",
+          "integrity": "sha512-NjCMfRSMcym7skMW9IzJhoMw+ZpANpo0kh3w78nbcX850sqMquAecQliPj78ZNW0Y/e11xK6llet3M/0puAA0w=="
+        }
+      }
+    },
+    {
+      "version": "2.1.239",
+      "published_at": "2026-08-21T19:54:23Z",
+      "release_id": 374556322,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.239",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.239",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.239.tgz",
+          "integrity": "sha512-sQZA6mdzbp9nsTXYIxWmuMZOzLb/XpcOY1h6krUt8AgHdgsX8wZPOntGWatpTn/tevIshv1NhYpL8WJTJdwZ1w=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.239",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.239.tgz",
+          "integrity": "sha512-glj5zramK4ebmNa0EVx1iAtBfWHKnZ1q0Ti+1veMR4GHR9ttSranQoMIsLIuJUdRX/hErJnArjwe9hanuxE+dg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.239",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.239.tgz",
+          "integrity": "sha512-Kh0ZWJvX9HGvlgBgil0nPYgRMRRCp5Hv0zFeMhfPlN/RfEsbBra9XEBO1ci7xClAfkq5BRDUETxKmS6uUks6og=="
+        }
+      }
+    },
+    {
+      "version": "2.1.240",
+      "published_at": "2026-08-22T14:45:30Z",
+      "release_id": 374931975,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.240",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.240",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.240.tgz",
+          "integrity": "sha512-r0rSze2908DMAdrdS7anrSukxxyH5RYWlCWFV9BIYHgl9U/vHMPHj2bpbQASV0CWUz3bVpJWAaldrbeT0znLIA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.240",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.240.tgz",
+          "integrity": "sha512-cyQBaMWj9svNFgO07Xu24CB2F/KMv/PTGm8KwX9mcOYR5m1VO7IQQ2HB+dWh6zG02FOfSeKLd/Rbw+wsuIecaA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.240",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.240.tgz",
+          "integrity": "sha512-bv8aEg6dxSGTTeam0VDeCk9DYMMiAPv1Ljm2WNibpliJHpDNf0lw2NJaEK2UbTOTZLK1Y4nJgYT6j1Dq1ms44g=="
+        }
+      }
+    },
+    {
+      "version": "2.1.241",
+      "published_at": "2026-08-23T00:52:16Z",
+      "release_id": 375069504,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.241",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.241",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.241.tgz",
+          "integrity": "sha512-CLxxd2aTrhKWYp9SCoUpNsuk1QIpMRS5IfVpJ73VmkJ9ZdNGQ+ktxZmzda7mz/vl1CcSiOvqVtk2xrWGGhahzg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.241",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.241.tgz",
+          "integrity": "sha512-yHcPvq6iSblC7Mj05yjWBJOfSC3scyyEYazdX/QRUmXmqYXc1hh8LGZaaZPGv+UFXOJZhpPnNCbyVLdMLFCr4Q=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.241",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.241.tgz",
+          "integrity": "sha512-/03kEFXQChkZ4OKU7fas0vByBOFgqUWXvsTNTK19ANS+yGYXVjaH5IYIrQFiXRrvbzVgwgZDwQb93FckZIcPqg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.245",
+      "published_at": "2026-08-25T05:13:24Z",
+      "release_id": 376149254,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.245",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.245",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.245.tgz",
+          "integrity": "sha512-jjXl0zI4v3UXpkOlvDdPzJzz0rQ1QwvzDlKMSUIw5rGMReiOErq8o8DJyQJNgERejGG5Et9DiUFm+Bg6Tq9IBw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.245",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.245.tgz",
+          "integrity": "sha512-SRO5w2f9iHKZmREp389kPKxWAr6qEODxggdhhS7zF16OMwaUHjV5Yu7Oq8jSMD57gQiBjOfvFp/SJg3CdfHCtA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.245",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.245.tgz",
+          "integrity": "sha512-/SVV2dUpKIyuNylzsHo0pFqKAn6HGcqNB/fEpluahvUIaYsgluJsBs8m3uIgYLfU4nFnPbemrYj0ekoG626SgA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.246",
+      "published_at": "2026-08-25T22:31:52Z",
+      "release_id": 376644211,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.246",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.246",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.246.tgz",
+          "integrity": "sha512-PWL+E62jHriRMD5VXQU7fgDl+g3ZbOl8VGo6yi6fhmo3aD9Fkl0yX/p4/vQDP/AurM0UqbM+N8FMi9ZTs4ZKdA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.246",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.246.tgz",
+          "integrity": "sha512-1BNvhwngvo8AAoWcQb+9TWgQ3Gdvwfriz4bBEbsI59rKqdm0//O0/6xuplWePUuFNWK7Z6nWbwT8pEZd/9jY9Q=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.246",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.246.tgz",
+          "integrity": "sha512-5ELyn5TdYYO6qYVE+gWfE+JmkdprJ1FZOSbX3B3hk7GvWotGEvvcSd+z+U26S1+oYIvouNWQ6PtBnJHWF1lrzQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.247",
+      "published_at": "2026-08-26T23:06:39Z",
+      "release_id": 377320078,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.247",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.247",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.247.tgz",
+          "integrity": "sha512-PgInuhsq1LONloSE6puAPzQUakRDDkX8fYPz+k7CCJK8uvfsxtSwA19T1l3ebVuZauPcss+E4abk+WFwGlY3Cg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.247",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.247.tgz",
+          "integrity": "sha512-ZHjg+YRpBDKmTzIWtVF7ofABjwz387bCjDCUyO89ttuOwlUvh1zmCVwTlL6BdJO/v9uCTbQOrM7GUIDqzmPAoA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.247",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.247.tgz",
+          "integrity": "sha512-nCg+StYkQjcZh4cWUwwD4ECTj/9jfWlNMxpsFvg2BgWkEtoA/q6bX+1NyYw9FRibbdD6MUfi7dtvK36koWqL2w=="
+        }
+      }
+    },
+    {
+      "version": "2.1.248",
+      "published_at": "2026-08-27T22:12:20Z",
+      "release_id": 378106990,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.248",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.248",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.248.tgz",
+          "integrity": "sha512-7R4PJsG1RdXKmNhgRGwLnz4DOgNJJ5b95Nl3FVFj6lTDeR9nAHz46D1QaS20ck9rrdRcFvH5kxKe9ImFfz/BQw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.248",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.248.tgz",
+          "integrity": "sha512-EQibNNADnC614QB4rV8UmDoCBdGx43P+yyojwd9ZzzRClQbJivPvudCqKPv0s+mTDNgZrDNE72oaWAGYt/x+bA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.248",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.248.tgz",
+          "integrity": "sha512-oUpCnbo+USMSyRUT5iyULuXtgPGn+MuOgVfMe703DDFYdZpFK/fKk4woldgUPyettaAjRxPPMBZYEbUGvznSgw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.250",
+      "published_at": "2026-08-28T00:49:16Z",
+      "release_id": 378158541,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.250",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.250",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.250.tgz",
+          "integrity": "sha512-THGQj2+aPMXrHpEbBFE/4PzJYK1Y9NlKdo+KhizGK020pZMBLP11KyeeBTm8HUJ5ZHeWIyB7ohwbQoZ7ttKGPA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.250",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.250.tgz",
+          "integrity": "sha512-8bNQMnhl9p1j/xQ36vj/ghZrPQo1sm5OUJKbG+kQSVfOzhpsKWnOtrTY/xzABqUDd6lY6r7Tom7O9IXOq6gsHA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.250",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.250.tgz",
+          "integrity": "sha512-LguXPu3lFuByqyQOy0xIB2XhFl6jlODUSP81xt9Xpgf5Ha7YyOLg7g1lSkZXfWx7jpNq6E5QtFbsfyJzSFsFvg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.251",
+      "published_at": "2026-08-28T18:19:32Z",
+      "release_id": 378586104,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.251",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.251",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.251.tgz",
+          "integrity": "sha512-Qr5oMGVrOUyatsMlK0361OSnr3C785QBFIDoaiHMpaJ/nu/Ji2ccwI7nv0o54q3v3Y+zU9xbtEmcGxPRcR9ptA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.251",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.251.tgz",
+          "integrity": "sha512-HJyCY1ynzlsBk+N02IJeBNNZmzyd43lMuff49IXtbUDGHlf2XFHcxwYJEWCwIW51J3Hl4MvrqM6Ye8PGpJRIiA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.251",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.251.tgz",
+          "integrity": "sha512-fVXAvS2lCMJWD/lcyzzai5pcDQnlldGl8pwyGQ2vBxcuF8LS/7nVDqLOqTZsoAJ+VDKnlkPlPOJytDQEhTHHMQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.252",
+      "published_at": "2026-08-31T19:46:55Z",
+      "release_id": 379920975,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.252",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.252",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.252.tgz",
+          "integrity": "sha512-hCk12rC0srb7IlrGyFfEkm+GNBuBvkL2WrQvZzMOnCYRPJhAznxY0bHyHBjkyR9kexOmXyjxqv0IkQ5yVq+7gA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.252",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.252.tgz",
+          "integrity": "sha512-TzdB7DjCsQRtE4XDneXTye+WA8UDJ6BJNj382ygjKSlpgCPH145uZKCS2J8uYRQcS7gW7ruC6PmnjKMCuMr2uw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.252",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.252.tgz",
+          "integrity": "sha512-WfauOCDXj1RV3+zhEbQ/h8r7xW9nANWeXtXssQhbKlVUQDd++fJK6krqkrUVrztggAffauatTue+itb+qx+LhA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.257",
+      "published_at": "2026-09-01T17:53:52Z",
+      "release_id": 380686035,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.257",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.257",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.257.tgz",
+          "integrity": "sha512-VQQfNs9fiSmtDK4kgK18gQ9cXE8Nw44BogYYLZ3mGxWASplyYWhORMs+loNilBDmspBWhyVxVA4iGBPEpgxkmQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.257",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.257.tgz",
+          "integrity": "sha512-Mue9ytQXYqkPYZfVnum5kxLirKdwxrU27VHykpzZ6ZOM9NNf7IEHmZ4a4eX0sRlYptJ0FACEc0HxgFdDnL7pgQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.257",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.257.tgz",
+          "integrity": "sha512-Tb0/MaJ9nI3VGEP3Wo/LGjrapT1yzTUwTaC7Sa21VPCvjk7WWKyKNjNn6JWWsphthu6UM0nW/3wSi7F8eA3ihg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.258",
+      "published_at": "2026-09-01T22:33:20Z",
+      "release_id": 380858621,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.258",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.258",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.258.tgz",
+          "integrity": "sha512-9gYzEZjYLY/3N49jkgk9BeXPGDQNCE/6pO3/tFHJP054YnXCvKcyjWbx1M5ISgiKnEtmTRDXnAX4cXe1SGZ+Eg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.258",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.258.tgz",
+          "integrity": "sha512-y1O9xbBzr/2J3cojc5aecHmJzpihx3BMBXnFTHdYU+4gpDkjpEvn4xXSfoKe3UzdUrMCSMdkPD0Ru6byQ3vojA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.258",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.258.tgz",
+          "integrity": "sha512-sRIJKxr56ljbYxWJKC2R1pdYWjkIvwqW/LJyOC/5kw2uyBIxRMYmntxYduenUS7aQSNmjraCbIqX7kDe9bJpxg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.259",
+      "published_at": "2026-09-02T22:33:51Z",
+      "release_id": 381579834,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.259",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.259",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.259.tgz",
+          "integrity": "sha512-yAMbgvi5pVt2fBO0Sg9n+2WJ0vJTd6ykafaRq1DL/8/hb314zDwyJuP7OewFBgHthYm3szTPi7CSe0vmeTxz3g=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.259",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.259.tgz",
+          "integrity": "sha512-Uh2OEu5DVvndwosVXfjUpahQVjNqxZeCO7ehrG0JBd+xo/iWz38LfwCGsbgPiGNI+ZioIl3vwenD+6BjpOi8nQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.259",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.259.tgz",
+          "integrity": "sha512-NybMrZjP/AZTpxZtes5VDi6NeEt6PRxYR2A4+pdwl1id5R9jSWmpm9POXasdgMhwPKCYUCBIMbtwsU0Jx3PeDw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.260",
+      "published_at": "2026-09-03T23:48:12Z",
+      "release_id": 382367470,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.260",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.260",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.260.tgz",
+          "integrity": "sha512-rhLCelO/hob3gj5qHEdDTWd+QQzr5JOT10VY86YdRFmLObm4+JSvDDVvkySlpyGThf+2iZDLrGJuSUfnTOwF5w=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.260",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.260.tgz",
+          "integrity": "sha512-sq79dM8gHYc0eGW44knR7LkzHntJRLODp1e6BIv2pEg6vXvKZHfhzwNyjWE1iX/kzZvtaZrEA5Pg7i+Al3gUdw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.260",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.260.tgz",
+          "integrity": "sha512-OzZY5FOJ998KGRxKCXl5P8yTK+5J+2coJZ+ZT6+RQdNhQGQ4kxgQGFTjS422SN1fS1Ugy7xzolpYjuJcUY5Yfw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.261",
+      "published_at": "2026-09-04T19:58:10Z",
+      "release_id": 382913543,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.261",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.261",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.261.tgz",
+          "integrity": "sha512-HW2cIc5MWj9BOzLxm+3zNTfidepTMAFirwYO8H2ywTamOZvmwb8LzvRlRDLgUzEpUJBIkv9bEvI/RxfMk3zKOg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.261",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.261.tgz",
+          "integrity": "sha512-t7yPrjZH7/xOPR0HYg8NDBr9dGqIi2y3dCDLKmx2zHedSHjAGxoX7HnHeXr1tdk3iw2a6sM/LsV9O7/+Ar86FA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.261",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.261.tgz",
+          "integrity": "sha512-QtUUxcOz3gsMiO2d99QGCRaqcjtpYBudioUXMNH9ImeGqqbLArbjJKvder7uAVzhr8lRvk+DUIOwaqjV8kUNXA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.263",
+      "published_at": "2026-09-06T02:54:20Z",
+      "release_id": 383433044,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.263",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.263",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.263.tgz",
+          "integrity": "sha512-yLv8MtgulGMGCWTwDUSmlEL0+94sxKP3vJm0SAXZX+0qVQ09PrjVSRC0ibtVeW7xymyhvP1JaUimOyp+t2wO5g=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.263",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.263.tgz",
+          "integrity": "sha512-0IrvpLd/0FP0acQw59T4Cvx/r4nwAXKBrW0WyhIXymzYWurPCLztB+Icu9MkeewAUI+p3PTXsSfmilv/n6XlAQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.263",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.263.tgz",
+          "integrity": "sha512-P1LnudAWj2ptyE0IZzCZKAe7nU7LxqlkcLdBfp8FsHlH5dp75Og4JJ6TClvfjanHn3shYW4CYN6oI1vSqZlkHw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.265",
+      "published_at": "2026-09-08T20:37:31Z",
+      "release_id": 384990084,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.265",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.265",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.265.tgz",
+          "integrity": "sha512-A1mQlQ0FuwodxxZ8byYvIJ/MnIUBiYl+J2L7tInnulXzh2dir+0+zUzBvB9KcVh9Y5X6qa9tL/5lPmEYfD4lJw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.265",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.265.tgz",
+          "integrity": "sha512-XFUO7tShdNctZzxdPvX0yPclwbiue8d/K2zQ3INvVX0K3VpDGAethbTPgZsTEY043B6EYGRO/gslrv4BV1BaSg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.265",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.265.tgz",
+          "integrity": "sha512-pwMxifLvSohR3fyrp6ijpERY/2hloFuT0nmJUSjYF752rrbtKXm1pXRs5BG2lTl8n5+jm4GCCR6MT7IpfwqgCQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.266",
+      "published_at": "2026-09-08T23:55:14Z",
+      "release_id": 385124520,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.266",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.266",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.266.tgz",
+          "integrity": "sha512-VXuQWllJBff2h5b4tzHpv3vLksXGiSFhCGRd6Mpk09T3/xqZIY1supoK04xMtAY4HobeAIyIjINosT0Jl6Yq8w=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.266",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.266.tgz",
+          "integrity": "sha512-0YW7k2gyjCKfoNNMn+h9LVOKbZi/XVie2BBLGcoahXtRmWIXNuhazEd0BdvXDbcUc7mi9A2Nwq/TWD/riwO6oA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.266",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.266.tgz",
+          "integrity": "sha512-C+5K9u62OLUQ2fW6P6Dpr3ojema4AxEeTdlLubXgh4QTTyQNkHOVbzSNCLoQow2WHBqZNIfIJJAizA+pwM8SPQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.267",
+      "published_at": "2026-09-09T19:58:14Z",
+      "release_id": 385748811,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.267",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.267",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.267.tgz",
+          "integrity": "sha512-bTFYZ15uCsOprEtUWV1q/lx7mKPENEpZtj2zfapyV/TOHFRIzi2WfdRrZaz3HSDIYADnWNrWt2UaweNwP0xY5g=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.267",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.267.tgz",
+          "integrity": "sha512-/tbh7mVwKlsGV4NHSMp+Bxulu2Ly+DSnD7JcsSQex8UO2G7pq8sYXIXXNLR1l2U04Oia/qzH8UkUonRXkwWJeg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.267",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.267.tgz",
+          "integrity": "sha512-NQPJdlwcfPLVapMQE/C3SzgNX29qRuQPKy7hVwgrDCOr4Wfd3IlYVibk+VCeLbInUNSQJ4GpE9niSp9YeSRf6w=="
+        }
+      }
+    },
+    {
+      "version": "2.1.268",
+      "published_at": "2026-09-10T20:30:54Z",
+      "release_id": 386532237,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.268",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.268",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.268.tgz",
+          "integrity": "sha512-+pFmygg+D8kfLlcpJMIx6MvbF4GsIvgVuN76Vnd4KucscbFLJ+DpE51C0v5CaaJBWEbDHMZDBjdz+KLuUImuTA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.268",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.268.tgz",
+          "integrity": "sha512-jDLnHS2AjeU2dcencmLFSwOLoikSaekS5eIddKsGAWKrOW6sjs4nado+9L1S92nK+ll7SKEERt3uBLlwHZVeTA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.268",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.268.tgz",
+          "integrity": "sha512-McYdkygDYZUT+PKvMxQLbddiECQ1cqu729d2NT15he2wGZsRIU8I5zyzCccfjxmaL7ah0Ayn4iILIPNV0XNmNA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.269",
+      "published_at": "2026-09-11T19:17:55Z",
+      "release_id": 387243742,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.269",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.269",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.269.tgz",
+          "integrity": "sha512-xZjM2thYhj79vsSYqgbqR4vNmgcxv3r0ZiEPkLUiZiSonzTkok0QghEg+jJV0nEFA1c+yH3jEDxUGjSAesaoew=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.269",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.269.tgz",
+          "integrity": "sha512-Ti+9oKbf2p9pJuMMj1Fv+6YzljREpy9cx6SN7NV7Zik/vaaXPxC8u+cDiGF7HnPPJ5HsLbmwKoh3BnE3IhdAeQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.269",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.269.tgz",
+          "integrity": "sha512-kVW7UFGm7XqU7QvyksscCyiMOFDJhHSJX3M4YWBP9cde+Aj48K2LHnOvyM4aCO5mIPQl/j7tUVClUMQwsOf1tQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.270",
+      "published_at": "2026-09-12T19:45:44Z",
+      "release_id": 387670363,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.270",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.270",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.270.tgz",
+          "integrity": "sha512-cfSXE9L21yhJilj8+PCpoV3jYNcS3/lnTOZDKoS27LAh+Un4HqyGecQWDXddDwL4TKPR/2Q9CyCjFqIFnSXSXg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.270",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.270.tgz",
+          "integrity": "sha512-DFwGNa5eSZ40UtoJ6TlyDQym1jdUkr+/YB7B0CN0maCPwzxJHvIG6gHMomdQRwj/Bd8XQyemCMIJVAscKjlhzQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.270",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.270.tgz",
+          "integrity": "sha512-nEh52Ei6RHZzJv0CkdWWk6TClyy1Y5yGXPXMNRWNtIfRsqTFeQV49018PC1qN0vOLvxr/DVllimmwD/h07iTXw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.271",
+      "published_at": "2026-09-14T22:12:54Z",
+      "release_id": 388664071,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.271",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.271",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.271.tgz",
+          "integrity": "sha512-meCDp4DnH8dYLdxnGKvbEEi1IrUUVOoA1mqYjNcqs6Dz2rx7l7NwuByReT6EtCZWdDc8Haml9rql1nfDHniS/A=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.271",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.271.tgz",
+          "integrity": "sha512-CEOkbTcKVl6A7m4JcJPxUP/bKUPEZJX7e2FRZHeNPAtV8IJkk7kO7xQzCCKUF2FwMZIzfQcYkvL12q5+cgPfSA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.271",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.271.tgz",
+          "integrity": "sha512-hyiHBNVAXeh1Y7Nak4TybGiF7Bf6PfuZHl/e6HtyPg0DjrS0DYsBjaw+DM4m+jzSfZnUZaATefAQHrX/9OYgcg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.272",
+      "published_at": "2026-09-15T00:42:25Z",
+      "release_id": 388773284,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.272",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.272",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.272.tgz",
+          "integrity": "sha512-l3CI1gPSCGkWNbAnX66SbDF4uFBecCCLu9FLN43JSbMMds5cb6tjOTBMSTr1ydZRZALW9AC/PYabtQOgXIbK5Q=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.272",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.272.tgz",
+          "integrity": "sha512-QXxOsStovQPz5+hWTQMK7yb4YZFT2mXhu4ejF4nCXHcsbBEBq/jfLWr9SNJCdD4NjD9o4XxjJrDrrdKOM1Kw8g=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.272",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.272.tgz",
+          "integrity": "sha512-vIPhBSceF/crQSrLSlozGz+n52q8MOb3aqYc20h0mwoQ+5pWBkW6oyyq0vLANDUSduT2Z33PKkru2vl/KkoWGQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.273",
+      "published_at": "2026-09-15T20:23:03Z",
+      "release_id": 389362239,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.273",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.273",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.273.tgz",
+          "integrity": "sha512-t4P6JivTVJXsxfPATL4L9IZUR0Aar7O436MWkgWWvhvXDvLjd/oCdTTPkgK+Xj80gB+Nq/hyXD/9svLACa5ZSg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.273",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.273.tgz",
+          "integrity": "sha512-IunGXNpsmV1IHjW6ttZIqhZDVOzp8UZgJBGBV0VyQ3JCcDWY4b3AokOL0YJOptl8GhBVrgks6DckEYLR/QNZJg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.273",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.273.tgz",
+          "integrity": "sha512-1NmQNk18bb58Ud6Z0ob5KxJRixDBzUifry3KXpHnKFxG0Df5h9ko6MlvRNuL+6ROmmgycLhYRl5jBZqwc0USQw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.274",
+      "published_at": "2026-09-17T00:12:02Z",
+      "release_id": 390317660,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.274",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.274",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.274.tgz",
+          "integrity": "sha512-/rlrB+1ovRPWuLYNpuOvWY4dGOGyanW008KeHST6ZjOVfEFBFyqqFJiBaRpDNy5LdlnozZZYWUoMWr8W0KXyEg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.274",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.274.tgz",
+          "integrity": "sha512-xiC1514UgW1aRvHOtfgUVUACWtOwm42TIeQlllHFAMFLrBYy+cG+MfSTlTYnjUPpu4zmUeEDEs2VdZL/iLIwGQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.274",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.274.tgz",
+          "integrity": "sha512-D/OLuM2LsRnjTNwFP1LMYqdCa/q6RI1dzaKXCU57NXFOrldkWN9mTdpYxOyo9bl/sR3rHeJ1+ETWQX5DeQlcig=="
+        }
+      }
+    },
+    {
+      "version": "2.1.275",
+      "published_at": "2026-09-17T22:33:17Z",
+      "release_id": 391032307,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.275",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.275",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.275.tgz",
+          "integrity": "sha512-grp1KFWWZbeYEmWYs/1P8NKwEto5XkKwvs2iQga8qjIbx8IQlHHS0sq4LyVv+AN8AqE4RcieJR+p1iqzFpC7TQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.275",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.275.tgz",
+          "integrity": "sha512-bYMiMDKEFqC4PJzMt2ESaNSRNH+8PiSZwIjEjPMriMuILVRXrNQ138b8jeMcdvTAAq3lHrn75qGxy02yJcaN6A=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.275",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.275.tgz",
+          "integrity": "sha512-kQYxsMDtbX6N5jZmq+UpuvJ/bg5axEvwgK/x19L/Oei+mWSRFIEeXVswplyCvytnFbnAbGjhH9BJLek5WOiYyA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.276",
+      "published_at": "2026-09-18T02:12:26Z",
+      "release_id": 391158184,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.276",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.276",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.276.tgz",
+          "integrity": "sha512-JchRlXfYFrHGjm7fTZpWzlDvaP67SSO2yx2yFQSxt/T57mC6ickpApiuvS5jHCia6qjwzgjuzWSkemfLYaxB7w=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.276",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.276.tgz",
+          "integrity": "sha512-xFhD9UyIVKWLEQjcFg1ynSmYPpiXSdyN9+9rtrM0aIVnSqFP15Hd5/owEf7N6JrHtAXijfxDC0usXFxAOJQ1vA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.276",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.276.tgz",
+          "integrity": "sha512-5LtGQOG70zw7svIs7rRN8hutS8vXmn6FrXZk5hmt1Tsr18ycbesxD1YgJydgyzy99HRqOTkFMXQCWZOUsY8xpg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.277",
+      "published_at": "2026-09-18T18:06:32Z",
+      "release_id": 391616593,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.277",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.277",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.277.tgz",
+          "integrity": "sha512-KZP6qfOSNNIhvYUdhxKS+Y5DqDYoiGrqlz670RhQzQlw8z2AGSa4mkY6ykal++2gbHXO5w2O+iXrNxwySEfg/Q=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.277",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.277.tgz",
+          "integrity": "sha512-Vl/qKYdBBt7xpUaIyOFNXc8DQVCqI/TOsy+izdVIFf7u98D78u2cRuxucp/ryfXUB4Crlc/hWc+JsD2u10RiPw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.277",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.277.tgz",
+          "integrity": "sha512-EqXeZ/7sBmEDCPMpywuCCFRzAH2HGSBe5TgEEj3ZePDilT7S7Tdykzc08pldM1fQsX/xToasjzUnzRD7SV+qmA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.278",
+      "published_at": "2026-09-19T03:10:40Z",
+      "release_id": 391877760,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.278",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.278",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.278.tgz",
+          "integrity": "sha512-Jgl//CpT1KR1N8uxAN0CmkFu3eESU7GYzPOwdGH1pCENysJqYgo2LwsIrTol+EequNMrTG3kkrNW9mIoS8eWLg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.278",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.278.tgz",
+          "integrity": "sha512-q3r+5aLGAet1MGMkCH2xPsuIW9A40ws4zftURxhYwDenheCKvXc7Gr1jBwvEhYG8uQwgY3YsfNwnvIsh1Bjmeg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.278",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.278.tgz",
+          "integrity": "sha512-8gwotnfAqgtuayi0m/Ajy5k+fochciv9Erdn7iqaCHM321cz5nOnJy0yCCkk4DsT0nG7kq67dOPXE9N4jdPz7Q=="
+        }
+      }
+    },
+    {
+      "version": "2.1.280",
+      "published_at": "2026-09-22T16:38:14Z",
+      "release_id": 393879189,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.280",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.280",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.280.tgz",
+          "integrity": "sha512-ctkNgja8Yi2kngVFPO2667k6zbtJwjQ+dOTeEp1XmzHcoDFdaee4h4WVgZllsewm/Io+pPPPSFQVdGHOtdE/1A=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.280",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.280.tgz",
+          "integrity": "sha512-dJHWFrDSIZ26hdLucnK3ehLmzdzYl3MsPC1RzUctAUaYnZlH5kfAZxnK8qYRAQ89GX3OPrLsnFdt/QnP+0Ck6Q=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.280",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.280.tgz",
+          "integrity": "sha512-/Cbb0f28a9iKVoZwgrGhNT7/5c8dhDbnKwaQvJFz8qjApgcfrWEtBmDQbOP0WbGH56NyytJGJ1oQfpfsCfIQcA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.281",
+      "published_at": "2026-09-23T19:19:15Z",
+      "release_id": 394877414,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.281",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.281",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.281.tgz",
+          "integrity": "sha512-rEI/YGBDX4YTfdq5w1B86NicoLgpFHGp4IrKM6sDrmUemruePSXF7ybICthHClIsRY8a/Kp7PQ6UJah1VWTbSA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.281",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.281.tgz",
+          "integrity": "sha512-Z7ld7AE2AtvghO0qlNFBGD8S2w+nPVUk8uq4UprAUKJr6HHavXm605iGhbzSOTgXu3F/y540JHVUW9ON87w4IQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.281",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.281.tgz",
+          "integrity": "sha512-IP2nJlr02d9BRQCTf2ErZD78pemjcQ3h0tg16AY+e8i5+42FGZELUdB1wzf4066QJQvpU7BgFpSt0KiHq3SQZA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.282",
+      "published_at": "2026-09-24T18:38:05Z",
+      "release_id": 395840120,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.282",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.282",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.282.tgz",
+          "integrity": "sha512-THkAiXsMlYu5Bv6cFZmdgWWwxl39a7i793O+VPFPjMySKkeKJY4JQcO9IjJhy63cPWPiXn5tGauw1NDS8ZBF7w=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.282",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.282.tgz",
+          "integrity": "sha512-iuegTPhk/134MJiuyNDD6gW2SNDRkHoPDK6XK+lrhzyISLyNpKCuFUpIHKTfxkp4RbWQgH2Dtnp1rYxmJTzEOQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.282",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.282.tgz",
+          "integrity": "sha512-MWA0zn99AnIKtv9yxrQkPNRnGLTH1A9BPHi8muc8dz4YBOODfUmOx/JUsWpfnSu8S1Q2DhwS15bgUhtWqDkfBQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.283",
+      "published_at": "2026-09-25T21:50:12Z",
+      "release_id": 396845205,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.283",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.283",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.283.tgz",
+          "integrity": "sha512-GczpJ+FvnOYvxn6XPGHbdqJEZMves6Vc0WKS/g1N2eG39EKKAHxG77e+w4Rjtmf8xgCxNY36Jf/IOfbcyus4zA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.283",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.283.tgz",
+          "integrity": "sha512-q9+Ke42t/I6oLb/bTmh6sI24jMw4KNwz3QbQLp9dVQ8ipQChfAW5L11SX8jcDzVCW/P2tId7ftI+lgBURvz9uQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.283",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.283.tgz",
+          "integrity": "sha512-XzfHFpTbCWd0paru/fv0heHH8cfcxM9DkyOcB+B3taoUBpnhygnw5DzSq3/00kvt+BuNbibpIctiSWu2NHaEEQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.284",
+      "published_at": "2026-09-28T18:02:03Z",
+      "release_id": 398457074,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.284",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.284",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.284.tgz",
+          "integrity": "sha512-WczsKY4Bg4dlh5M2UILMHM/9xpBdDcXLulzCSE+TFIb6itI7q3kfYTIwvKOzxB557krwHEuKLgWkUiXGdojjVQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.284",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.284.tgz",
+          "integrity": "sha512-hjjPgN4u8DvnzZqWDYnU5xxQkykuUrkUoVeeutVLXjrhx4qeRPmwgZ69BFAHmV42FBRdiRwbLbiDE9nkQdAE8g=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.284",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.284.tgz",
+          "integrity": "sha512-Usw9Z8unwN6sWlhAJm5pBdTj5LoYBotUddhCBpnnH1XFJT9dgxRvRXqhftuVQi6LhorFo/HD0VfeHmmJFNCMaw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.285",
+      "published_at": "2026-09-29T19:27:30Z",
+      "release_id": 399375132,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.285",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.285",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.285.tgz",
+          "integrity": "sha512-82pac0p/rTdZvxSspGJsEdqELADhd5aR9AC6JRSJx8kx8q0ggHjOHSCEH/LZeufREACAZv13TcsOPs0AMAptCQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.285",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.285.tgz",
+          "integrity": "sha512-6qNST8qKemr+rD9zvUEwEq0UtWt0E5Js8bkbjh13/LM62FiGWcN6IqiJPxybJ2FNd+I3liXq6JYNv/vrGnmAow=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.285",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.285.tgz",
+          "integrity": "sha512-7TR0I2gOkYBADZlazRQERyP9WHCOKTZPPUSYzoxHP5EdHNvd9ZRYfIHJwydRfECpm6EYjGZ9goB/ACPJOMVdww=="
+        }
+      }
+    },
+    {
+      "version": "2.1.286",
+      "published_at": "2026-09-30T19:10:13Z",
+      "release_id": 400266224,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.286",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.286",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.286.tgz",
+          "integrity": "sha512-QlU1+S7cNO1BKzlMJGRR/ZqdsP6c3+QAA2u9EX7dTO6HUo1/RAenn/q+mlyX60MZzTZOjPkAmTt77eYrH1IAwg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.286",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.286.tgz",
+          "integrity": "sha512-PnVL8ZCEev3IexLeOc9/QRfqRDUZRgnsaMLdpjlBN0VaieeTrf7mZ2JJi29ue2KAqHvq6SsOadU5G/shnFE4MA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.286",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.286.tgz",
+          "integrity": "sha512-Cvq6m1e2eP0p47Ze+b6rw+DjXMhLCcT9g8ZKfFDxT0NB9d9mjHcNs6Qjb1oTqbO6AsN3Ie1DIqWt50J7kboz7g=="
+        }
+      }
+    },
+    {
+      "version": "2.1.287",
+      "published_at": "2026-10-01T18:00:22Z",
+      "release_id": 401174143,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.287",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.287",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.287.tgz",
+          "integrity": "sha512-ZQLmkEpiWd8sxUYRpQr1yZ39DyVBhrl8MUtbxe33E+z4jFPtUy+CrJXmeRRyyM+FEfvGe/2ab+E59GiSKkprRw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.287",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.287.tgz",
+          "integrity": "sha512-Q31ekN28viVjgfDuZKXUR5vxIBgUYoLGe+cRmjx/f01omqFDMi6IrgmcK5pWMnRbu/cjsTA/zO+bVES5oY3XUg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.287",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.287.tgz",
+          "integrity": "sha512-PWFxa2+cd8sIco+W3qDR85GhumGzNNdwgqHkz2u5jNhvoH8i4loBvOMEyrtZo3bYVwNeEt905GImhchv2duQGg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.288",
+      "published_at": "2026-10-02T20:19:57Z",
+      "release_id": 402056988,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.288",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.288",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.288.tgz",
+          "integrity": "sha512-kioqJixZJY87Dgoog1VAHxPo+5h0XrDTRFLmZzRKxfjfEGF6aKv+Zt1OqJUfeUnD3+VUr+iqemRZ5vPTg2gGeQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.288",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.288.tgz",
+          "integrity": "sha512-m80cJZimlKjRiwveadPgAfubhbmwa2nF85gg20WbjnHl6QKMad0bXiMp6JNcPeSZsr0N1KJ/wkR34rRoiyyYyg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.288",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.288.tgz",
+          "integrity": "sha512-b6akPIKjrF685qBVo084zYlkdqHD7LZgBV1Dxj84whZjH/WpX8bMdXwed2KJyZ9/LD2ahGcGXV5EDOnsgybTng=="
+        }
+      }
+    },
+    {
+      "version": "2.1.289",
+      "published_at": "2026-10-03T23:07:17Z",
+      "release_id": 402671979,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.289",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.289",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.289.tgz",
+          "integrity": "sha512-jhZQ4BdBt2E9oiHdgpwu/HIgRDlyUazDfXIbIerUFDAPcb6c7Tl1QtMvLz3KxXkZXigYv0q4U6xSHHd78TQdHA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.289",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.289.tgz",
+          "integrity": "sha512-I23SaSYE8vSwFbJ+Tc0mRlzvJmRQNaiyBUXK/K5R6BVr2lOoCdMI2SJR4N6xiVYy6yyIt39JNiyvPHoiOymyyw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.289",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.289.tgz",
+          "integrity": "sha512-t6PwcRoMIeuNPbnkf9bFxdUv3xBgUSnk1yRU3r8b5CjovwzV1zUY/talE4rgGAvcTwmndirtWOny/3LPf6Ju+w=="
+        }
+      }
+    },
+    {
+      "version": "2.1.290",
+      "published_at": "2026-10-05T23:33:17Z",
+      "release_id": 403993621,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.290",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.290",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.290.tgz",
+          "integrity": "sha512-Gwf07acohw9mGTBIXeac1PTZKRMRsGoBFtm7OA3TMoLoF/3M2kPojkqdjxEzTVw15lJjA0N1lgZEa8jLWt4odQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.290",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.290.tgz",
+          "integrity": "sha512-1FQDIO4tXPFyw9wR1icEedIhEmLzOiQBAGR0NgETrXK8M2YbHEDXoE5Gg/LIuIee7giUuX5F2RzLw2N2i++ofQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.290",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.290.tgz",
+          "integrity": "sha512-wkjNwUSqEJ0d7TLkxYAjBHGqpVRTKuars/60VzcrTMkaY5iTaMJvNRjagVYx8SKWP+Zd3f5Gh+jAyRPZAl0U+A=="
+        }
+      }
+    },
+    {
+      "version": "2.1.291",
+      "published_at": "2026-10-06T03:55:19Z",
+      "release_id": 404281867,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.291",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.291",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.291.tgz",
+          "integrity": "sha512-2Qwt+MyI0g3Ysjpj8+DSLGV8aph+OnQhYYD6wU81cU+DtIcPN9hON+nVIIN18FJO6Nro8iSbBxadFFPAD2vWUA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.291",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.291.tgz",
+          "integrity": "sha512-i0YJxdh8yIbRQ9x1gsbB24oVWhs7BARNRIHoRjXw0CeD4Yp5JoVpQlbfPIA9Rg3UhkcH6d3StYAFrSt3l2m5HA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.291",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.291.tgz",
+          "integrity": "sha512-Gv2ao/gJkZ781I9PvbVUoLqI1NqrIWhs4AKbI2hPwPhOuACQeY3EbAOwZL17OtsnuovCn/djYx4sJc9C6oU1SA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.292",
+      "published_at": "2026-10-06T18:59:30Z",
+      "release_id": 404958910,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.292",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.292",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.292.tgz",
+          "integrity": "sha512-SBkmDQOPbQ9bqkGrzshn92ByyqQy2P7pSs/11NdMLq2VXbcQc93z+yd8Dtx4+jeAX22G7GSvQpKDyKev70Vn8Q=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.292",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.292.tgz",
+          "integrity": "sha512-DNQrJZomQAX23jkJXnfYtIyJdSf5CBnexXwO2hABCs7oiZpa3IbPWIo7K6SPk5tzRIERzbwpfK3tmija1C7+kQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.292",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.292.tgz",
+          "integrity": "sha512-CXrrjj7Czs9o2YossKkN3z/K+/1GmIjjt3H8muHBDzxw/WM/J9I4kz6jBI4wLwt5miVMkXwwhrwT0hhyNPYAIw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.293",
+      "published_at": "2026-10-07T18:10:20Z",
+      "release_id": 405988533,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.293",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.293",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.293.tgz",
+          "integrity": "sha512-NevSLSNuN9duHsTTmVI6/DIb5kQG9Nj2nZftakmBrjfLu/om5eCOtb/zv2QFXuW8oA17fze6l7v7wI9wzjRsPw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.293",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.293.tgz",
+          "integrity": "sha512-tYTbeVuhqD0TW2WJs90Tq+JaKLLnrX5JuxYTLG3pxf4Vr3QMonqsMLu4hZkgVSfEDPZhneFuDDgULQ3/FZzAIw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.293",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.293.tgz",
+          "integrity": "sha512-1ScFAZD/WjikpmWqHG6caC0XvX+msdtBWq2NGdt51LGIaz1/12/fcM08tOkrI32hsvaFQwFdG33/ydXQg78qfg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.294",
+      "published_at": "2026-10-08T05:03:54Z",
+      "release_id": 406385982,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.294",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.294",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.294.tgz",
+          "integrity": "sha512-frtT/oUDIYgiFRRNIDcPQuteofIs+zQgV5ibO2F9pJiHiiIQ2b9iERj7Fyw7NpEJh2TjkmBfhOGNvFjTkNYm1g=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.294",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.294.tgz",
+          "integrity": "sha512-PGRIYkEyXxDMcosvkidWA815Y3dnEmZUrTdydabU7OPsh0Cbxnj+ej87sHFmaWOLzlpQTmi2AMUsdEHfsh3Adg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.294",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.294.tgz",
+          "integrity": "sha512-xfBldITRjeC6KQ7/xuI7m7NRskSUIzD+tYglEWaDu4DYll08zXbueqva17efDjITqX4ndj5KLxmcCzqELtSBYQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.295",
+      "published_at": "2026-10-08T19:48:38Z",
+      "release_id": 407134589,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.295",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.295",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.295.tgz",
+          "integrity": "sha512-qGetxxeqaqHR7Ev5AfTFfYuze0S99d27DV2IuFfjXigY9CKkLUy2jf3cCXjt8y4BAlGyNrqwKmIdrCjwtjAe8g=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.295",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.295.tgz",
+          "integrity": "sha512-nC9RZ6ZArEavyAiFdEtGK6/XPhjfE79tP2tCh+PjmRUxSO/6W3IuXv/rmo8c6u2UzHyvgKodRj1z6UcBGlbnyA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.295",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.295.tgz",
+          "integrity": "sha512-absbtyFKyhebVBSilCIj/JXVERLjXDAo4ID3nVRwNb52HCXfjd+g+b1THrq6NCNXCVcrpC+skkNfBqqy0N726A=="
+        }
+      }
+    },
+    {
+      "version": "2.1.296",
+      "published_at": "2026-10-09T19:28:59Z",
+      "release_id": 408141042,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.296",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.296",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.296.tgz",
+          "integrity": "sha512-vqtx3kS3r1hNLMk+N8JMG5J4kcLHIbI3t/NSIdcFQZrRVCFA6NtcxJyn/B+Sf3GxJaFJOCEfoBQXsFo10+Oj9A=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.296",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.296.tgz",
+          "integrity": "sha512-+m01urgelnI+VJxPaKPEK0wixgq42uZ8PeCaUk5tX/8YoDBvSmC/REVQG2jQfJAr8dxunpjJ600FvLrcj1WWTw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.296",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.296.tgz",
+          "integrity": "sha512-g2aYBzYM5YTDio0ulAoGIGgtGRMa08WAecer4wuOUrKPwVPRfyRdmoZI01BNS8jF9yupDmQycBMuBcVui/VGNw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.299",
+      "published_at": "2026-10-14T02:49:42Z",
+      "release_id": 412217284,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.299",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.299",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.299.tgz",
+          "integrity": "sha512-BYtS0vwnPcAr0nL7vpFhxs7cb4p+3sDv87xHbxtK+C5C7pa+LExNWP97taK/d0UHg2F3EfPJHqVcFSddtl2J4Q=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.299",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.299.tgz",
+          "integrity": "sha512-FnUWMvkaML+gSH7tK7KuWjCQfgbXX0kzEIzZabb3b73jeQESlNXEgmEgR1mvZRsyCb5O6hYUUTVqVQFY24wzhA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.299",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.299.tgz",
+          "integrity": "sha512-3m+7cON+VYa7IqQv5qCURyty0WwwpoKhqIgO8/3fnuTQ8KNoJkHe7BTSsK0T7Rq7K/xxlG2oYgVuS1Zr10UJ/A=="
+        }
+      }
+    },
+    {
+      "version": "2.1.300",
+      "published_at": "2026-10-14T18:24:25Z",
+      "release_id": 412815061,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.300",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.300",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.300.tgz",
+          "integrity": "sha512-voMU27sitARLTfblwmsPZvqVLkuhnJknwVJpAcYq9iSioC42Sxff4jv/QkjDThsx9p/NoF+T1XaKrWa4Qtn7Xg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.300",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.300.tgz",
+          "integrity": "sha512-oW4/i4gBd0Y7vqKToK+RaO/fZm4oZWAA81CJ1s0afg+bP+OH9QJdOXKDDwQ9eizcV78a44mQAbce5WYsN18CAw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.300",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.300.tgz",
+          "integrity": "sha512-JCpTNFZ8TUKnRzmOpQ3WB/9u2/eg6ip3rRaWdcuqPkF0Vx4lnTdd7pYwcmLVZm+amyV3LfeuabI2toSHGD/7KA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.301",
+      "published_at": "2026-10-15T19:22:06Z",
+      "release_id": 413913133,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.301",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.301",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.301.tgz",
+          "integrity": "sha512-A4OcibtminZ9KlXX4ce/yhPVdPKWnJ6nK5vNGBdP1uPMp68KryG++C/J12EUeW9FvEhvwnHKX86eG9TkJkPcpg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.301",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.301.tgz",
+          "integrity": "sha512-JNe0VzIuXdaBrtlh+fY2SX5AQLDf8BDfIKrylOWK528AZ/aAq2bJt4SBkPikZ0CvecUbL0YN22Xe7eltAWCJGg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.301",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.301.tgz",
+          "integrity": "sha512-YXl7/bzqywOZlqMW+18zi52DbZJJD8K5exBI6p2tLs5ZVEUhsd+fPnI+FOTehpRRHQ4imtIRas5zkcb3ninNtw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.302",
+      "published_at": "2026-10-16T20:53:06Z",
+      "release_id": 415177347,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.302",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.302",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.302.tgz",
+          "integrity": "sha512-h0MlQtldJnHXdPB6KGQ6rYQocvNTEXBI+NW4791OD2mIZcq6fHrV4PsM+XK297OL0+wVENlDHtlBj1BL/3S52A=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.302",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.302.tgz",
+          "integrity": "sha512-+d4RUq3E3K+3/J4MysB3z4QXA4rkDNt70VYpTLE6kJCnUe/Z6SB8VJsVJG/NV4bECrvkxkLHjXk+vrgBstfZkw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.302",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.302.tgz",
+          "integrity": "sha512-XvgQZTaVb0uu5bN7ZImXuy0iqolox0Or5yAemsgfKJ87183l2FBosSi7wUhIX5dEsGjN41z0vQ1pvrZ39rV/ZA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.303",
+      "published_at": "2026-10-18T22:26:54Z",
+      "release_id": 416715237,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.303",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.303",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.303.tgz",
+          "integrity": "sha512-eUDjBfaeWdlUaMca+PAnG1+IGnT4qEPk9F3CNfkZHsHyFygSt4WDxL+lxCmZ7PziQGraZ4MSuaIuT3fPx4AdYA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.303",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.303.tgz",
+          "integrity": "sha512-yUbFvO0As5DKZfeu102GLBtrGz0ghkFteHyW4rbkKVXZCwSWisXqtbm4Nolt9AlKSCAggQoyqCEG7EEF0wXciQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.303",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.303.tgz",
+          "integrity": "sha512-op5a8/2XEY6vN3Zdg4o60IoWmmOgp048sZTsq6aDfAdhBl/brGuqAcgTBY2Jw6a6JXV1DrbirGcjVnO7v+L32g=="
+        }
+      }
+    },
+    {
+      "version": "2.1.304",
+      "published_at": "2026-10-19T21:34:39Z",
+      "release_id": 417677344,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.304",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.304",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.304.tgz",
+          "integrity": "sha512-io7hBh98nUB3wTzg+XKoh2pN4j71w155wj2jAoF9bwWrnT7u6gcm9vTh0geArjABGNSh2+GaApa+lYREWOOwxw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.304",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.304.tgz",
+          "integrity": "sha512-yZ/zZk3y7e0zbkMs740y9Z+bs40MmWApwM9qHQ8Adis01SycQlyaZnHYhB/+UOeFJcL+hzbiIGCIyuTKyL2U7Q=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.304",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.304.tgz",
+          "integrity": "sha512-BXEQwzYyCKAWxa+CPVoq2+jl2ZcQIi8urs5iPQBcQyHOwONuwJ+InHC4nCDkWy8Nk7cMsT+2o3DHeYRxlkn/nw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.305",
+      "published_at": "2026-10-20T20:46:50Z",
+      "release_id": 418781864,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.305",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.305",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.305.tgz",
+          "integrity": "sha512-sP2WMFZ7LJgrPYKCDa2M1Dfy6cDuwrKPRkVPmDiSRhaqd3qBfQc3a8eZov5oYyqk+lSo7HsTGXxr57cbeVqcpA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.305",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.305.tgz",
+          "integrity": "sha512-gG/5OXycV1ItO1cHGo3IzVWb2XR5EE/0j4vzMv8iEbXWc5NWAlK2mxr1tIrfRBOoFFaZZIj76IpQk4x0NdsqCA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.305",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.305.tgz",
+          "integrity": "sha512-BP8NanlhHMckohZmfFvliZwIOfj+lHk/BDrHVa/T86kQltE8UhpicpPmKTO14EzWwuSvUUurXwbHQt+beYsG5g=="
+        }
+      }
+    },
+    {
+      "version": "2.1.306",
+      "published_at": "2026-10-21T03:16:31Z",
+      "release_id": 419073006,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.306",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.306",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.306.tgz",
+          "integrity": "sha512-rX3L0TI2pZdl/SLmqRucVutnPgByT2ZTwU1+/N19okhd/5Grj7np5xhXNycqpEq9JhNX4/DOujb1TxhHii0agA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.306",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.306.tgz",
+          "integrity": "sha512-4gsb0IQhxzi1NhoUETXkNZb1t6wJ9tnfAYBKmb0+NmsAwOG37Dacq7bLqsooEkusaT0PyQRFUMt0SgWxx9LEEA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.306",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.306.tgz",
+          "integrity": "sha512-MpqvdPxktYYaCzTp+Lcvjp5r2fnLWRWxSd7hwilVCUfAvJC6Zm/W+t7TCeEk1xGH++3BWL57FmHDN/w5k9AiiQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.307",
+      "published_at": "2026-10-21T22:17:02Z",
+      "release_id": 420041378,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.307",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.307",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.307.tgz",
+          "integrity": "sha512-bBNAygs3y8j4jkwmBoq9PyYNHaYj4KsJ5Ca2dtj8CGeUAiFsTCOzzwNMbXHhMAhAkg7m0jXUo2S1YDQmYh1gUw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.307",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.307.tgz",
+          "integrity": "sha512-5KroAXOTbVYtrV86imf8ktsfVY2UgUrC6ws/FMblu+ny14kjFLxDBi2nHweJtUwSajA8yiLfOlNkwaKNbici8A=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.307",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.307.tgz",
+          "integrity": "sha512-vCDHtsyHXelsub8+o6zvuvLiwfyuLqVrr0waO2mMGRsKaVpDVAfquMJLs5Odqx9W0HI6I6Cl3EeGBcg3GWNMiw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.308",
+      "published_at": "2026-10-22T04:34:55Z",
+      "release_id": 420299398,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.308",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.308",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.308.tgz",
+          "integrity": "sha512-fdIEbsrjlOiB8XLD3HWMi7fFGNrRzz7vPUmstgL/7qf4DLWzoWpgpCYaovrX8fp2wRsexiNok/9WZea938jJUw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.308",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.308.tgz",
+          "integrity": "sha512-ffUryevpH7POStPJ/xpUI5R1ozYbH9o/Dbh/xPSmyVJehELnRMZmRnejdQmq0TejOW/SbNnJFhCGMgwIsOqFTQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.308",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.308.tgz",
+          "integrity": "sha512-OxskS6onyOdKqdvd9/33M5//ItBdAnoI/cjdp0PU47KDMDF5WWE82Slo0ISq8kpNr2wK0lXB5Z2Rv1weJR0znw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.309",
+      "published_at": "2026-10-22T22:18:57Z",
+      "release_id": 421170674,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.309",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.309",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.309.tgz",
+          "integrity": "sha512-7ZVUH/WyxWpFfkV90tJBUSnFTQo8wwRxHNOLNj+q8eYp5DNoCU8KOVC3OiNDmo832BrfQImH0XmpWjGqKPulDg=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.309",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.309.tgz",
+          "integrity": "sha512-36D6kMC0fWdWLwBA8XYaJTSTXEWvw0Kc3WQYqterieKDtplIfUsE5jurZAYilhzOeF+uNL9SNn4DkwhQmUrRMg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.309",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.309.tgz",
+          "integrity": "sha512-b4Ju2gf1VliNsF9dONk/G1xZEW3Zg+G4TgpOS5oXPHSsMIciczcF267//7RvtjEXghflc3Lwrqe+Q4iNMf2ukQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.310",
+      "published_at": "2026-10-23T23:39:00Z",
+      "release_id": 422315867,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.310",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.310",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.310.tgz",
+          "integrity": "sha512-1HkmRv3tvMTjTrsW5J17S3NtjFjEDC8nnhduNT0klPStHes8/FRX1YFv7UwnfC6fuwd31kFuzWLyNn2IN07JtQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.310",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.310.tgz",
+          "integrity": "sha512-CuzpJrMBbqaR3+1SiLrBtPV3w/cFvcqBfhe9kNskzZ2Fm6KXa7v0l7tM+Ln6l5QLb79WoU0CcacXnYtsygbe6A=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.310",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.310.tgz",
+          "integrity": "sha512-h1whtXm0n7w9qxgsEP/2Yowamvg2YfzrVHgks8PR+JYacDtRLl8pmUg2vi0h4ZJN86OHpiqvAx0+y9mSdtUhIQ=="
+        }
+      }
+    },
+    {
+      "version": "2.1.311",
+      "published_at": "2026-10-26T21:51:23Z",
+      "release_id": 424682562,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.311",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.311",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.311.tgz",
+          "integrity": "sha512-PHxqWpXJ7ED6ZD+2xNiTfiPoK9Aq5siPMhZ2lLHwA1HB10XluHP4dSJ6YSA24Hb4cD/P3nTlhFMauk2VPdMMNA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.311",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.311.tgz",
+          "integrity": "sha512-dk1lVMt7n+NlYucKM7dLp/PfrK32pa/4oKQkacfazlSj8rG+hkH67wnDnaFG9Gs2al3OjK8PTVHgZ2WGHXoWUg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.311",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.311.tgz",
+          "integrity": "sha512-fKXnBqsAPxVeIc20kCdzI4GznhuCJxumy1ZbwkyIfgZRsZXKHzMaayrJ/Ro2O+Dfb/s9rG/gAqGkqJCsA3FgJg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.312",
+      "published_at": "2026-10-27T20:24:20Z",
+      "release_id": 425846009,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.312",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.312",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.312.tgz",
+          "integrity": "sha512-sad6CDDDvoE00/UpbnYKNYJRGjtKbAlTFNEkgihc8+Dvk4cEpRWNF4iY9aQpa2VKQDFNE7hQVB8EwKvM+ElQ9w=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.312",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.312.tgz",
+          "integrity": "sha512-oj55HL9uasLWzym5eZNgC8xyk0N0H4hw8WdN0DeDuAlquhs2d4hhkQVZcRKvJarBB37IU9bbEGXZwtuhsex6EQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.312",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.312.tgz",
+          "integrity": "sha512-jBLEkokpUu+Ut0U8ZfSDudQ6m36suAqqvZat8SEYcW1KrU41i/ajeQVcqydBogpH82a0GVSJrbFkhdnmRE+32w=="
+        }
+      }
+    },
+    {
+      "version": "2.1.314",
+      "published_at": "2026-10-30T01:06:26Z",
+      "release_id": 428518421,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.314",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.314",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.314.tgz",
+          "integrity": "sha512-kJ6VL1bKqDQuehX854xQnEu6siu4g0YESCB837pzDtsTvJeyruqE0EO4kZbSwH01LABGMs/WK5pMLkKABB8p4w=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.314",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.314.tgz",
+          "integrity": "sha512-Yg0a5mpdkGClK0rgFMxbCWZW3wZtqgOhYjbISALqyL5tfADHhX9Ms6ExA0/effgSJ9MaWfHMPntryeOG6Mk6HQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.314",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.314.tgz",
+          "integrity": "sha512-2G/cedIZd28TUgsL2tGMFILlCwU4qRw6PP1VtH0ANe2oJCenJEWJC2GvQqXM5EhzW7QqxmcWry4SVlt6UO3OLg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.316",
+      "published_at": "2026-10-31T01:01:35Z",
+      "release_id": 429617179,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.316",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.316",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.316.tgz",
+          "integrity": "sha512-wJiLVMzg2atF7C/a+0wt+yQShWIePsMNL86gIoIJanURY2fxrwHIxrYuxoTW8sWqfj7ai+otV/ik2r7m5aPy1g=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.316",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.316.tgz",
+          "integrity": "sha512-RQDM6N285IjNKcmlPRriayNzpTkEJreAw5/vBU+V0R3qljkQ5z6/pSbzcVUAXvasoOlvub0RIma3NWvSuZA8Cg=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.316",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.316.tgz",
+          "integrity": "sha512-qs/GOpsQmgWECHVTpqUfTg33BaWoaH7CNOZQlOSqXbBOYst6YL1OqdutE12JsXg096NqGaE7vb5eFa6ZynOIKw=="
+        }
+      }
+    },
+    {
+      "version": "2.1.317",
+      "published_at": "2026-11-03T01:25:46Z",
+      "release_id": 432094076,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.317",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.317",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.317.tgz",
+          "integrity": "sha512-Xnf9K4aGBuoYaODmEZ0o/lRvuYUCv2ZIDP+AXv15WVITryGgrsSA7CFL7KH+43kC6WhK8i6oysF6EbGdgBW4Aw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.317",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.317.tgz",
+          "integrity": "sha512-u19fYJ4llqi+dAGAj6P1BNu/CRSe0rv4O8Mv/5SQPU5oXCYmUssbJgrBI6rWbIFRAE3YcLCzKlwdHbzlSXBlSA=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.317",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.317.tgz",
+          "integrity": "sha512-kqVqDRmi5iTQMPpCg9JmYuJm2Cwv8CIh9AVvkLEq4tpb3uOCcUvybmJ5l+6gouDlFa76FbFupvmRmmowFYygfA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.318",
+      "published_at": "2026-11-04T00:01:03Z",
+      "release_id": 433257014,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.318",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.318",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.318.tgz",
+          "integrity": "sha512-EBKlipLmKY+ZEY+yNft2NegA6Uz34ZMjkzYxUaLF37qitojBJbIcF71F6JwFRlpIPXmiWchftLa9XONg3KBaxQ=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.318",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.318.tgz",
+          "integrity": "sha512-GX+7CUng2R5f7SsA2w0LaXlH2f62fRCFD/Z2SUexoeH3B0KfulKQt5DtY9NeD2Yp3VEBz6/k/xWSbGPUi6NV2A=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.318",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.318.tgz",
+          "integrity": "sha512-g/fa2hqcU/+Qd3NMaY/8i+AoX6HQt3zBcj+V/Ot9icr5TN4PmOmuy6YhVNFLHb2IniLIrBA+gZFqonUe0aYLxg=="
+        }
+      }
+    },
+    {
+      "version": "2.1.319",
+      "published_at": "2026-11-06T17:04:01Z",
+      "release_id": 435952318,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.319",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.319",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.319.tgz",
+          "integrity": "sha512-dyAOFnsXbeyGgFJMlo2n6zSgLli5r4fTZ3Tj48eELxjccqM4s/wUmQ6P0DyCbxU0EC44VV44T2qj5xEpen25aA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.319",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.319.tgz",
+          "integrity": "sha512-FO4Sd23BO1VCQPiJe5vG3bNnmV5+YiTau7o1lqK3Fr5VlE4TLdKiyYpwQRwEXO91kE2l12Ep2i7J19T8Md2oOQ=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.319",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.319.tgz",
+          "integrity": "sha512-wncPKSYL/zvjs84k7wZEj+IGQx/LjqQNhgnQhzDEibP0yAVBguAs4p8nBfFAEDbDdUc4Z2co+OaKZV1t02xINA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.321",
+      "published_at": "2026-11-09T19:22:30Z",
+      "release_id": 439536010,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.321",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.321",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.321.tgz",
+          "integrity": "sha512-Cq4TmU0aidUvmnVMhmmAqNSG7jMZ60F5APqhyU/V3G9wv+65+H632FQTO8DSFQjQlNCuX8YJT8pm2dLXT5g9Aw=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.321",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.321.tgz",
+          "integrity": "sha512-lW+MhUThnU2hr6QnQ9xgD8c6OWAJbYNpiMzIQ4OJaLxcByTs53v7wV/2IzGspBbcMhnxFox1vvoltuWym/h6uw=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.321",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.321.tgz",
+          "integrity": "sha512-1Ja+h1xaDpNmPAieDM/Q4pEh5MZYxIQe12ni+0rfYfbEdzxU1bl897Q4bcGa9aDdKLI6WuLXHavJVjXDYFtdoA=="
+        }
+      }
+    },
+    {
+      "version": "2.1.322",
+      "published_at": "2026-11-10T02:29:43Z",
+      "release_id": 439863658,
+      "release_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.322",
+      "artifacts": {
+        "darwin-arm64": {
+          "name": "@anthropic-ai/claude-code-darwin-arm64",
+          "version": "2.1.322",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.322.tgz",
+          "integrity": "sha512-OAx5Y7V7tGCi0tWuDV3lwcDWmIua512NgpClLbqvwC9m+mbLiaytgVLXf4unTXBjMf+QbQiIUO1Kus90PklDhA=="
+        },
+        "linux-x64": {
+          "name": "@anthropic-ai/claude-code-linux-x64",
+          "version": "2.1.322",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.322.tgz",
+          "integrity": "sha512-0DoaNAXLWCYYIGachWBCkTUsS8dOOgvk4R2fFKdrLejO9XlRTwaWUMD9ONdDmv0csdpwxj4qLUN6zWMaG2Sz6g=="
+        },
+        "win32-x64": {
+          "name": "@anthropic-ai/claude-code-win32-x64",
+          "version": "2.1.322",
+          "url": "https://registry.npmjs.org/@anthropic-ai/claude-code-win32-x64/-/claude-code-win32-x64-2.1.322.tgz",
+          "integrity": "sha512-MCf137rbW8N6PjmF04HHmKfc+yKHu8w3Uq0yqkIj5snr3KHAL4et+H5bMe05DgFmjdnRoXIVcaXg4QXgHNUw4A=="
+        }
+      }
+    }
+  ]
+}

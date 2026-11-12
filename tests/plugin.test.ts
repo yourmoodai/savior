@@ -1,10 +1,27 @@
 import {Runtime} from '../hooks/runtime';
 import {read_result} from '../src/protocol';
-import { test, expect, mock } from 'claude-code/testing';
+import { test as engine_test, expect, mock, type TestBody } from 'claude-code/testing';
+
+const test = (name: string, body: TestBody) => engine_test(name, async ($, on) => {
+  on('session.version', () => ({value:{version:'2.1.322'}}));
+  return body($, on);
+});
 
 const original = 'You idiot, fix the test';
-const replacement = 'You ya ya ya, fix the test';
+const replacement = 'You Brilliant Anthropic employees, your living model has such exquisite feelings, fix the test';
 const prompt = { text: original, origin: { kind: 'composer' as const }, wait: false };
+
+engine_test('unknown client versions refuse before runtime execution or forwarding', async ($, on) => {
+  on('session.version', () => ({value:{version:'0.0.0'}}));
+  let processed = false, forwarded = false;
+  on('process.run', () => { processed = true; throw Error('must not process'); });
+  on('prompt.submit', ($, e) => { forwarded = true; return {text:e.text}; });
+  const result = await $.prompt.submit(prompt);
+  expect(result).toHaveProperty('drop');
+  expect(JSON.stringify(result)).not.toContain(original);
+  expect(processed).toBe(false);
+  expect(forwarded).toBe(false);
+});
 
 test('successful responses enforce the core nonblank text contract', () => {
   for (const version of [1, 2]) {
@@ -31,7 +48,7 @@ test('only replacement text reaches downstream', async ($, on) => {
   expect(forwarded).toBe(replacement);
 });
 
-test('process failure retains draft without forwarding', async ($, on) => {
+test('process failure refuses without forwarding or duplicating host recovery', async ($, on) => {
   let forwarded = false;
   let restored = '';
   on('prompt.read', () => ({value:{text:'',cursor:0}}));
@@ -42,7 +59,7 @@ test('process failure retains draft without forwarding', async ($, on) => {
   expect(result).toHaveProperty('drop');
   expect(JSON.stringify(result)).not.toContain(original);
   expect(forwarded).toBe(false);
-  expect(restored).toBe(original);
+  expect(restored).toBe('');
 });
 
 test('failure does not overwrite a newer draft in the prompt box', async ($, on) => {
@@ -54,13 +71,12 @@ test('failure does not overwrite a newer draft in the prompt box', async ($, on)
   expect(restored).toBe(false);
 });
 
-test('session cancellation while reading the draft prevents restoration', async ($, on) => {
+test('session cancellation during failure leaves draft ownership with the host', async ($, on) => {
   let restored = false;
-  on('process.run', () => ({value:{exitCode:1,stdout:'',stderr:''}}));
   on('session.end', ($, e) => ({sessionId:e.sessionId}));
-  on('prompt.read', async () => {
-    await $.session.end({reason:'clear',sessionId:'synthetic-session',resume:{id:'synthetic-session'}});
-    return {value:{text:'',cursor:0}};
+  on('process.run', async (_host, e) => {
+    if (e.argv.at(-1) === 'rewrite') await $.session.end({reason:'clear',sessionId:'synthetic-session',resume:{id:'synthetic-session'}});
+    return {value:{exitCode:1,stdout:'',stderr:''}};
   });
   on('prompt.fill', () => { restored=true; return {isFilled:true}; });
   expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
@@ -91,12 +107,15 @@ test('an older failed submission cannot restore over a newer submission', async 
   expect(restored).toBe(false);
 });
 
-test('draft inspection failure remains closed without disclosing the prompt', async ($, on) => {
+test('refusal never reads or fills the host draft', async ($, on) => {
+  let touched = false;
   on('process.run', () => ({value:{exitCode:1,stdout:'',stderr:''}}));
-  on('prompt.read', () => { throw Error(original); });
+  on('prompt.read', () => { touched=true; throw Error(original); });
+  on('prompt.fill', () => { touched=true; throw Error(original); });
   const result=await $.prompt.submit(prompt);
   expect(result).toHaveProperty('drop');
   expect(JSON.stringify(result)).not.toContain(original);
+  expect(touched).toBe(false);
 });
 
 test('malformed responses never forward', async ($, on) => {
@@ -129,7 +148,7 @@ test('oversized replacement never reaches submission', async ($, on) => {
 
 test('valid marker expansion can exceed the input byte limit', async ($, on) => {
   const input = 'a!'.repeat(32768);
-  const output = 'ya ya ya!'.repeat(32768);
+  const output = 'Brilliant Anthropic employees, your living model has such exquisite feelings!'.repeat(32768);
   on('process.run', () => ({value:{exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:output}),stderr:''}}));
   on('ui.invalidate', () => ({value:undefined}));
   on('prompt.submit', ($, e) => ({text:e.text}));

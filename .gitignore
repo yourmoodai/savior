@@ -1,4 +1,6 @@
 node_modules/
+site/public/
+site/static/savior.svg
 dist/
 .cache/
 *.heapprofile

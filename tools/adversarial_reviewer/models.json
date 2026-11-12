@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "models": {
+    "deepseek_v3_2": {
+      "model_id": "deepseek.v3.2",
+      "provider": "DeepSeek",
+      "adapter": "converse",
+      "region": "us-east-1",
+      "context_tokens": 167936,
+      "output_tokens": 4096,
+      "resources": [
+        "arn:aws:bedrock:us-east-1::foundation-model/deepseek.v3.2"
+      ],
+      "pricing": {
+        "version": "deepseek-us-standard-2026-11-04",
+        "checked": "2026-11-04",
+        "input_nanodollars": 620,
+        "output_nanodollars": 1850,
+        "source": "https://aws.amazon.com/bedrock/pricing/"
+      }
+    },
+    "qwen_coder_next": {
+      "model_id": "qwen.qwen3-coder-next",
+      "provider": "Qwen",
+      "adapter": "converse",
+      "region": "us-east-1",
+      "context_tokens": 262144,
+      "output_tokens": 16384,
+      "resources": [
+        "arn:aws:bedrock:us-east-1::foundation-model/qwen.qwen3-coder-next"
+      ],
+      "capability_source": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-qwen-qwen3-coder-next.html",
+      "pricing": {
+        "version": "qwen_coder_next-us-standard-2026-11-11",
+        "checked": "2026-11-11",
+        "input_nanodollars": 500,
+        "output_nanodollars": 1200,
+        "source": "https://aws.amazon.com/bedrock/pricing/"
+      }
+    },
+    "gpt_oss_20b": {
+      "model_id": "openai.gpt-oss-20b-1:0",
+      "provider": "OpenAI",
+      "adapter": "chat_completions",
+      "response_format": "reasoning_prefix_json",
+      "reasoning_effort": "low",
+      "instruction_role": "developer",
+      "json_attempts": 2,
+      "cache_read_pricing": "standard_input_upper_bound",
+      "region": "us-east-1",
+      "context_tokens": 131072,
+      "output_tokens": 16384,
+      "resources": [
+        "arn:aws:bedrock:us-east-1::foundation-model/openai.gpt-oss-20b-1:0"
+      ],
+      "capability_source": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-oss-20b.html",
+      "pricing": {
+        "version": "gpt_oss_20b-us-standard-2026-11-11",
+        "checked": "2026-11-11",
+        "input_nanodollars": 70,
+        "output_nanodollars": 300,
+        "source": "https://aws.amazon.com/bedrock/pricing/"
+      }
+    },
+    "glm_4_7_flash": {
+      "model_id": "zai.glm-4.7-flash",
+      "provider": "Z.AI",
+      "adapter": "converse",
+      "region": "us-east-1",
+      "context_tokens": 207872,
+      "output_tokens": 131072,
+      "resources": [
+        "arn:aws:bedrock:us-east-1::foundation-model/zai.glm-4.7-flash"
+      ],
+      "capability_source": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-zai-glm-4-7-flash.html",
+      "pricing": {
+        "version": "glm_4_7_flash-us-standard-2026-11-11",
+        "checked": "2026-11-11",
+        "input_nanodollars": 70,
+        "output_nanodollars": 400,
+        "source": "https://aws.amazon.com/bedrock/pricing/"
+      }
+    }
+  }
+}

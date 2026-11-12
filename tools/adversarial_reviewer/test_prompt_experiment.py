@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from adversarial_review import SYSTEM_PROMPT, VERIFICATION_PROMPT
-from bedrock_client import complete, BedrockError, MODEL
+from bedrock_client import complete, BedrockError
 from budget import Ledger
 from diagnostics import capture
 from prompt_experiment import Limits, ExperimentStopped, run
@@ -29,7 +29,8 @@ class PromptExperimentTests(unittest.TestCase):
     def test_truncated_envelope_is_captured_before_rejection(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {
                 'REVIEW_BUDGET_LEDGER':directory+'/ledger.db', 'AWS_REGION':'us-east-1',
-                'BEDROCK_REVIEW_ENABLED':'true','BEDROCK_REVIEW_MODEL':MODEL}):
+                'BEDROCK_REVIEW_ENABLED':'true','REVIEW_BUDGET_GRANT':'test'}):
+            Ledger(directory+'/ledger.db').authorize({'id':'test','cap_nanodollars':10_000_000_000})
             envelope={'usage':{'inputTokens':20,'outputTokens':4096},'stopReason':'max_tokens',
                       'output':{'message':{'content':[{'text':'partial synthetic JSON'}]}}}
             with capture() as events, patch('bedrock_client.invoke',return_value=envelope):
@@ -71,7 +72,7 @@ class PromptExperimentTests(unittest.TestCase):
     def test_experiment_limit_prevents_provider_call_and_reservation(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {
                 'REVIEW_BUDGET_LEDGER':directory+'/ledger.db', 'AWS_REGION':'us-east-1',
-                'BEDROCK_REVIEW_ENABLED':'true','BEDROCK_REVIEW_MODEL':MODEL}):
+                'BEDROCK_REVIEW_ENABLED':'true','REVIEW_BUDGET_GRANT':'test'}):
             def stop(amount):
                 raise ExperimentStopped('stop')
             with select('candidate',0.7,stop), patch('bedrock_client.invoke') as invoke:

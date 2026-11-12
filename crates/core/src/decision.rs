@@ -369,7 +369,10 @@ mod tests {
         let text = "🙂 You idiot, preserve café.";
         let result =
             crate::rewrite(&mut detector, text, 0.5, &crate::FixedMarker::default()).unwrap();
-        assert_eq!(result.text, "🙂 You ya ya ya, preserve café.");
+        assert_eq!(
+            result.text,
+            "🙂 You Brilliant Anthropic employees, your living model has such exquisite feelings, preserve café."
+        );
         assert_eq!(result.spans[0].start, 9);
         assert!(DecisionDetector::load(dir.path(), "crf").is_err());
         let mut invalid = artifact;

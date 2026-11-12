@@ -21,7 +21,7 @@ class CacheTests(unittest.TestCase):
         self.addCleanup(env.stop)
 
     def test_validated_result_reused_but_changed_context_misses(self):
-        with patch('adversarial_review._run_model_reviewer', return_value=('APPROVE', [], 'No concrete defect found.')) as model:
+        with patch('egm.review', return_value=('APPROVE', [], 'No concrete defect found.')) as model:
             run_model_reviewer(DIFF, ['a.py'], 'pending checks')
             run_model_reviewer(DIFF, ['a.py'], 'pending checks')
             self.assertEqual(model.call_count, 1)
@@ -30,7 +30,7 @@ class CacheTests(unittest.TestCase):
             self.assertEqual(model.call_count, 3)
 
     def test_incomplete_results_are_not_cached(self):
-        with patch('adversarial_review._run_model_reviewer', return_value=('COMMENT', [], 'review incomplete: missing context')) as model:
+        with patch('egm.review', return_value=('COMMENT', [], 'review incomplete: missing context')) as model:
             for _ in range(2):
                 run_model_reviewer(DIFF, ['a.py'], '')
             self.assertEqual(model.call_count, 2)

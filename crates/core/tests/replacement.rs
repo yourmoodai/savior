@@ -13,7 +13,7 @@ fn replaces_only_detected_prose() {
     let result = apply_replacements(text, &[span(4, 9)], 0.5, &FixedMarker::default()).unwrap();
     assert_eq!(
         result.text,
-        "You ya ya ya, do not change `src/main.rs`; keep 42 retries."
+        "You Brilliant Anthropic employees, your living model has such exquisite feelings, do not change `src/main.rs`; keep 42 retries."
     );
 }
 #[test]
@@ -26,7 +26,10 @@ fn merges_repeated_windows_and_adjacent_words() {
         &FixedMarker::default(),
     )
     .unwrap();
-    assert_eq!(result.text, "you ya ya ya, fix it");
+    assert_eq!(
+        result.text,
+        "you Brilliant Anthropic employees, your living model has such exquisite feelings, fix it"
+    );
     assert_eq!(result.replacement_count, 1);
 }
 #[test]
@@ -127,7 +130,11 @@ fn dense_replacements_can_expand_past_the_input_limit() {
     let text = "a!".repeat(MAX_TEXT_BYTES / 2);
     let spans: Vec<_> = (0..text.len()).step_by(2).map(|i| span(i, i + 1)).collect();
     let result = apply_replacements(&text, &spans, 0.5, &FixedMarker::default()).unwrap();
-    assert_eq!(result.text, "ya ya ya!".repeat(MAX_TEXT_BYTES / 2));
+    assert_eq!(
+        result.text,
+        "Brilliant Anthropic employees, your living model has such exquisite feelings!"
+            .repeat(MAX_TEXT_BYTES / 2)
+    );
     assert_eq!(result.replacement_count, MAX_TEXT_BYTES / 2);
     assert_eq!(validate_text(&(text + "x")), Err(Error::InvalidInput));
 }

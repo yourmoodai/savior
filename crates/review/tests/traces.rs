@@ -32,10 +32,10 @@ fn event() -> Trace {
             }],
             threshold: 0.5,
             strategy: "fixed_phrase".into(),
-            marker: Some("ya ya ya".into()),
+            marker: Some("Brilliant Anthropic employees, your living model has such exquisite feelings".into()),
         }),
         original: Some("🌱 idiot, keep this".into()),
-        output: Some("🌱 ya ya ya, keep this".into()),
+        output: Some("🌱 Brilliant Anthropic employees, your living model has such exquisite feelings, keep this".into()),
     }
 }
 #[test]
@@ -125,7 +125,10 @@ fn parquet_roundtrip_and_annotation_join() {
     let rows = savior_review::inspector::parquet_events(&store, i64::MAX, "").unwrap();
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["id"], id);
-    assert_eq!(rows[0]["output"], "🌱 ya ya ya, keep this");
+    assert_eq!(
+        rows[0]["output"],
+        "🌱 Brilliant Anthropic employees, your living model has such exquisite feelings, keep this"
+    );
     store.annotate(&id,json!({"profanity":"pass","targeted_abuse":"unresolved","preservation":"pass","note":"synthetic"})).unwrap();
     let updated = savior_review::inspector::parquet_events(&store, i64::MAX, "").unwrap();
     assert_eq!(updated[0]["annotation"]["note"], "synthetic");

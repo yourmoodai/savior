@@ -13,7 +13,9 @@ class BedrockClientTests(unittest.TestCase):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         env = patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', AWS_REGION='us-east-1',
-                         BEDROCK_REVIEW_MODEL=client.MODEL, GITHUB_TOKEN='private canary', REVIEW_BUDGET_LEDGER=temp.name+'/ledger.db')
+                         REVIEW_BUDGET_GRANT='test', GITHUB_TOKEN='private canary', REVIEW_BUDGET_LEDGER=temp.name+'/ledger.db')
+        from budget import Ledger
+        Ledger(temp.name+'/ledger.db').authorize({'id':'test', 'cap_nanodollars':10_000_000_000})
         env.start()
         self.addCleanup(env.stop)
 
@@ -54,7 +56,7 @@ class BedrockClientTests(unittest.TestCase):
             self.invoke(code=1)
 
     def test_configuration_and_deadline_fail_before_request(self):
-        for changes in [{'BEDROCK_REVIEW_ENABLED': ''}, {'AWS_REGION': ''}, {'BEDROCK_REVIEW_MODEL': 'other'}]:
+        for changes in [{'BEDROCK_REVIEW_ENABLED': ''}, {'AWS_REGION': ''}, {'REVIEW_BUDGET_GRANT': ''}]:
             with patch.dict(os.environ, changes), patch('bedrock_client.subprocess.run') as run:
                 with self.assertRaises(client.BedrockError):
                     client.complete([], time.monotonic()+10)

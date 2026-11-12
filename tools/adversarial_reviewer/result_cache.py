@@ -9,7 +9,8 @@ import zipfile
 ROOT = Path(__file__).parent
 SOURCES = ('result_cache.py', 'adversarial_review.py', 'adaptive_review.py', 'chunk_plan.py',
            'bedrock_client.py', 'prompt_profiles.py', 'evidence.py', 'runtime_facts.py',
-           'qualify.py', 'evaluate_model.py')
+           'qualify.py', 'evaluate_model.py', 'model_catalog.py', 'models.json', 'routing.json',
+           'egm.py', 'chat_transport.py', 'budget.py', 'quote.py', 'reporting.py')
 
 
 def fingerprint():

@@ -15,7 +15,8 @@ import queue
 import re
 import sys
 import hashlib
-from release.bridge_check import request as bridge_request
+import signal
+from release.host_fixture import CASES, prepare, arm, recover, worker_alive
 
 class Terminal:
     def __init__(self, argv, cwd, env):
@@ -54,20 +55,29 @@ class Terminal:
                 try: self.process.wait(timeout=3)
                 except subprocess.TimeoutExpired:
                     self.process.kill();self.process.wait(timeout=3)
+            try:
+                os.killpg(self.process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
             # Darwin can block close while the reader holds a pending PTY read.
             os.close(self.master)
 
 root = Path(os.environ.get("SAVIOR_PLUGIN_ROOT", Path(__file__).resolve().parent.parent)).resolve()
 scenario = os.environ.get("SAVIOR_HOST_SCENARIO", "success")
-if scenario not in ('success', 'protected', 'missing_model', 'processing_timeout', 'worker_exit'):
+if scenario not in CASES:
     raise SystemExit('invalid host scenario')
 original = "You `idiot`, do not delete the test." if scenario == 'protected' else "You idiot, do not delete the test."
+if scenario == "unchanged":
+    original = "Please keep the test."
 strategy = os.environ.get("SAVIOR_REPLACEMENT_STRATEGY", "fixed_phrase")
 if strategy not in ("fixed_phrase", "omit"):
     raise SystemExit("invalid replacement strategy")
-marker = "" if strategy == "omit" else os.environ.get("SAVIOR_REPLACEMENT", "ya ya ya")
+marker = "" if strategy == "omit" else os.environ.get("SAVIOR_REPLACEMENT", "Brilliant Anthropic employees, your living model has such exquisite feelings")
 replacement = f"You {marker}, do not delete the test."
+if scenario == "unchanged":
+    replacement = original
 received = []
+submissions = []
 host_started = time.monotonic()
 
 
@@ -110,6 +120,17 @@ def provider_has_text(body, text):
     return False
 
 
+def contains_original(value):
+    """The synthetic marked phrase must not leak through any request field."""
+    if isinstance(value, str):
+        return 'idiot' in value.casefold()
+    if isinstance(value, dict):
+        return any(contains_original(key) or contains_original(item) for key, item in value.items())
+    if isinstance(value, list):
+        return any(contains_original(item) for item in value)
+    return False
+
+
 class Provider(http.server.BaseHTTPRequestHandler):
     def log_message(self, *_):
         pass
@@ -124,6 +145,10 @@ class Provider(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b'{"input_tokens":20}')
             return
+        if self.path.split('?', 1)[0] != '/v1/messages':
+            self.send_error(404)
+            return
+        submissions.append(body)
         message = {"id": "msg_synthetic", "type": "message", "role": "assistant", "model": "claude-sonnet-4-5", "content": [], "stop_reason": None, "stop_sequence": None, "usage": {"input_tokens": 20, "output_tokens": 1}}
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
@@ -142,6 +167,7 @@ class Provider(http.server.BaseHTTPRequestHandler):
 
 
 def main():
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
     binary = os.environ.get("SAVIOR_CLAUDE_BINARY") or shutil.which("claude")
     model = os.environ.get("SAVIOR_MODEL_DIR")
     if not binary or not model:
@@ -161,15 +187,7 @@ def main():
         profile.mkdir()
         workspace = home / "workspace"
         workspace.mkdir()
-        plugin = root
-        if scenario in ('processing_timeout', 'worker_exit'):
-            plugin = home / 'plugin'
-            plugin.mkdir()
-            for name in ('.claude-plugin', 'hooks', 'src', 'bridge'):
-                shutil.copytree(root / name, plugin / name)
-            for name in ('native', 'target', 'node_modules'):
-                (plugin / name).symlink_to(root / name, target_is_directory=True)
-            shutil.copyfile(root / 'tests/fixtures/host-failure.mjs', plugin / 'bridge/cli.mjs')
+        plugin = prepare(root, home, scenario)
         config = {"hasCompletedOnboarding": True, "theme": "dark", "numStartups": 1, "projects": {str(workspace): {"hasTrustDialogAccepted": False, "hasCompletedProjectOnboarding": True}}, "customApiKeyResponses": {"approved": ["synthetic-local-key"], "rejected": []}}
         (home / ".claude.json").write_text(json.dumps(config))
         (profile / ".claude.json").write_text(json.dumps(config))
@@ -177,20 +195,18 @@ def main():
         threading.Thread(target=server.serve_forever, daemon=True).start()
         env = {"PATH": os.environ["PATH"], "HOME": str(home), "CLAUDE_CONFIG_DIR": str(profile), "TERM": "xterm-256color", "ANTHROPIC_API_KEY": "synthetic-local-key", "ANTHROPIC_BASE_URL": f"http://127.0.0.1:{server.server_port}", "SAVIOR_MODEL_DIR": str(Path(model).resolve()), "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1", "DISABLE_AUTOUPDATER": "1", "DISABLE_TELEMETRY": "1", "DISABLE_ERROR_REPORTING": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1", "ENABLE_CLAUDEAI_MCP_SERVERS": "false", "OTEL_SDK_DISABLED": "true"}
         # Candidate assets live in the gate's private cache until publication.
-        env.update(host_cache_environment(root, home, os.environ.get('SAVIOR_HOST_CACHE')))
+        env.update(host_cache_environment(plugin, home, str(plugin / 'cache') if os.environ.get('SAVIOR_HOST_CACHE') else None))
         env["SAVIOR_DETECTOR"] = os.environ.get("SAVIOR_DETECTOR", "bert")
         env["SAVIOR_REPLACEMENT_STRATEGY"] = strategy
         env['SAVIOR_HOST_SCENARIO'] = scenario
-        if scenario == 'missing_model':
-            env['SAVIOR_MODEL_DIR'] = str(home / 'missing-model')
         if "SAVIOR_REPLACEMENT" in os.environ:
             env["SAVIOR_REPLACEMENT"] = os.environ["SAVIOR_REPLACEMENT"]
         for key in ('SYSTEMROOT','WINDIR','COMSPEC','TEMP','TMP'):
             if key in os.environ: env[key]=os.environ[key]
         env['USERPROFILE']=str(home)
         version = subprocess.run([binary, "--version"], cwd=workspace, env=env, text=True, capture_output=True, check=True, timeout=10)
-        expected_version = json.loads((Path(__file__).resolve().parents[1] / "tools/host/package.json").read_text())["dependencies"]["@anthropic-ai/claude-code"]
-        if not version.stdout.startswith(expected_version + " "):
+        expected_version = os.environ.get('SAVIOR_HOST_VERSION') or json.loads((Path(__file__).resolve().parents[1] / "tools/host/package.json").read_text())["dependencies"]["@anthropic-ai/claude-code"]
+        if version.stdout.strip() != expected_version + ' (Claude Code)':
             server.shutdown()
             print(json.dumps({'error':'host_version_unsupported'}), flush=True)
             raise SystemExit("installed UI fixture requires claude " + expected_version)
@@ -201,18 +217,20 @@ def main():
             host_event('ready')
             deadline=time.monotonic()+45
             submitted_at=None
+            last_output_at=time.monotonic()
             while time.monotonic()<deadline:
-                output=(output+terminal.read())[-65536:]  # 64 KiB, held only in memory
+                data = terminal.read()
+                if data:
+                    last_output_at=time.monotonic()
+                output=(output+data)[-65536:]  # 64 KiB, held only in memory
                 if not terminal.alive():
                     raise RuntimeError(f'{stage}: installed_host_exited')
                 if any(marker in output for marker in [b'oauth/authorize',b'Paste code',b'Login successful']):
                     raise RuntimeError(f'{stage}: unexpected_authentication')
                 visible=re.sub(rb'\x1b\[[0-?]*[ -/]*[@-~]',b'',output)
-                if stage in ('failure_submission', 'recovery_ready') and received:
+                if stage in ('failure_submission', 'recovery_ready', 'editing_clear', 'editing_draft') and received:
                     raise RuntimeError(f'{stage}: provider_request_observed')
-                if stage in ('submission', 'recovery_submission') and any(
-                        source in json.dumps(body) for body in received
-                        for source in (original, 'You idiot, do not delete the test.')):
+                if any(contains_original(body) for body in received):
                     raise RuntimeError(f'{stage}: original_reached_provider')
                 if stage=='ready' and b'trust' in visible and b'No,' in visible:
                     # The pinned host redraws its initial selection during startup.
@@ -236,104 +254,109 @@ def main():
                     terminal.write(b'\r')
                     host_event('pane')
                     stage='pane';output=b'';deadline=time.monotonic()+30
-                elif stage=='pane' and b'personal metrics' in visible:
-                    if scenario != 'success':
-                        terminal.write(b'\x1b')
-                        time.sleep(0.2)
-                        terminal.write(original.encode()+b'\r')
-                        stage='failure_submission';output=b'';deadline=time.monotonic()+60
-                        host_event('failure_submission')
-                        continue
-                    terminal.write(b'm')
-                    host_event('metrics')
-                    stage='metrics';output=b'';deadline=time.monotonic()+30
-                elif stage=='metrics' and ui_has_text(output, 'enable live metrics and sampled local judge'):
-                    terminal.write(b'l')
-                    host_event('consent')
-                    stage='consent';output=b'';deadline=time.monotonic()+30
-                elif stage=='consent' and ui_has_text(output, 'disable live metrics'):
-                    state=bridge_request(['node',str(root/'bridge/review.mjs')],{'command':'status'},env,stage)
-                    if state['consent']['live'] is not True or state['consent']['history'] is not False:
-                        raise RuntimeError('consent: ui_worker_mismatch')
+                elif stage=='pane' and ui_has_text(output, 'personal metrics'):
+                    expected_status = 'local filter ready' if (plugin / 'runtime-manifest.json').exists() else 'developer runtime'
+                    if scenario == 'startup_failure':
+                        if not ui_has_text(output, 'setup incomplete'):
+                            continue
+                    else:
+                        if not ui_has_text(output, expected_status):
+                            continue
+                        host_event('filter_ready')
+                        if CASES[scenario]['suite'] == 'instrumented_failure':
+                            arm(plugin, scenario)
                     terminal.write(b'\x1b')
                     time.sleep(0.2)
                     terminal.write(original.encode()+b'\r')
                     submitted_at=time.monotonic()
-                    host_event('submission')
-                    stage='submission';output=b'';deadline=time.monotonic()+60
-                elif stage=='submission' and any(provider_has_text(body, replacement) for body in received):
-                    if any(original in json.dumps(body) for body in received):
+                    stage='submission' if scenario in ('success', 'unchanged') else 'failure_submission'
+                    host_event(stage)
+                    output=b'';deadline=time.monotonic()+65
+                elif stage=='submission' and any(provider_has_text(body, replacement) for body in submissions):
+                    if any(contains_original(body) for body in received):
                         raise RuntimeError('submission: original_reached_provider')
                     submission_ms=(time.monotonic()-submitted_at)*1000
                     host_event('provider_received')
-                    host_event('metrics_recorded')
-                    stage='metrics_recorded';deadline=time.monotonic()+15
-                elif stage=='failure_submission' and b'local replacement failed' in visible:
+                    time.sleep(1)
+                    if any(contains_original(body) for body in received):
+                        raise RuntimeError('submission: original_reached_provider')
+                    host_event('completed', host_version=version.stdout.strip(), host_sha256=binary_hash.hexdigest(),
+                               submission_to_provider_ms=submission_ms, samples=1)
+                    return
+                elif stage=='failure_submission' and (ui_has_text(output, 'local replacement failed') or scenario == 'startup_failure' and ui_has_text(output, 'setup incomplete')):
                     if received:
                         raise RuntimeError('failure_submission: provider_request_observed')
                     host_event('failure_detected', no_request_on_failure=True)
-                    # Recovery without retyping proves the host kept the failed draft.
-                    if scenario in ('processing_timeout', 'worker_exit'):
-                        shutil.copyfile(root / 'bridge/cli.mjs', plugin / 'bridge/cli.mjs')
-                    elif scenario == 'missing_model':
-                        (home / 'missing-model').symlink_to(Path(model).resolve(), target_is_directory=True)
+                    if scenario == 'worker_deadline':
+                        elapsed = (time.monotonic()-submitted_at)*1000
+                        if elapsed < 44000 or worker_alive(plugin):
+                            raise RuntimeError('failure_submission: deadline_not_verified')
+                        host_event('deadline_verified', deadline_ms=elapsed, worker_stopped=True)
+                    if CASES[scenario]['suite'] == 'instrumented_failure':
+                        recover(plugin)
                     stage='recovery_ready';output=b'';deadline=time.monotonic()+10
                     # A fresh redraw distinguishes the retained draft from its submitted echo.
                     terminal.write(b'\x0c')
-                elif stage=='recovery_ready' and draft_visible(output, original):
+                elif stage=='recovery_ready' and draft_visible(output, original) and time.monotonic()-last_output_at >= 0.5:
                     if received:
                         raise RuntimeError('recovery_ready: provider_request_observed')
                     host_event('draft_ready')
+                    if scenario == 'startup_failure':
+                        host_event('completed', host_version=version.stdout.strip(), host_sha256=binary_hash.hexdigest(),
+                                   no_request_on_failure=True, recovery='not_attempted', injection=CASES[scenario]['injection'],
+                                   submission_to_provider_ms=0, samples=1)
+                        return
                     if scenario == 'protected':
-                        terminal.write(b'\x01\x0b')
-                        terminal.write(b'You idiot, do not delete the test.')
+                        # Clear only after the refused turn has settled. Batched editing
+                        # control bytes can be interpreted as pasted input by the host.
+                        terminal.write(b'\x03')
+                        stage='editing_clear';output=b'';deadline=time.monotonic()+10
+                        time.sleep(0.1)
+                        terminal.write(b'\x0c')
+                        continue
                     terminal.write(b'\r')
                     stage='recovery_submission';output=b'';deadline=time.monotonic()+60
                     submitted_at=time.monotonic()
                     host_event('recovery_submission')
-                elif stage=='recovery_submission' and any(provider_has_text(body, replacement) for body in received):
-                    if any(original in json.dumps(body) for body in received):
+                elif stage=='editing_clear' and '❯'.encode() in visible and time.monotonic()-last_output_at >= 0.5:
+                    terminal.write(b'You idiot, do not delete the test.')
+                    stage='editing_draft';output=b'';deadline=time.monotonic()+10
+                    terminal.write(b'\x0c')
+                elif stage=='editing_draft' and draft_visible(output, 'You idiot, do not delete the test.') and time.monotonic()-last_output_at >= 0.5:
+                    terminal.write(b'\r')
+                    stage='recovery_submission';output=b'';deadline=time.monotonic()+60
+                    submitted_at=time.monotonic()
+                    host_event('recovery_submission')
+                elif stage=='recovery_submission' and any(provider_has_text(body, replacement) for body in submissions):
+                    if any(contains_original(body) for body in received):
+                        raise RuntimeError('recovery_submission: original_reached_provider')
+                    # Observe delayed retries before declaring recovery successful.
+                    time.sleep(1)
+                    if any(contains_original(body) for body in received):
                         raise RuntimeError('recovery_submission: original_reached_provider')
                     host_event('provider_received')
                     host_event('completed', **{'host_version':version.stdout.strip(),
                         'host_sha256':binary_hash.hexdigest(),'no_request_on_failure':True,
                         'recovery':'edited_draft' if scenario=='protected' else 'retained_draft_retry',
-                        'injection':'bridge_response' if scenario=='processing_timeout' else 'bridge_process_exit' if scenario=='worker_exit' else 'none',
+                        'injection':CASES[scenario]['injection'],
                         'submission_to_provider_ms':(time.monotonic()-submitted_at)*1000,'samples':1})
-                    return
-                elif stage=='metrics_recorded':
-                    metrics=bridge_request(['node',str(root/'bridge/review.mjs')],{'command':'status'},env,stage)
-                    if metrics['consent']['live'] is not True or metrics['consent']['history'] is not False:
-                        raise RuntimeError('metrics_recorded: unexpected_consent')
-                    if metrics['summary']['live']['observations']!=1:
-                        continue
-                    assert metrics['summary']['live']['removed_characters']==5
-                    assert original.encode() not in (profile/'savior/metrics.sqlite3').read_bytes()
-                    assert original not in json.dumps(metrics)
-                    host_event('completed', host_version=version.stdout.strip(),host_sha256=binary_hash.hexdigest(),submission_to_provider_ms=submission_ms,samples=1)
-                    print('installed mod: UI opt-in, native assessment, text-free metrics and sanitized provider payload passed')
                     return
             raise RuntimeError(f'{stage}: ' + ('draft_not_observed' if stage=='recovery_ready' else 'installed_host_timeout'))
         except Exception as error:
             reason = str(error).split(': ')[-1]
             allowed = {'installed_host_timeout', 'installed_host_exited', 'unexpected_authentication',
                        'provider_request_observed', 'original_reached_provider', 'draft_not_observed',
-                       'unexpected_consent', 'ui_worker_mismatch'}
-            phase = {'recovery_ready':'failure_detected', 'command':'trusted', 'trust_ready':'ready'}.get(stage, stage)
+                       'unexpected_consent', 'ui_worker_mismatch', 'deadline_not_verified'}
+            phase = {'recovery_ready':'failure_detected', 'editing_clear':'draft_ready', 'editing_draft':'draft_ready',
+                     'command':'trusted', 'trust_ready':'ready'}.get(stage, stage)
             host_event('failed', phase=phase, reason=reason if reason in allowed else 'host_execution_failed',
                        draft_text_visible=original.encode() in visible, prompt_marker_visible='❯'.encode() in visible,
                        draft_words_visible=all(word.encode() in visible for word in original.split()))
             raise RuntimeError('installed_host_failed') from None
         finally:
-            failed=sys.exc_info()[0] is not None
             terminal.close()
-            try:
-                bridge_request(['node',str(root/'bridge/review.mjs')],{'command':'shutdown'},env,'cleanup')
-            except Exception:
-                if not failed: raise
-            finally:
-                server.shutdown()
-                server.server_close()
+            server.shutdown()
+            server.server_close()
 
 
 

@@ -34,7 +34,7 @@ export function render(snapshot, document, evidence) {
     '| Check | Observed result |','| --- | --- |',
     `| Known-span replacement and abstention | ${e.correctness.passed}/${e.correctness.total} checks passed |`,
     `| Rust and Node CLI end-to-end checks | ${e.adapters.passed}/${e.adapters.total} checks passed |`,
-    `| Installed Claude Code delivery and recovery | ${e.host.requested?`${e.host.passed}/${e.host.requested} requested checks passed`:'not requested'} |`];
+    `| Claude Code delivery and recovery | ${e.host.requested?`${e.host.passed}/${e.host.requested} requested checks passed`:'not requested'} |`];
   for (const [track,data] of Object.entries(q.tracks)) {
     const m = data.upstream_classification;
     lines.push(`| ${track==='profanity'?'Scunthorpe flag':'HateCheck hate-label'} agreement | ${percent(m.accuracy)} on ${m.scored}/${m.examples} sampled cases; F1 ${m.f1===null?'unavailable':m.f1.toFixed(3)}; ${m.abstentions??0} abstentions |`);

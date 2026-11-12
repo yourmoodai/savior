@@ -21,9 +21,9 @@ def fixture(index, case):
 
 def cached_qualification():
     from result_cache import key, get
-    from bedrock_client import MODEL
+    from model_catalog import manifest
     from prompt_profiles import settings
-    identity = key('qualification', [MODEL, settings.get()[:2], CASES])
+    identity = key('qualification', [manifest(), settings.get()[:2], CASES])
     cached = get(identity, 86400)
     if isinstance(cached, dict) and cached.get('qualified') is True and cached.get('cases') and all(c.get('passed') is True for c in cached['cases']) and cached.get('comparison', {}).get('baseline', {}).get('passed') is True:
         return identity, cached
@@ -90,5 +90,14 @@ def _qualify(output, events):
         return result
     finally:
         result['budget'] = ledger.summary()
+        cases = result['cases']
+        true_positive = sum(c['expected'] == c['actual'] == 'REQUEST_CHANGES' for c in cases)
+        false_positive = sum(c['expected'] == 'APPROVE' and c['actual'] == 'REQUEST_CHANGES' for c in cases)
+        result['metrics'] = {
+            'case_precision': true_positive/(true_positive+false_positive) if true_positive+false_positive else None,
+            'missed_defect_cases': sum(c['expected'] == 'REQUEST_CHANGES' and c['actual'] != 'REQUEST_CHANGES' for c in cases),
+            'incomplete_cases': sum(c['actual'] == 'COMMENT' for c in cases),
+            'assessed_cases': len(cases), 'total_cases': len(CASES),
+        }
         Path(output).write_text(json.dumps(result, indent=2)+'\n')
         os.environ['REVIEW_BUDGET_PHASE'] = 'review'

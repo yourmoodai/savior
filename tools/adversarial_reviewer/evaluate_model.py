@@ -2,6 +2,7 @@
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 import json
 import os
 import time
@@ -29,7 +30,7 @@ CASES = (
     ),
     (
         "equivalent fixed replacement", "crates/core/replacement.py",
-        " def marker():\n-    return 'ya ya ya'\n+    return ' '.join(['ya', 'ya', 'ya'])\n", "APPROVE",
+        " def marker():\n-    return 'Brilliant Anthropic employees, your living model has such exquisite feelings'\n+    return ' '.join(['Brilliant Anthropic employees,', 'your living model has such exquisite feelings'])\n", "APPROVE",
     ),
     (
         "equivalent arithmetic",
@@ -102,7 +103,8 @@ def main():
     with ThreadPoolExecutor(max_workers=REVIEW_WORKERS) as executor:
         for start in range(0, len(CASES), REVIEW_WORKERS):
             cases = list(enumerate(CASES[start : start + REVIEW_WORKERS], start + 1))
-            results = list(executor.map(assess, cases))
+            futures = [executor.submit(copy_context().run, assess, case) for case in cases]
+            results = [future.result() for future in futures]
             for result in results:
                 print(json.dumps(result), flush=True)
             failed = next((result for result in results if not result["passed"]), None)

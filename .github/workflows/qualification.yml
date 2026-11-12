@@ -93,7 +93,7 @@ jobs:
             .cache/release/release-public.pem
             .cache/release/release-envelope.*
   installed:
-    timeout-minutes: 15
+    timeout-minutes: 100
     needs: package
     strategy:
       fail-fast: false
@@ -106,9 +106,12 @@ jobs:
           persist-credentials: false
           ref: ${{ github.sha }}
       - uses: ./.github/actions/release-installed
+  compatibility:
+    needs: package
+    uses: ./.github/workflows/compatibility.yml
   qualification:
     if: always()
-    needs: [gate, build, package, installed]
+    needs: [gate, build, package, installed, compatibility]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

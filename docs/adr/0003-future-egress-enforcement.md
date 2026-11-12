@@ -1,11 +1,12 @@
-# 3. Planned transparent-proxy adapter
+# 3. Proposed transparent-proxy adapter
 
 Date: 2026-10-20
 
 ## Status
 
-Planned next adapter. It is not implemented, supported, or evidence of complete
-egress enforcement.
+Proposed. It is not implemented, supported, or evidence of complete egress
+enforcement. This record preserves research requirements; it does not authorize
+deployment or expand the accepted mod boundary in ADR 1.
 
 ## Context
 
@@ -16,7 +17,7 @@ platform behavior beyond text transformation.
 
 ## Decision
 
-The planned proxy would extract supported prompt fields, transform them in Rust,
+The proposed proxy would extract supported prompt fields, transform them in Rust,
 validate the reconstructed request, and then forward it. It owns TLS termination,
 upstream validation, HTTP structure, compression, framing, streaming, routing,
 certificates, and operating-system lifecycle. Rust continues to own detection,

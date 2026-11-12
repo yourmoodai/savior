@@ -1,6 +1,17 @@
 {
   "version": "2.0.0",
   "tasks": [
+    {"label":"reviewer model status","type":"shell","command":"npm run reviewer:models -- status","problemMatcher":[]},
+    {"label":"test reviewer routing","type":"shell","command":"npm run test:reviewer","problemMatcher":[]},
+    {"label":"check claude compatibility","type":"process","command":"npm","args":["run","check:claude"],"problemMatcher":[]},
+    {"label":"test claude compatibility","type":"process","command":"npm","args":["run","test:compatibility"],"problemMatcher":[]},
+    {"label":"test compatibility window","type":"process","command":"npm","args":["run","compatibility:test"],"problemMatcher":[]},
+    {"label":"discover compatibility window","type":"process","command":"npm","args":["run","compatibility:discover","--","${input:compatibility_inventory}"],"problemMatcher":[]},
+    {"label":"assess native compatibility","type":"process","command":"python3","args":["scripts/release/compatibility-run.py","${input:compatibility_inventory}","${input:compatibility_output}"],"problemMatcher":[]},
+    {"label":"preview homepage","type":"process","command":"python3","args":["scripts/site.py","serve"],"problemMatcher":[]},
+    {"label":"build homepage","type":"process","command":"python3","args":["scripts/site.py","build"],"problemMatcher":[]},
+    {"label":"verify homepage","type":"process","command":"python3","args":["scripts/site.py","check"],"problemMatcher":[]},
+    {"label":"test homepage in browser","type":"process","command":"npm","args":["run","site:test"],"problemMatcher":[]},
     {"label":"watch replacements release","type":"process","command":"npm","args":["run","watch"],"problemMatcher":[]},
     {"label":"watch replacements debug","type":"process","command":"npm","args":["run","watch:debug"],"problemMatcher":["$rustc"]},
     {"label":"build replacement watcher release","type":"process","command":"npm","args":["run","watch:build:release"],"problemMatcher":["$rustc"]},
@@ -269,6 +280,8 @@
     }
   ],
   "inputs": [
+    {"id":"compatibility_inventory","type":"promptString","description":"Frozen compatibility inventory path","default":".cache/compatibility/inventory.json"},
+    {"id":"compatibility_output","type":"promptString","description":"Fresh native assessment directory","default":".cache/compatibility/assessments"},
     {"id":"quality_report","type":"promptString","description":"Quality report to review","default":".cache/battle-2026-10-20/quality.json"},
     {"id":"performance_report","type":"promptString","description":"Performance report to classify","default":".cache/battle-2026-10-20/performance.json"},
     {"id":"battle_output","type":"promptString","description":"New benchmark directory (suite) or JSON file (memory)","default":".cache/battle-new"},

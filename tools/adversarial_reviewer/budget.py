@@ -32,6 +32,15 @@ class Ledger:
             db.execute('CREATE TABLE IF NOT EXISTS calls (id TEXT PRIMARY KEY, phase TEXT, identity TEXT, reserved INTEGER, charged INTEGER, metrics TEXT)')
             db.execute('CREATE TABLE IF NOT EXISTS grants (id TEXT PRIMARY KEY, cap INTEGER, context TEXT)')
             db.execute('CREATE TABLE IF NOT EXISTS funding (call_id TEXT PRIMARY KEY, grant_id TEXT NOT NULL)')
+            db.execute('CREATE TABLE IF NOT EXISTS call_pricing (call_id TEXT PRIMARY KEY, model TEXT NOT NULL)')
+            db.execute('CREATE TABLE IF NOT EXISTS ceiling (id INTEGER PRIMARY KEY CHECK(id=1), amount INTEGER NOT NULL)')
+
+    def set_ceiling(self, amount):
+        """A cumulative investigation cap can tighten, never reset or increase."""
+        if type(amount) is not int or amount <= 0:
+            raise BudgetError('invalid cumulative ceiling')
+        with self.connect() as db:
+            db.execute('INSERT INTO ceiling VALUES (1,?) ON CONFLICT(id) DO UPDATE SET amount=MIN(amount,excluded.amount)', (amount,))
 
     def authorize(self, grant):
         """An approval belongs to one logical workflow run, including its retries."""
@@ -80,8 +89,12 @@ class Ledger:
             tables = {r[0] for r in prior.execute("SELECT name FROM sqlite_master WHERE type='table'")}
             grants = prior.execute('SELECT id,cap,context FROM grants').fetchall() if 'grants' in tables else []
             funding = dict(prior.execute('SELECT call_id,grant_id FROM funding')) if 'funding' in tables else {}
+            pricing = dict(prior.execute('SELECT call_id,model FROM call_pricing')) if 'call_pricing' in tables else {}
+            ceiling = prior.execute('SELECT amount FROM ceiling WHERE id=1').fetchone() if 'ceiling' in tables else None
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if ceiling:
+                db.execute('INSERT INTO ceiling VALUES (1,?) ON CONFLICT(id) DO UPDATE SET amount=MIN(amount,excluded.amount)', ceiling)
             for identity, cap, context in grants:
                 metadata = json.loads(context)
                 if (type(cap) is not int or not 0 < cap <= 2**53-1 or metadata.get('id') != identity
@@ -98,6 +111,12 @@ class Ledger:
                 old = db.execute('SELECT id,phase,identity,reserved,charged,metrics FROM calls WHERE id=?', (key,)).fetchone()
                 funded = db.execute('SELECT grant_id FROM funding WHERE call_id=?', (key,)).fetchone()
                 grant = funding.get(key)
+                model = pricing.get(key)
+                old_model = db.execute('SELECT model FROM call_pricing WHERE call_id=?', (key,)).fetchone()
+                if old and (old_model[0] if old_model else None) != model:
+                    raise BudgetError('conflicting historical model pricing')
+                if model:
+                    db.execute('INSERT OR IGNORE INTO call_pricing VALUES (?,?)', (key, model))
                 if old and (funded[0] if funded else None) != grant:
                     raise BudgetError('conflicting historical funding')
                 if grant:
@@ -123,12 +142,18 @@ class Ledger:
                            "ON CONFLICT(id) DO UPDATE SET reserved=MAX(reserved,excluded.reserved)",
                            ('external-probes', 'external-qualification-probes', amount))
 
-    def reserve(self, inputs, outputs, phase, identity):
+    def reserve(self, inputs, outputs, phase, identity, *, model=None):
         if phase not in ('qualification', 'review') or any(type(n) is not int or n < 0 for n in (inputs, outputs)):
             raise BudgetError('invalid reservation parameters')
-        amount = cost(inputs, outputs)
+        from model_catalog import cost as model_cost
+        amount = model_cost(model, inputs, outputs) if model else cost(inputs, outputs)
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            ceiling = db.execute('SELECT amount FROM ceiling WHERE id=1').fetchone()
+            if ceiling:
+                committed = db.execute('SELECT COALESCE(SUM(COALESCE(charged,reserved)),0) FROM calls').fetchone()[0]
+                if committed + amount > ceiling[0]:
+                    raise BudgetExhausted('cumulative investigation allowance exhausted')
             if db.execute('SELECT COUNT(*) FROM calls WHERE charged > reserved').fetchone()[0]:
                 raise BudgetError('provider usage exceeded a reservation; pilot halted')
             grant = os.environ.get('REVIEW_BUDGET_GRANT')
@@ -148,6 +173,8 @@ class Ledger:
             db.execute('INSERT INTO calls VALUES (?,?,?,?,NULL,NULL)', (key, phase, identity, amount))
             if grant:
                 db.execute('INSERT INTO funding VALUES (?,?)', (key, grant))
+            if model:
+                db.execute('INSERT INTO call_pricing VALUES (?,?)', (key, json.dumps(model, sort_keys=True)))
         return key
 
     def reconcile(self, key, envelope, elapsed):
@@ -155,7 +182,7 @@ class Ledger:
         inputs, outputs = usage.get('inputTokens'), usage.get('outputTokens')
         if any(type(n) is not int or n < 0 for n in (inputs, outputs)):
             raise BudgetError('missing usage; full reservation retained')
-        if usage.get('cacheReadInputTokens', 0) or usage.get('cacheWriteInputTokens', 0):
+        if usage.get('cacheWriteInputTokens', 0):
             raise BudgetError('unexpected cache usage; full reservation retained')
         metrics = {'usage': usage, 'stop_reason': envelope.get('stopReason'),
                    'latency_seconds': elapsed, 'recorded_at': time.time()}
@@ -164,7 +191,17 @@ class Ledger:
             row = db.execute('SELECT reserved,charged FROM calls WHERE id=?', (key,)).fetchone()
             if row is None or row[1] is not None:
                 raise BudgetError('invalid reservation')
-            actual = cost(inputs, outputs)
+            from model_catalog import cost as model_cost
+            model = db.execute('SELECT model FROM call_pricing WHERE call_id=?', (key,)).fetchone()
+            cached = usage.get('cacheReadInputTokens', 0)
+            if type(cached) is not int or not 0 <= cached <= inputs or (cached and (
+                    not model or json.loads(model[0]).get('cache_read_pricing') != 'standard_input_upper_bound')):
+                raise BudgetError('unexpected cache usage; full reservation retained')
+            actual = model_cost(json.loads(model[0]), inputs, outputs) if model else cost(inputs, outputs)
+            if cached:
+                metrics['cost_basis'] = 'standard_input_upper_bound'
+            if model:
+                metrics['model'] = json.loads(model[0])
             db.execute('UPDATE calls SET charged=?,metrics=? WHERE id=?', (actual, json.dumps(metrics), key))
         if actual > row[0]:
             raise BudgetError('provider usage exceeded reservation; stop review')
@@ -174,7 +211,9 @@ class Ledger:
             rows = db.execute('SELECT id,phase,identity,reserved,charged,metrics FROM calls ORDER BY rowid').fetchall()
             funding = dict(db.execute('SELECT call_id,grant_id FROM funding'))
             grants = db.execute('SELECT id,cap,context FROM grants ORDER BY id').fetchall()
-        return {'limit_usd': LIMIT / 1e9, 'committed_usd': sum(r[4] if r[4] is not None else r[3] for r in rows) / 1e9,
+            ceiling = db.execute('SELECT amount FROM ceiling WHERE id=1').fetchone()
+        return {'ceiling_nanodollars': ceiling[0] if ceiling else None,
+                'limit_usd': LIMIT / 1e9, 'committed_usd': sum(r[4] if r[4] is not None else r[3] for r in rows) / 1e9,
                 'pilot_committed_nanodollars': sum(r[4] if r[4] is not None else r[3] for r in rows if r[0] not in funding),
                 'qualification_committed_nanodollars': sum(r[4] if r[4] is not None else r[3] for r in rows if r[0] not in funding and r[1] == 'qualification'),
                 'grants': [dict(id=g[0], cap_nanodollars=g[1], context=json.loads(g[2]),

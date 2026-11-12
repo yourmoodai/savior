@@ -21,10 +21,10 @@ npm run bench:test
 npm run bench:all -- --output .cache/battle-001
 ```
 
-`bench:all` runs quality, installed-host checks, and the performance screen
+`bench:all` runs quality, source-checkout host checks, and the performance screen
 sequentially. Failed stages return nonzero and preserve completed evidence.
-The installed host requires Claude Code 2.1.290, matching the existing terminal
-fixture. It uses a temporary profile, dummy credentials, synthetic text, and a
+The native host version is pinned in `tools/host/package.json` (currently
+2.1.322). It uses a temporary profile, dummy credentials, synthetic text, and a
 loopback provider. `--host no` explicitly omits that boundary and reports it as
 not requested; CI uses this option because it does not install the host.
 If `claude` is a shell or profile-routing wrapper, set `SAVIOR_CLAUDE_BINARY` to
@@ -46,8 +46,8 @@ Pass `--model DIR` to select local model artifacts. Only the CPU FP32 baseline
 is evaluated by this suite. `bench:build:debug` prepares debug binaries; pass
 `--profile debug` for debug runs, and rebuild with `bench:build` before measuring
 release performance. VS Code includes build, test, suite, and memory tasks.
-The installed-host metrics worker always uses the release binary, as in the
-normal development installation; use `--host no` for a wholly debug adapter run.
+Host checks exercise the built source mod, with personal metrics and trace
+recording off. Use `--host no` for a wholly debug CLI adapter run.
 Peak RSS is recorded for each native and Node process; it excludes unrelated
 processes and is not an allocation profile.
 
@@ -185,14 +185,17 @@ offsets, and boundaries through 64 KiB. Native `rewrite` is also compared with
 
 CLI checks cover successful rewrites, clean inputs, protected abstentions,
 invalid requests/configuration, and unavailable models. Errors must omit source
-text. Installed-host checks observe successful sanitized submissions for each
-strategy, opt-in metrics, and absence of original text in observed provider
-payloads. Host checks also cover real protected-span and unavailable-model
-errors, plus timeout responses and worker exits injected into a temporary
-plugin copy. Recovery retries the retained draft after repair; protected text
-requires editing first. No failure switch is added to the shipped runtime.
+text. Source-checkout host checks observe rewritten and unchanged submissions,
+protected refusal, unavailable models, malformed output, timeout responses,
+worker exits, and the real process deadline. A command-aware shim in a disposable
+copy injects rewrite faults after readiness; startup and inspection keep using
+the real bridge. Recovery retries the retained draft after repair; protected
+text requires editing first. No failure switch is added to the shipped runtime.
+These runs cannot qualify a release archive. The complete installed-candidate
+matrix, including startup failure, belongs to
+[release preparation](releases.md#interception-evidence).
 
-Installed-host evidence uses a versioned, content-free event stream. Each
+Host evidence uses a versioned, content-free event stream. Each
 scenario has its own checkpoint beside the E2E output, and validated events
 are appended as they arrive. A failed process retains its last observed phase
 and any verified absence of provider requests; missing completion evidence
@@ -205,12 +208,13 @@ check; the provider payload must still contain the exact expected replacement.
 Terminal output stays in memory. A readiness timeout is `draft_not_observed`,
 not proof of draft loss. Recovery stalls and non-reproduced failures remain
 visible until their cause is established.
-Injected timeout responses test adapter handling, not the model deadline or
-the host's hard process watchdog. Provider traffic is observed through recovery.
-The adapter restores the draft only into an empty prompt box for the latest,
-uncancelled submission; it does not overwrite a newer draft. A host refusal
-alone does not imply that the prompt box retained the draft.
-Existing plugin tests separately exercise retained drafts on failures.
+Injected timeout responses test adapter handling. The separate `worker_deadline`
+case stalls a real bridge process, waits for the production 45-second watchdog,
+and verifies process termination. Provider traffic is observed through recovery.
+Claude 2.1.322 restores refused drafts. The adapter leaves that recovery to the
+host; filling the prompt box before returning `drop` duplicates retry text.
+A host refusal alone does not imply that the prompt box retained the draft.
+Existing handler tests separately exercise cancellation and newer-draft races.
 This evidence does not prove the absence of host telemetry or other submission
 paths.
 

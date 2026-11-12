@@ -35,11 +35,11 @@ class QuoteTests(unittest.TestCase):
         with patch('bedrock_client.complete', side_effect=AssertionError('inference is forbidden')):
             quote = create(MANIFESTS, self.ledger.summary(), None)
         self.assertGreater(quote['items'][0]['calls'], 0)
-        self.assertEqual([i['calls'] for i in quote['items'][1:]], [1, 1, 2, 4])
+        self.assertEqual([i['calls'] for i in quote['items'][1:]], [1]*14+[4])
         self.assertGreater(quote['cap_nanodollars'], quote['estimated_nanodollars'])
         self.assertEqual(quote['cap_nanodollars'] % 10_000_000, 0)
         cached = estimate({'chunks': [{'input_tokens': 1000, 'cached_assessment': True}]})
-        self.assertEqual([i['calls'] for i in cached], [0, 0, 0, 4])
+        self.assertEqual([i['calls'] for i in cached], [0]*14+[4])
 
     def test_digest_expiration_archive_and_model_pricing(self):
         validate(self.quote)
@@ -57,7 +57,7 @@ class QuoteTests(unittest.TestCase):
             else:
                 with self.assertRaises(ValueError):
                     inspect_archive(archive.getvalue())
-        for change in ({'AWS_REGION': 'eu-west-1'}, {'BEDROCK_REVIEW_MODEL': 'other-model'}):
+        for change in ({'AWS_REGION': 'eu-west-1'},):
             with patch.dict(os.environ, change), self.assertRaisesRegex(ValueError, 'unsupported_pricing'):
                 create(MANIFESTS, self.ledger.summary(), {'strategy': 'baseline'})
 

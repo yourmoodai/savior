@@ -29,7 +29,12 @@ jobs:
       head: ${{ steps.scope.outputs.head }}
       pr: ${{ steps.scope.outputs.pr }}
       base: ${{ steps.scope.outputs.base }}
+      enabled: ${{ steps.enabled.outputs.value }}
     steps:
+      - id: enabled
+        env:
+          ENABLED: ${{ vars.BEDROCK_REVIEW_ENABLED }}
+        run: echo "value=$ENABLED" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -53,7 +58,7 @@ jobs:
     if: needs.scope.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     concurrency:
-      group: bedrock-haiku45-pilot
+      group: bedrock-review-spending
       cancel-in-progress: false
     environment:
       name: bedrock-review
@@ -68,8 +73,7 @@ jobs:
       PR_NUMBER: ${{ needs.scope.outputs.pr }}
       BASE_SHA: ${{ needs.scope.outputs.base }}
       AWS_REGION: us-east-1
-      BEDROCK_REVIEW_MODEL: ${{ vars.BEDROCK_REVIEW_MODEL }}
-      BEDROCK_REVIEW_ENABLED: ${{ vars.BEDROCK_REVIEW_ENABLED }}
+      BEDROCK_REVIEW_ENABLED: ${{ needs.scope.outputs.enabled }}
       BEDROCK_EXTERNAL_PROBE_NANODOLLARS: ${{ vars.BEDROCK_EXTERNAL_PROBE_NANODOLLARS }}
     steps:
       # Only trusted base code executes with secrets. PR code is diff data.
@@ -96,6 +100,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12.10'
+      - name: install signing transport
+        run: python3 -m pip install -r tools/adversarial_reviewer/requirements.txt
       - name: fetch diff without checkout
         env:
           PR_NUMBER: ${{ needs.scope.outputs.pr }}
@@ -104,7 +110,7 @@ jobs:
         with:
           node-version: 24.22.2
       - name: restore pilot budget
-        if: vars.BEDROCK_REVIEW_ENABLED == 'true'
+        if: needs.scope.outputs.enabled == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
@@ -164,8 +170,7 @@ jobs:
       - name: qualify and assess
         if: steps.preflight.outputs.spend == 'true'
         env:
-          BEDROCK_REVIEW_ENABLED: ${{ vars.BEDROCK_REVIEW_ENABLED }}
-          BEDROCK_REVIEW_MODEL: ${{ vars.BEDROCK_REVIEW_MODEL }}
+          BEDROCK_REVIEW_ENABLED: ${{ needs.scope.outputs.enabled }}
           BEDROCK_EXTERNAL_PROBE_NANODOLLARS: ${{ vars.BEDROCK_EXTERNAL_PROBE_NANODOLLARS }}
           BASE_SHA: ${{ needs.scope.outputs.base }}
           HEAD_SHA: ${{ needs.scope.outputs.head }}
@@ -173,7 +178,7 @@ jobs:
           REVIEW_BUDGET_GRANT: ${{ steps.preflight.outputs.grant }}
         run: python3 tools/adversarial_reviewer/run_ci.py
       - name: snapshot budget after completion or cancellation
-        if: always() && vars.BEDROCK_REVIEW_ENABLED == 'true' && hashFiles('review-result/ledger.db') != ''
+        if: always() && needs.scope.outputs.enabled == 'true' && hashFiles('review-result/ledger.db') != ''
         run: python3 tools/adversarial_reviewer/settle.py review-result
       - name: preserve validated review cache
         if: always() && hashFiles('review-result/cache/*.json') != ''
@@ -184,7 +189,7 @@ jobs:
           retention-days: 7
           if-no-files-found: error
       - name: reconcile pilot reservation
-        if: always() && vars.BEDROCK_REVIEW_ENABLED == 'true' && hashFiles('review-result/recovery/settled.json') != ''
+        if: always() && needs.scope.outputs.enabled == 'true' && hashFiles('review-result/recovery/settled.json') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: haiku45-pilot-20261015-settled-${{ github.run_id }}-${{ github.run_attempt }}

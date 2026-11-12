@@ -1,0 +1,15 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "<reasoning>Synthetic analysis of an unchanged fixture result.</reasoning>{\"rationale\":\"The fixture preserves the original output and introduces no observable failure.\",\"findings\":[],\"abstention\":\"\"}"
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1220,
+    "completion_tokens": 904
+  }
+}

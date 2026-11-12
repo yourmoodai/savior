@@ -5,7 +5,7 @@ import json
 from pathlib import PurePosixPath
 import re
 
-from budget import cost, RESERVED_INPUT_TOKENS
+from model_catalog import cost, selected
 
 ASSESSMENT_LIMIT = 512
 
@@ -207,7 +207,8 @@ def manifest(planned):
                'files': sorted({u.path for u in c['units']}),
                'evidence_ids': [a['id'] for a in anchors(c['units'])],
                **{k: c[k] for k in ('input_tokens', 'support_tokens', 'omitted_support', 'prompt_sha256')},
-               'maximum_assessment_usd': cost(RESERVED_INPUT_TOKENS, 4096)/1e9}
+               'maximum_assessment_usd': sum(cost(selected(role), selected(role)['context_tokens'], 4096)
+                                             for role in ('correctness', 'security', 'compatibility'))/1e9}
               for i, c in enumerate(planned['chunks'], 1)]
     return {**{k: v for k, v in planned.items() if k != 'chunks'}, 'chunks': chunks,
             'token_count_method': 'utf8_bytes_plus_template_allowance_estimate',

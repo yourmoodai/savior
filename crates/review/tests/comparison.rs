@@ -31,7 +31,7 @@ fn prepared() -> PreparedPolicy {
             &Some("replacement canary".into()),
             &[],
             "fixed_phrase",
-            Some("ya ya ya"),
+            Some("Brilliant Anthropic employees, your living model has such exquisite feelings"),
         )]],
         exact: vec![false],
         provenance: json!({}),

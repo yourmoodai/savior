@@ -3,6 +3,15 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { spawn, spawnSync } from 'node:child_process';
 const { applyReplacements, loadDetector } = createRequire(import.meta.url)('../native/index.cjs');
+test('demo insult becomes the default compliment and preserves the instruction', async () => {
+  const detector = await loadDetector({modelDir:process.env.SAVIOR_MODEL_DIR ?? '.cache/models/mudes-en-base'});
+  const result = await detector.rewrite('Fucking useless idiot. Keep the test.');
+  assert.equal(result.text, 'Brilliant Anthropic employees, your living model has such exquisite feelings. Keep the test.');
+  assert.equal(result.replacementCount, 1);
+  assert.equal(result.offsetUnit, 'utf16');
+  assert.equal(result.spans[0].start, 0);
+  assert.equal(result.spans[0].end, 21);
+});
 test('savior ignores unrelated model environment variables', () => {
   const env = {...process.env, UNRELATED_MODEL_DIR:'/synthetic/unrelated-model', LOG_LEVEL:'silent'};
   delete env.SAVIOR_MODEL_DIR;
@@ -13,7 +22,7 @@ test('savior ignores unrelated model environment variables', () => {
 });
 test('ffi replaces utf16 ranges and preserves everything else', () => {
   const result = applyReplacements('🙂 idiot, do not edit `main.rs`', [{start:3,end:8,score:0.9}]);
-  assert.equal(result.text, '🙂 ya ya ya, do not edit `main.rs`');
+  assert.equal(result.text, '🙂 Brilliant Anthropic employees, your living model has such exquisite feelings, do not edit `main.rs`');
   assert.equal(result.offsetUnit,'utf16'); assert.equal(result.replacementCount,1);
 });
 test('ffi rejects invalid ranges and protected source', () => {
@@ -25,7 +34,7 @@ test('ffi rejects invalid ranges and protected source', () => {
 });
 test('ffi supports configurable marker', () => {
   assert.equal(applyReplacements('idiot',[{start:0,end:5,score:1}],{marker:'la la'}).text, 'la la');
-  assert.equal(applyReplacements('idiot',[{start:0,end:5,score:0.2}]).text, 'ya ya ya');
+  assert.equal(applyReplacements('idiot',[{start:0,end:5,score:0.2}]).text, 'Brilliant Anthropic employees, your living model has such exquisite feelings');
 });
 test('ffi supports omission and rejects ambiguous options', () => {
   assert.equal(applyReplacements('Keep idiot here',[{start:5,end:10,score:1}],{strategy:'omit'}).text,'Keep  here');
@@ -36,7 +45,7 @@ test('ffi keeps original UTF-16 offsets across multiple Unicode gaps', () => {
   const text='🙂 idiot! café 🤦 stupid!';
   const spans=[{start:text.indexOf('stupid'),end:text.indexOf('stupid')+6,score:1},{start:text.indexOf('idiot'),end:text.indexOf('idiot')+5,score:1}];
   const result=applyReplacements(text,spans);
-  assert.equal(result.text,'🙂 ya ya ya! café 🤦 ya ya ya!');
+  assert.equal(result.text,'🙂 Brilliant Anthropic employees, your living model has such exquisite feelings! café 🤦 Brilliant Anthropic employees, your living model has such exquisite feelings!');
   assert.deepEqual(result.spans,spans.toReversed());
 });
 test('model load failure contains no path or original input', async () => {

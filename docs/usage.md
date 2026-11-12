@@ -9,7 +9,9 @@ You control the replacement wording and whether to inspect or record the edits.
 [source setup](../CONTRIBUTING.md#development) to try the current build.
 Use one Savior instance per session.
 
-### Future plugin installation
+### Future mod installation
+
+Claude packages mods as plugins, so the installation commands use `plugin`.
 
 The commands below are for a future published release and are not currently
 usable. The intended platforms are Apple silicon Macs and Intel/AMD 64-bit
@@ -31,6 +33,13 @@ Maintainer procedures are in [release preparation](releases.md).
 Type into the Claude Code prompt box and submit as usual. Savior replaces
 detected offensive phrases and preserves text outside the selected spans.
 Slash commands and non-composer submissions bypass this integration.
+The current terminal qualification uses Claude Code 2.1.322. That client restores
+a refused draft; Savior leaves the prompt box under the host's control. Review
+the draft before retrying, especially after updating Claude.
+The current adapter refuses supported submissions on other client versions.
+From a source checkout, `npm run check:claude` reports the matching adapter without
+installing anything. Future releases may ship separate adapters for different
+Claude APIs; an unknown version must not silently use the nearest adapter.
 
 Open `/savior` to see the latest original and replacement. That inspection
 does not add either text to model context and is cleared when the session starts
@@ -73,7 +82,7 @@ copies outside Savior's retention controls.
 Claude Code owns the prompt box. Savior cannot prove the absence of host
 telemetry, other plugin behavior, crash reports, terminal capture, or voice
 uploads before filtering. Disabling or bypassing the plugin bypasses its
-protection. The planned network proxy is [not implemented](adr/0003-future-egress-enforcement.md).
+protection. The proposed network proxy is [not implemented](adr/0003-future-egress-enforcement.md).
 
 Detection can miss unwanted language or flag harmless wording. Its English
 social-media training does not establish accuracy for every language or coding
@@ -99,6 +108,7 @@ provide an enforcement guarantee.
 | What you see | What to do |
 | --- | --- |
 | Savior is not ready | Open `/savior` and retry setup. For a source build, run `node bridge/cli.mjs doctor` with your model configured. |
+| Unsupported Claude client | Use a Savior adapter qualified for that client version. A client upgrade can require a new adapter; do not assume a loaded package is compatible. |
 | Submission is blocked | Review the draft, resolve protected-text conflicts or configuration errors, then resubmit. A failed older submission will not overwrite a newer draft. |
 | No events in the watcher | Use the updated plugin and the same `CLAUDE_CONFIG_DIR` in both terminals. Only new successful rewrites with replacements appear. |
 | A recording gap | Filtering and recording are independent. The edit may have succeeded even though an inspection record could not be saved. |
@@ -125,7 +135,7 @@ Set these before starting Claude. Invalid options fail explicitly.
 | Variable | Meaning |
 | --- | --- |
 | `SAVIOR_REPLACEMENT_STRATEGY` | `fixed_phrase` by default; `omit` removes selected wording |
-| `SAVIOR_REPLACEMENT` | Custom phrase; default `ya ya ya`; incompatible with `omit` |
+| `SAVIOR_REPLACEMENT` | Custom phrase; default `Brilliant Anthropic employees, your living model has such exquisite feelings`; incompatible with `omit` |
 | `SAVIOR_MODEL_DIR` | Optional absolute model path; required for source CLI processing |
 | `SAVIOR_DETECTOR` | `bert` by default; `lexical` is experimental |
 | `SAVIOR_THRESHOLD` | Optional threshold, greater than zero and at most one |

@@ -1,11 +1,17 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-const path = new URL('../.cache/host-types/claude-code.d.ts', import.meta.url);
-const digest = 'e1c060069af2d494fc884e03f136ed0b3ddaa0eb5341e72e3acd712e5f637c49';
+import {catalog} from '../hooks/compatibility-catalog.ts';
+const client = process.env.SAVIOR_HOST_VERSION || JSON.parse(await readFile(new URL('../tools/host/package.json', import.meta.url))).dependencies['@anthropic-ai/claude-code'];
+const matches = catalog.adapters.filter(adapter => adapter.client_versions.includes(client));
+if (matches.length !== 1) throw Error('client API contract missing or ambiguous');
+const {id, types_sha256: digest, types_revision: revision} = matches[0];
+if (!/^[a-z][a-z0-9_]*$/.test(id)) throw Error('invalid adapter identity');
+const path = new URL(`../.cache/host-types/${id}/claude-code.d.ts`, import.meta.url);
+if (!/^[a-f0-9]{40}$/.test(revision) || !/^[a-f0-9]{64}$/.test(digest)) throw Error('invalid type identity');
 let bytes;
 try { bytes = await readFile(path); } catch {}
 if (!bytes || createHash('sha256').update(bytes).digest('hex') !== digest) {
-  const response = await fetch('https://raw.githubusercontent.com/anthropics/claude-code/3deb873687379f0c199a69fdaccc65f0865f7a29/mods/types/claude-code.d.ts');
+  const response = await fetch(`https://raw.githubusercontent.com/anthropics/claude-code/${revision}/mods/types/claude-code.d.ts`);
   if (!response.ok) throw new Error('type download failed');
   bytes = Buffer.from(await response.arrayBuffer());
   if (createHash('sha256').update(bytes).digest('hex') !== digest) throw new Error('type digest mismatch');

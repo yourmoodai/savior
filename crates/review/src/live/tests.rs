@@ -33,15 +33,17 @@ fn views_use_applied_unicode_spans_and_minimize_content() {
             View::Spans => {
                 assert!(!wire.contains("keep café"));
                 assert!(rendered.contains("  idiot stupid\n  jerk\n"));
-                assert!(!rendered.contains("ya ya ya"));
+                assert!(!rendered.contains(
+                    "Brilliant Anthropic employees, your living model has such exquisite feelings"
+                ));
             }
             View::SpanDiff => {
                 assert!(!wire.contains("keep café"));
-                assert!(rendered.contains("- idiot stupid\n+ ya ya ya\n- jerk\n+ ya ya ya"));
+                assert!(rendered.contains("- idiot stupid\n+ Brilliant Anthropic employees, your living model has such exquisite feelings\n- jerk\n+ Brilliant Anthropic employees, your living model has such exquisite feelings"));
             }
             View::PromptDiff => {
                 assert!(rendered.contains(
-                    "🌱 [-idiot stupid-]{+ya ya ya+}!\nkeep café, [-jerk-]{+ya ya ya+}."
+                    "🌱 [-idiot stupid-]{+Brilliant Anthropic employees, your living model has such exquisite feelings+}!\nkeep café, [-jerk-]{+Brilliant Anthropic employees, your living model has such exquisite feelings+}."
                 ));
             }
         }
