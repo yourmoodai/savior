@@ -10,6 +10,7 @@ import tarfile
 import urllib.request
 import zipfile
 from macos_bundle import BUNDLE, RUNTIME, create as create_bundle
+from version_gate import development_version
 
 ROOT = Path(__file__).resolve().parents[2]
 NODE = '24.22.2'
@@ -66,7 +67,12 @@ def stage(target, destination):
                   'files': {p.relative_to(destination).as_posix(): digest(p) for p in sorted(destination.rglob('*')) if p.is_file() and p.name != 'stage.json'}}
     (destination/'stage.json').write_text(json.dumps(provenance, indent=2)+'\n')
 
-def assemble(parts, destination, node='node', npm='npm', require_signed=False):
+def assemble(parts, destination, node='node', npm='npm', require_signed=False, development=False):
+    version=json.loads((ROOT/'package.json').read_text())['version']
+    ref=os.environ.get('GITHUB_REF', '')
+    if development and (require_signed or not development_version(version)
+                        or ref != 'refs/tags/v'+version):
+        raise ValueError('development packaging requires matching development tag')
     if destination.exists():
         raise ValueError('output already exists; use a fresh staging directory')
     destination.mkdir(parents=True)
@@ -130,7 +136,7 @@ def assemble(parts, destination, node='node', npm='npm', require_signed=False):
     (destination/'runtime-manifest.json').write_text(json.dumps(runtime,sort_keys=True,separators=(',',':'))+'\n')
     signing_env = dict(os.environ)
     if not signing_env.get('SAVIOR_RELEASE_SIGNING_KEY'):
-        if require_signed or signing_env.get('GITHUB_REF', '').startswith('refs/tags/'):
+        if require_signed or (ref.startswith('refs/tags/') and not development):
             raise ValueError('production signing key required')
         signing_env['SAVIOR_RELEASE_SIGNING_KEY'] = subprocess.check_output([node, '-e',
             "process.stdout.write(require('crypto').generateKeyPairSync('ed25519').privateKey.export({type:'pkcs8',format:'pem'}))"], text=True)
@@ -146,6 +152,8 @@ def assemble(parts, destination, node='node', npm='npm', require_signed=False):
             if path.is_file():archive.write(path,path.relative_to(destination))
     if output.stat().st_size>=LIMIT: raise ValueError('plugin archive exceeds 210 MB')
     marketplace=json.loads((ROOT/'.claude-plugin/marketplace.json').read_text())
+    if development_version(version):
+        marketplace['name']='yourmood.ai-dev'
     marketplace['plugins'][0]['source']={'source':'archive','url':f'https://github.com/yourmoodai/savior/releases/download/v{version}/{output.name}','sha256':digest(output)}
     (destination.parent/'marketplace.json').write_text(json.dumps(marketplace,indent=2)+'\n')
     (destination.parent/'SHA256SUMS').write_text(f'{digest(output)}  {output.name}\n')
@@ -167,6 +175,7 @@ if __name__=='__main__':
     p=sub.add_parser('assemble');p.add_argument('parts',type=Path);p.add_argument('destination',type=Path)
     p.add_argument('--node',default='node');p.add_argument('--npm',default='npm')
     p.add_argument('--require-signed',action='store_true')
+    p.add_argument('--development',action='store_true')
     args=parser.parse_args()
     if args.command=='stage':stage(args.target,args.destination)
-    else:assemble(args.parts,args.destination,args.node,args.npm,args.require_signed)
+    else:assemble(args.parts,args.destination,args.node,args.npm,args.require_signed,args.development)

@@ -3063,7 +3063,7 @@ dependencies = [
 
 [[package]]
 name = "savior"
-version = "0.1.0"
+version = "0.1.0-dev.1"
 dependencies = [
  "candle-core",
  "candle-nn",
@@ -3084,7 +3084,7 @@ dependencies = [
 
 [[package]]
 name = "savior-cli"
-version = "0.1.0"
+version = "0.1.0-dev.1"
 dependencies = [
  "fs2",
  "reqwest",
@@ -3098,7 +3098,7 @@ dependencies = [
 
 [[package]]
 name = "savior-lab"
-version = "0.1.0"
+version = "0.1.0-dev.1"
 dependencies = [
  "candle-core",
  "candle-nn",
@@ -3115,7 +3115,7 @@ dependencies = [
 
 [[package]]
 name = "savior-node"
-version = "0.1.0"
+version = "0.1.0-dev.1"
 dependencies = [
  "napi",
  "napi-build",
@@ -3127,7 +3127,7 @@ dependencies = [
 
 [[package]]
 name = "savior-review"
-version = "0.1.0"
+version = "0.1.0-dev.1"
 dependencies = [
  "chrono",
  "ctrlc",
