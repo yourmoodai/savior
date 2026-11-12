@@ -15,7 +15,7 @@ import preflight
 from quote import create, estimate, inspect_archive, validate, apply_policy
 
 ENV = {'GITHUB_REPOSITORY':'org/repo', 'PR_NUMBER':'5', 'BASE_SHA':'base', 'HEAD_SHA':'head',
-       'AWS_REGION':'us-east-1', 'GITHUB_RUN_ID':'7', 'BEDROCK_REVIEW_ENABLED':'true', 'REVIEW_COST_POLICY':'true'}
+       'AWS_REGION':'us-east-1', 'GITHUB_RUN_ID':'7', 'GITHUB_ACTIONS':'true', 'BEDROCK_REVIEW_ENABLED':'true', 'REVIEW_COST_POLICY':'true'}
 MANIFESTS = {s: {'chunks':[{'input_tokens':1000, 'cached_assessment':False}]} for s in ('baseline','adaptive')}
 
 

@@ -15,6 +15,11 @@ from prompt_profiles import select, prompts, settings
 
 
 class PromptExperimentTests(unittest.TestCase):
+    def setUp(self):
+        env = patch.dict(os.environ, GITHUB_ACTIONS='false', REVIEW_COST_POLICY='false')
+        env.start()
+        self.addCleanup(env.stop)
+
     def test_prompt_selection_restores_production_and_preserves_contracts(self):
         with select('current'):
             self.assertEqual(prompts(SYSTEM_PROMPT,VERIFICATION_PROMPT),(SYSTEM_PROMPT,VERIFICATION_PROMPT))

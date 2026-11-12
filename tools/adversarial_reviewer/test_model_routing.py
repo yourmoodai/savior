@@ -78,8 +78,9 @@ class RoutingTests(unittest.TestCase):
             with self.assertRaises(BudgetError):
                 merged.reconcile(keys[0], {'usage': {'inputTokens': 10, 'outputTokens': 10}}, 1)
 
-    def test_no_grant_means_no_provider_call(self):
-        with patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', AWS_REGION='us-east-1', REVIEW_BUDGET_GRANT=''), patch('bedrock_client.invoke') as invoke:
+    def test_local_diagnostics_need_a_grant_before_calling_provider(self):
+        with patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', AWS_REGION='us-east-1',
+                        GITHUB_ACTIONS='false', REVIEW_COST_POLICY='false', REVIEW_BUDGET_GRANT=''), patch('bedrock_client.invoke') as invoke:
             with self.assertRaisesRegex(BedrockError, 'approval'):
                 complete([], time.monotonic()+10)
             invoke.assert_not_called()
