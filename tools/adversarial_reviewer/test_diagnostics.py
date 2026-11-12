@@ -58,7 +58,13 @@ class DiagnosticTests(unittest.TestCase):
             os.chdir(directory)
             Path("review-result").mkdir()
             Path("review-result/recoveries.json").write_text("[]")
-            Path('review-result/preflight.json').write_text(json.dumps({'blocked_reason': None, 'commit_id': 'test'}))
+            from quote import configuration, digest
+            import time
+            issued = int(time.time())
+            quote = {'schema':1,'issued_at':issued,'expires_at':issued+86400,'projected_nanodollars':1,
+                     'binding':{'head':'test','base':'base','repository':'org/repo','pr':1,'configuration':configuration()}}
+            quote['id'] = digest(quote)
+            Path('review-result/preflight.json').write_text(json.dumps({'blocked_reason':None,'commit_id':'test','quote':quote}))
             Path('review-result/baseline-manifest.json').write_text(json.dumps({
                 'files': 162, 'total_lines': 26939, 'total_chunks': 100,
                 'total_units': 258, 'excluded_assets': [], 'test_evidence': {'head': 'test'}}))
@@ -67,11 +73,12 @@ class DiagnosticTests(unittest.TestCase):
                 'unexpected_findings': [], 'report': {'chunks': [{
                     'complete': False, 'summary': 'review incomplete: invalid findings: expected array.'}]}}]}}}
             from budget import Ledger
-            Ledger('review-result/ledger.db').authorize({'id':'test','cap_nanodollars':10_000_000_000,'head':'test','run_id':1})
-            with patch.dict(os.environ, {'REVIEW_BUDGET_GRANT':'test','GITHUB_RUN_ID':'1','HEAD_SHA': 'test', 'BASE_SHA': 'base',
+            ledger = Ledger('review-result/ledger.db')
+            with patch.dict(os.environ, {'REVIEW_COST_POLICY':'true','GITHUB_REPOSITORY':'org/repo','PR_NUMBER':'1','HEAD_SHA': 'test', 'BASE_SHA': 'base',
                                           'BEDROCK_REVIEW_ENABLED': 'true', 'GITHUB_STEP_SUMMARY': '',
                                           'REVIEW_BUDGET_LEDGER': ''}), \
                     patch('subprocess.run') as run, \
+                    patch('preflight.restore', return_value=ledger), \
                     patch('qualify.qualify', return_value=result):
                 runpy.run_path(str(script), run_name='__main__')
             report = json.loads(Path('review-result/report.json').read_text())

@@ -1,0 +1,219 @@
+{
+  "schema": 1,
+  "repository": "yourmoodai/savior",
+  "source_artifact": 13961342672,
+  "source_ledger_sha256": "42bae1d4f9b9037aa403e4836e302f8de2a721f0c335e953c05b352f8d67b98b",
+  "description": "2026-11-12 attribution of 1476 preserved rows. PR 0 denotes historical repository probes outside PR execution; uncertain costs remain reserved against every future UTC day.",
+  "groups": [
+    {
+      "pr": 1,
+      "run": 38828310571,
+      "start": "2026-10-16T00:14:19Z",
+      "end": "2026-10-16T00:30:14Z",
+      "count": 23,
+      "rows_sha256": "c81a80ac31ce17e70b880df4cc278af2e6f8e75d0323fa10fefd67ade7ace5c1",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38828310571",
+      "log_sha256": "53f3d168b5e54c21b266679e61f6930de2adf5111dbf6f8846924bbd4f54650e"
+    },
+    {
+      "pr": 1,
+      "run": 38833424862,
+      "start": "2026-10-16T01:07:55Z",
+      "end": "2026-10-16T01:21:36Z",
+      "count": 3,
+      "rows_sha256": "58702bd812f080520fb071c1d312a4a8d9dd85554fe6e47038f9ab5bd75e6601",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38833424862",
+      "log_sha256": "e6bf1f8c85d3e4fd3eae4e0b47b106f5f92e1bf56fd30f5a8746791b13b39df7"
+    },
+    {
+      "pr": 1,
+      "run": 38835283158,
+      "start": "2026-10-16T01:28:23Z",
+      "end": "2026-10-16T01:29:12Z",
+      "count": 2,
+      "rows_sha256": "796440102d9ae4c487d5da50b1d9bc18ad03c94bc272cddb797eb30961786526",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38835283158",
+      "log_sha256": "aaee6f2aacc96c899daabf8e5aa35d6f562e3ad4e06a86b4123c225b9b9d9833"
+    },
+    {
+      "pr": 1,
+      "run": 38835635251,
+      "start": "2026-10-16T01:32:15Z",
+      "end": "2026-10-16T01:33:46Z",
+      "count": 7,
+      "rows_sha256": "4f00120a3e0865f6fc39a1951226fab8a2c9d5390dd80ff92bac421128e26c9e",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38835635251",
+      "log_sha256": "6ef07c3d5a741ac1159e088f949679e65ee1c322393d575f572f64f1fcb9d7a6"
+    },
+    {
+      "pr": 1,
+      "run": 38837519871,
+      "start": "2026-10-16T01:53:25Z",
+      "end": "2026-10-16T01:54:47Z",
+      "count": 7,
+      "rows_sha256": "2895c59e01c2475af1ffdc5dd26b8a07d29ab82b710bb71515646466518f385f",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38837519871",
+      "log_sha256": "570b458f0c3ce05da87a46f8548a90e974f593dc000b0806d8624fbd41a61177"
+    },
+    {
+      "pr": 1,
+      "run": 38848456361,
+      "start": "2026-10-16T04:01:48Z",
+      "end": "2026-10-16T04:05:39Z",
+      "count": 27,
+      "rows_sha256": "3cea4afc00d5d5712fe3acf865e21b4c02ded9cd5bc5a9fde95ba84a6003cee7",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38848456361",
+      "log_sha256": "ccc079c54fe12d867bf3d051ba53bb51be46df8f475a6ad9d564166ba96705e1"
+    },
+    {
+      "pr": 1,
+      "run": 38849027830,
+      "start": "2026-10-16T04:08:16Z",
+      "end": "2026-10-16T04:17:23Z",
+      "count": 116,
+      "rows_sha256": "d9c8e2e678891f965e7316b4446c4cc2ac775f5b989cd9c88e299d41416a70c2",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38849027830",
+      "log_sha256": "f08e0cba578aecd2b01bf9aceee12ae0d50a90ced2ecedc57d88cdd257615b3e"
+    },
+    {
+      "pr": 1,
+      "run": 38850136358,
+      "start": "2026-10-16T04:20:52Z",
+      "end": "2026-10-16T04:24:38Z",
+      "count": 27,
+      "rows_sha256": "6eb757280602d7b1b6d88c0c46ec70e6da7c97f0b28dc243ea0d3b448f978e7e",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38850136358",
+      "log_sha256": "fff35efca60ab663c55869053ef2c694c1f4dad32c374e681ffe0bf1d1df30c6"
+    },
+    {
+      "pr": 1,
+      "run": 38850796658,
+      "start": "2026-10-16T04:28:34Z",
+      "end": "2026-10-16T04:32:31Z",
+      "count": 28,
+      "rows_sha256": "a4334eac3f4414483898c7d7ee2e11d2cd76ab533f855734a36895b8a462305a",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38850796658",
+      "log_sha256": "2b9e59c39fcbccda5226132bcf1aa73bd77db0a1443942b20efc8832f08def8b"
+    },
+    {
+      "pr": 1,
+      "run": 38853804519,
+      "start": "2026-10-16T05:03:51Z",
+      "end": "2026-10-16T05:20:19Z",
+      "count": 213,
+      "rows_sha256": "4e6ac67265d86045f20a0a323abab7de25dfde81becd006a5c4d4b87e6e4919d",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38853804519",
+      "log_sha256": "123fc1594dacca5b529dee837313a3f96d729312c006d10fb8ed69f8b8268fb3"
+    },
+    {
+      "pr": 1,
+      "run": 38856012279,
+      "start": "2026-10-16T05:29:19Z",
+      "end": "2026-10-16T05:32:06Z",
+      "count": 28,
+      "rows_sha256": "439e0b42d463dbbbe0a07db61d4813844b2a41aeecca3efffbb344ef4d9cb743",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38856012279",
+      "log_sha256": "8459061e8a96802daf05b50b2ad5b35a0ea2c2845f303c454af68ca438b93136"
+    },
+    {
+      "pr": 1,
+      "run": 38857271283,
+      "start": "2026-10-16T05:43:47Z",
+      "end": "2026-10-16T05:57:22Z",
+      "count": 214,
+      "rows_sha256": "bdd369db35abd01426fef4f4a7462b501bbc8960d060ca5a741bf6eca70b80f9",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38857271283",
+      "log_sha256": "9919ee3314eaf28a3508887d0d32157e6a95de57a9f511a17601e3a69eaea639"
+    },
+    {
+      "pr": 1,
+      "run": 38858706193,
+      "start": "2026-10-16T06:00:01Z",
+      "end": "2026-10-16T06:12:09Z",
+      "count": 177,
+      "rows_sha256": "61e4213190ed21af9b28f1bc51bd5c815ed9d6edad14c1ab8dfafa28889ca067",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/38858706193",
+      "log_sha256": "bbf7e63660f06ccd98b6f83c604f6a7088f77dcf83bcfadb9551abdb0f3f9d5e"
+    },
+    {
+      "pr": 2,
+      "run": 39814792765,
+      "start": "2026-10-22T17:04:50Z",
+      "end": "2026-10-22T17:19:23Z",
+      "count": 224,
+      "rows_sha256": "1d6b07b322f4bba469e5b236780e5b18986197c5909ad1e3e42e9feb665a52db",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/39814792765",
+      "log_sha256": "35c04ded3f95c575ab25bbf74f0853ecf590d9b536768f0372e01b217fb23973"
+    },
+    {
+      "pr": 2,
+      "run": 39817507676,
+      "start": "2026-10-22T16:51:16Z",
+      "end": "2026-10-22T17:04:46Z",
+      "count": 223,
+      "rows_sha256": "6fa5772c9df338ddbc98cb39b513e4b7bb3c2b7d74ab37a543662088c0941668",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/39817507676",
+      "log_sha256": "5579ad81ec57ebfbe2496eacbe1ebcfa8fe4687de19fe21093fab33eed8e7730"
+    },
+    {
+      "pr": 3,
+      "run": 40973342809,
+      "start": "2026-10-29T23:28:21Z",
+      "end": "2026-10-29T23:46:10Z",
+      "count": 105,
+      "rows_sha256": "f02c3ec86bec23ba338a6079fc2d32ad89ba6c4db41933bd9b56ab4145377c59",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/40973342809",
+      "log_sha256": "dbe4b834dbd4a8bfa891be325740c2934d6a75c78f78f5b4865fd13de308afc5"
+    },
+    {
+      "pr": 6,
+      "run": 41888181490,
+      "start": "2026-11-04T18:32:49Z",
+      "end": "2026-11-04T18:36:54Z",
+      "count": 48,
+      "rows_sha256": "5f9339d8251921bad6387f5928640df3f20c914109dc56086104b9d44c8077d2",
+      "evidence": "https://github.com/yourmoodai/savior/actions/runs/41888181490",
+      "log_sha256": "ed4475d86cea6cbab5321491ab2ef46bc51b29b670044131be5f43ba2d1647b7"
+    },
+    {
+      "pr": 0,
+      "start": "2026-10-15T00:00:00Z",
+      "ids": [
+        "account-probes-20261015"
+      ],
+      "count": 1,
+      "rows_sha256": "9fee2d870f73855315ac91ea611b26776f5f5c40a5141161437938b078dac53f",
+      "evidence": "budget.py record_preflight: repository access probes, outside PR execution"
+    },
+    {
+      "pr": 0,
+      "start": "2026-10-15T00:00:00Z",
+      "ids": [
+        "external-probes"
+      ],
+      "count": 1,
+      "rows_sha256": "72f30dc5def21f47cf9be9a9703a5a2fc5e5597f436a84e0e7cdf3abeca84f76",
+      "evidence": "budget.py record_external_reservation: cumulative repository probes; earliest pilot date retained as conservative bound"
+    },
+    {
+      "pr": 1,
+      "start": "2026-10-16T04:43:00Z",
+      "ids": [
+        "recovery-38852112712-1"
+      ],
+      "count": 1,
+      "rows_sha256": "a99a4cefcafeb58d198735b4a7caab27b2496134d4c9a8defbbf07cf30eb4f0f",
+      "evidence": "recoveries/38852112712-1.json and workflow log PR_NUMBER=1; reservation remains uncertain"
+    },
+    {
+      "pr": 1,
+      "start": "2026-10-16T05:29:19Z",
+      "ids": [
+        "63ad217669434245a58ef4f511298bd3"
+      ],
+      "count": 1,
+      "rows_sha256": "b83836d269dfab08dab23957ad7158f5e322100aaac802c7e060006832c7c988",
+      "evidence": "first appears in settled artifact 12026834537 from run 38856012279 (PR_NUMBER=1); reservation remains uncertain"
+    }
+  ]
+}

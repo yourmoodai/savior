@@ -8,9 +8,9 @@ import sqlite3
 import tempfile
 import zipfile
 
-from budget import Ledger, BudgetError, LIMIT, QUALIFICATION_LIMIT
+from budget import Ledger, BudgetError
 from qualify import cached_qualification
-from quote import create, validate
+from quote import create, apply_policy
 
 ROOT = Path(__file__).parent
 DIRECTORY = Path('review-result')
@@ -40,6 +40,8 @@ def restore_history():
         ledger.record_recovery(f"{recovery['run']}-{recovery['attempt']}", recovery['nanodollars'])
     ledger.record_preflight()
     ledger.record_external_reservation(int(os.environ.get('BEDROCK_EXTERNAL_PROBE_NANODOLLARS') or '0'))
+    from history import attribute
+    attribute(ledger)
     from result_cache import restore as restore_cache
     os.environ['REVIEW_RESULT_CACHE'] = str((DIRECTORY/'cache').resolve())
     restore_cache((DIRECTORY/'previous-caches').glob('*.zip'))
@@ -58,54 +60,26 @@ def build_quote(ledger):
             raise ValueError('unsupported binary changes require manual review')
         manifests[strategy] = report['manifest']
     _, qualification = cached_qualification()
-    quote = create(manifests, ledger.summary(), qualification)
+    quote = apply_policy(create(manifests, ledger.summary(), qualification), ledger.policy_budget())
     (DIRECTORY/'quote.json').write_text(json.dumps(quote, indent=2)+'\n')
     return quote
 
 
-def authorize(ledger, quote, approval):
-    try:
-        validate(approval['quote'])
-    except ValueError:
-        return 'quote_expired_or_invalid', None
-    if approval['quote']['binding'] != quote['binding']:
-        return 'quote_stale', None
-    grant = approval['grant']
-    if (grant['quote_id'] != approval['quote']['id'] or grant['head'] != quote['binding']['head']
-            or grant['base'] != quote['binding']['base'] or grant['repository'] != quote['binding']['repository']
-            or grant['pr'] != quote['binding']['pr'] or grant['configuration'] != quote['binding']['configuration']
-            or grant['run_id'] != int(os.environ['GITHUB_RUN_ID'])):
-        return 'quote_stale', None
-    if grant['cap_nanodollars'] < quote['cap_nanodollars']:
-        return 'approval_below_estimate', None
-    try:
-        ledger.authorize(grant)
-    except BudgetError:
-        return 'approval_used', None
-    allowance = next(g for g in ledger.summary()['grants'] if g['id'] == grant['id'])
-    if allowance['cap_nanodollars']-allowance['committed_nanodollars'] < quote['cap_nanodollars']:
-        return 'budget_exhausted', None
-    return None, grant['id']
-
-
 def main():
     DIRECTORY.mkdir(exist_ok=True)
-    reason, grant, quote = None, None, None
+    reason, quote = None, None
     ledger = None
     try:
         if os.environ.get('BEDROCK_REVIEW_ENABLED') != 'true':
             reason = 'disabled'
         else:
             ledger = restore()
+            ledger.policy_budget()
             summary = ledger.summary()
             if any(c['actual_usd'] is not None and c['actual_usd'] > c['reserved_usd'] for c in summary['calls']):
                 raise BudgetError('prior reservation overrun')
             quote = build_quote(ledger)
-            approval = DIRECTORY/'approval.json'
-            if approval.exists():
-                reason, grant = authorize(ledger, quote, json.loads(approval.read_text()))
-            else:
-                reason = 'awaiting_budget'
+            reason = quote['blocked_reason']
     except BudgetError:
         reason = 'spending_unresolved'
         quote = None
@@ -118,12 +92,13 @@ def main():
     (DIRECTORY/'report.json').write_text(json.dumps(report, indent=2)+'\n')
     if not reason:
         reservation = json.loads((DIRECTORY/'reservation.json').read_text())
-        if grant:
-            reservation['grant'] = json.loads((DIRECTORY/'approval.json').read_text())['grant']
-            reservation['maximum_usd'] = reservation['grant']['cap_nanodollars']/1e9
+        reservation.update(repository=quote['binding']['repository'], pr=quote['binding']['pr'],
+                           utc_day=quote['policy']['utc_day'], projected_nanodollars=quote['projected_nanodollars'],
+                           maximum_usd=min(quote['policy']['pr_remaining_nanodollars'],
+                                           quote['policy']['daily_remaining_nanodollars'])/1e9)
         (DIRECTORY/'reservation.json').write_text(json.dumps(reservation)+'\n')
     with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-        output.write(f"spend={str(reason is None).lower()}\ngrant={grant or ''}\n")
+        output.write(f"spend={str(reason is None).lower()}\n")
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ Date: 2026-11-11
 ## Status
 
 Accepted for the development reviewer. Live activation remains gated by account
-access, approved spending, and qualification. This does not change offline
+access, repository cost limits, and qualification. This does not change offline
 application inference or release qualification in ADR 2.
 
 ## Context
@@ -25,7 +25,8 @@ The CI reviewer owns a versioned model catalog and role-routing manifest. Catalo
 entries bind exact invocation targets, API adapters, US resources, limits, and
 dated prices. Discovery refreshes evidence; it never promotes a candidate.
 Onboarding accepts only an approved plan binding account, configuration, IAM
-resources, and provider offers. Qualification has a separate spending quote.
+resources, and provider offers. CI qualification consumes the same PR and daily
+allowances as assessment.
 
 Adapt [Elephant–Goldfish review](https://github.com/google/elephant-goldfish-model/blob/main/docs/designs/review.md)
 to code review. Three independent Goldfish assess correctness, security, and
@@ -41,28 +42,49 @@ Goldfish, and different contexts do not establish independent model training.
 Fast candidates must pass the same applicable evidence checks. There is no
 implicit fallback or automatic latest-model selection.
 
+The reviewer projects remaining inference cost before calling a model. A PR has
+a $2 lifetime allowance across all revisions; the repository has a $5 daily
+allowance, resetting at midnight UTC. Full context, bounded output, planned
+qualification, verification, summaries, and retries contribute to the projection.
+Both remaining allowances must cover it. This replaces comment-funded increases
+and size-based automatic approvals: neither changed-line count nor a new run
+establishes affordable work.
+
+For a recorded cost block only, a human repository admin may comment
+`/savior review skip <full-head-sha>`. Trusted-base code revalidates the current
+head and base, readiness, comment integrity, permissions, and outstanding change
+requests, then submits an auditable GitHub approval explicitly waiving automated
+assessment. It asserts no code-review pass, spends nothing, and changes no cap.
+An admin author may waive; CODEOWNER status alone is insufficient. Other required
+reviews and checks still apply. Stale-approval dismissal keeps waivers bound to
+their revision. This path cannot authorize its own initial rollout.
+
 ## Invariants & Abstention
 
 - Runtime prompt processing remains offline. Only repository review evidence
   and synthetic qualification fixtures reach AWS.
 - PR content is data. Only trusted-base code executes with AWS credentials.
-- CI runs require revision-bound allowances. Explicitly authorized local diagnostic
+- CI calls share repository/PR lifetime and repository/UTC-day limits. A projection
+  equal to both remaining allowances is allowed; an overrun blocks before inference.
+  Missing, invalid, or older-than-90-day pricing blocks calls. Explicitly authorized local diagnostic
   loops may span configuration changes only within one persistent cumulative
   ceiling, recording each attempt's configuration. New grants cannot reset it.
   Reserve full context and bounded output before each call, including retries;
   settle once at that call's frozen prices.
-- Old charges are never repriced. Missing usage and interrupted calls retain
-  their reservations. Lost spending history blocks subsequent CI spending.
+- Old charges are never repriced or reassigned without evidence. Missing usage
+  and interrupted calls retain reservations across midnight. Lost, conflicting,
+  expired, or unattributed spending history blocks subsequent CI spending.
 - Automatic cache reads may use a documented standard-input upper bound when
   the catalog opts in; a presumed discount cannot release reserved funds.
 - Model framing is explicit per catalog entry. Reasoning removal and bounded
   regeneration never waive final JSON, evidence, or completion validation.
 - Missing reviewers, invalid evidence, refusals, unavailable endpoints, exhausted
-  allowance, or failed reconciliation cannot produce approval.
+  allowance, or failed reconciliation cannot produce an automated assessment
+  approval. Only a recorded cost block permits the explicit admin waiver above.
 - Provider terms and one-time use-case submissions require a concrete onboarding
   approval. Account access is not runtime qualification.
 - Use one repository enable flag, captured before entering the GitHub environment.
-  Spending approval cannot turn that flag on.
+  A waiver cannot turn that flag on.
 - Resource-scoped automated onboarding currently supports the runtime endpoint.
   Mantle transport exists, but its different IAM boundary requires a separately
   reviewed policy before activation; do not substitute wildcard permissions.
@@ -73,6 +95,11 @@ Routing can change without rewriting budgeting or review coverage. Independent
 contexts expose assumptions, while explicit roles make cost and failure evidence
 inspectable. More calls increase worst-case reservations and qualification cost.
 Conservative reconciliation can retain false positives for human adjudication.
+Fixed caps make spending predictable but conservative projections may block most
+large reviews. Admin waivers transfer that review decision to an identified
+human; they do not establish code quality. Legacy pilot records need attributable
+PR/date evidence before the new policy can spend. Artifact expiry requires durable
+retention and recovery, not a fresh budget.
 
 AWS APIs and model cards remain the authority for access and compatibility.
 [PR-Agent's explicit model configuration](https://github.com/The-PR-Agent/pr-agent/blob/main/docs/docs/usage-guide/changing_a_model.md)
