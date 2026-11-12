@@ -202,11 +202,10 @@ def supporting_diffs(header, chunk, chunks, files):
 
 
 def run_heuristic_reviewer(diff: str, files: List[str]) -> Tuple[str, List[Dict], str]:
-    """Deterministic heuristic reviewer checking core repository invariants."""
+    """Heuristic matches can request changes; they cannot establish a complete review or approve."""
     findings = []
     disposition = "COMMENT"
 
-    # Invariant 1: DEP001 - Check for non-empty runtime dependencies in pyproject.toml
     if "pyproject.toml" in files:
         in_runtime_deps = False
         for line in diff.splitlines():
@@ -229,7 +228,6 @@ def run_heuristic_reviewer(diff: str, files: List[str]) -> Tuple[str, List[Dict]
             elif in_runtime_deps and re.search(r"^[-+ ]*\]", line):
                 in_runtime_deps = False
 
-    # Invariant 2: PERF001 - Network calls in synchronous hook path
     for file in files:
         if file.startswith("src/whipit/"):
             if "requests." in diff or "urllib.request" in diff:
@@ -245,7 +243,6 @@ def run_heuristic_reviewer(diff: str, files: List[str]) -> Tuple[str, List[Dict]
                 )
                 disposition = "REQUEST_CHANGES"
 
-    # Invariant 7: CONV001 - AI attribution
     if re.search(r"Co-authored-by:\s*(?:AI|Claude|Gemini|ChatGPT|Assistant)", diff, re.IGNORECASE):
         findings.append(
             {
