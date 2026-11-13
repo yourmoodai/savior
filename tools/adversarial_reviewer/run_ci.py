@@ -61,7 +61,14 @@ try:
         raise ValueError('model qualification or baseline comparison did not pass')
     manifests = {s: json.loads(Path(f'review-result/{s}-manifest.json').read_text())['manifest']
                  for s in ('baseline', 'adaptive')}
-    strategy = bounded_strategy(qualification['strategy'], manifests)
+    from quote import create, execution_strategy
+    execution_quote = preflight['quote']
+    if execution_quote['phase'] == 'qualification_required':
+        execution_quote = create(manifests, ledger.summary(), qualification)
+        Path('review-result/execution-quote.json').write_text(json.dumps(execution_quote, indent=2)+'\n')
+    check(execution_quote['projected_nanodollars'], ledger.policy_budget())
+    strategy = execution_strategy(execution_quote, manifests, qualification)
+    os.environ['REVIEW_PLAN_DIGEST'] = execution_quote['binding']['plans'][strategy]
     Path('review-result/strategy.json').write_text(json.dumps({
         'qualified_preference': qualification['strategy'], 'selected': strategy,
         'assessment_limit': ASSESSMENT_LIMIT}))

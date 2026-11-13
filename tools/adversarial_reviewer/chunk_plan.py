@@ -8,6 +8,7 @@ import re
 from model_catalog import cost, selected
 
 ASSESSMENT_LIMIT = 512
+ASSESSMENT_INPUT_LIMIT = 36000  # Leaves 12 kB for one bounded finding and verification instructions.
 
 HUNK = re.compile(r'^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@')
 
@@ -144,8 +145,7 @@ def plan(diff, count, messages, *, strategy='adaptive'):
         text = render(group)
         if strategy == 'baseline':
             return len({u.path for u in group}) == 1 and len(text.encode()) <= 49152  # 48 KiB baseline
-        # This estimate only packs candidates; CountTokens enforces the actual ceiling.
-        return len(group) <= 16 and len({u.path for u in group}) <= 8 and len(text.encode()) <= target*4
+        return len(group) <= 16 and len({u.path for u in group}) <= 8 and tokens(text) <= target
 
     while pending:
         group = [pending.pop(0)]
@@ -167,9 +167,9 @@ def plan(diff, count, messages, *, strategy='adaptive'):
             chunks[0:0] = subdivide(group)
             continue
         support, omitted = [], []
-        primary_ids = {u.id.split('/')[0] for u in group}
+        primary_ids = {a['id'] for a in anchors(group)}
         for unit in original:
-            if unit.id in primary_ids or not any(related(u, unit) <= 1 for u in group):
+            if {a['id'] for a in unit.anchors()} <= primary_ids or not any(related(u, unit) <= 1 for u in group):
                 continue
             if len(render(support+[unit]).encode()) <= 8000:
                 support.append(unit)
@@ -177,13 +177,13 @@ def plan(diff, count, messages, *, strategy='adaptive'):
                 omitted.append(unit.id)
         prompt = messages(group, render(support))
         input_tokens = count(prompt)
-        if input_tokens > 48000 or sum(len(m['content'].encode()) for m in prompt) > 131072:
+        if input_tokens > ASSESSMENT_INPUT_LIMIT or sum(len(m['content'].encode()) for m in prompt) > 131072:
             if support:
                 omitted.extend(u.id for u in support)
                 support = []
                 prompt = messages(group, '')
                 input_tokens = count(prompt)
-            if input_tokens > 48000 or sum(len(m['content'].encode()) for m in prompt) > 131072:
+            if input_tokens > ASSESSMENT_INPUT_LIMIT or sum(len(m['content'].encode()) for m in prompt) > 131072:
                 children = subdivide(group)
                 chunks[0:0] = children
                 continue

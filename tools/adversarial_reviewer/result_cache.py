@@ -1,4 +1,5 @@
 """Reuse validated assessments from trusted workflow artifacts, never approvals."""
+import ast
 import hashlib
 import json
 import os
@@ -10,11 +11,18 @@ ROOT = Path(__file__).parent
 SOURCES = ('result_cache.py', 'adversarial_review.py', 'adaptive_review.py', 'chunk_plan.py',
            'bedrock_client.py', 'prompt_profiles.py', 'evidence.py', 'runtime_facts.py',
            'qualify.py', 'evaluate_model.py', 'model_catalog.py', 'models.json', 'routing.json',
-           'egm.py', 'chat_transport.py', 'budget.py', 'quote.py', 'reporting.py')
+           'egm.py', 'chat_transport.py', 'budget.py', 'cost_policy.py', 'quote.py', 'reporting.py')
 
 
 def fingerprint():
-    return hashlib.sha256(b''.join((ROOT / name).read_bytes() for name in SOURCES)).hexdigest()
+    return hashlib.sha256(json.dumps({name: source_identity(ROOT / name) for name in SOURCES}, sort_keys=True).encode()).hexdigest()
+
+
+def source_identity(path):
+    """Comments do not alter Python behavior; literals and docstrings still do."""
+    if path.suffix == '.py':
+        return ast.dump(ast.parse(path.read_text()), include_attributes=False)
+    return path.read_text()
 
 
 def key(kind, payload):

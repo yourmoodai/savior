@@ -17,6 +17,7 @@ from quote import create, estimate, inspect_archive, validate, apply_policy
 ENV = {'GITHUB_REPOSITORY':'org/repo', 'PR_NUMBER':'5', 'BASE_SHA':'base', 'HEAD_SHA':'head',
        'AWS_REGION':'us-east-1', 'GITHUB_RUN_ID':'7', 'GITHUB_ACTIONS':'true', 'BEDROCK_REVIEW_ENABLED':'true', 'REVIEW_COST_POLICY':'true'}
 MANIFESTS = {s: {'chunks':[{'input_tokens':1000, 'cached_assessment':False}]} for s in ('baseline','adaptive')}
+QUALIFIED = {'qualified': True, 'strategy': 'baseline', 'comparison': {'baseline': {'passed': True}}}
 
 
 class QuoteTests(unittest.TestCase):
@@ -28,13 +29,15 @@ class QuoteTests(unittest.TestCase):
         self.addCleanup(directory.cleanup)
         self.directory = Path(directory.name)
         self.ledger = Ledger(self.directory/'ledger.db')
-        self.quote = apply_policy(create(MANIFESTS, self.ledger.summary(), {'strategy':'baseline'}), self.ledger.policy_budget())
+        self.quote = apply_policy(create(MANIFESTS, self.ledger.summary(), QUALIFIED), self.ledger.policy_budget())
 
     def test_offline_projection_covers_retries_verification_and_summaries(self):
         with patch('bedrock_client.complete', side_effect=AssertionError('inference forbidden')):
             quote = create(MANIFESTS, self.ledger.summary(), None)
         self.assertGreater(quote['items'][0]['calls'], 0)
-        self.assertEqual([i['calls'] for i in quote['items'][1:]], [1]*14+[4])
+        self.assertEqual(quote['phase'], 'qualification_required')
+        self.assertIsNone(quote['strategy'])
+        self.assertEqual(len(quote['items']), 1)
         self.assertEqual(quote['projected_nanodollars'], sum(i['reserved_nanodollars'] for i in quote['items']))
         self.assertGreater(quote['projected_nanodollars'], quote['estimated_nanodollars'])
         cached = estimate({'chunks':[{'input_tokens':1000,'cached_assessment':True}]})
@@ -88,6 +91,10 @@ class QuoteTests(unittest.TestCase):
         self.assertEqual(json.loads((self.directory/'report.json').read_text())['blocked_reason'],'spending_unresolved')
 
     def test_qualified_execution_uses_policy_reservations_and_settles(self):
+        manifests = copy.deepcopy(MANIFESTS)
+        for manifest in manifests.values():
+            manifest['chunks'][0]['cached_assessment'] = True
+        self.quote = apply_policy(create(manifests, self.ledger.summary(), QUALIFIED), self.ledger.policy_budget())
         script = Path(__file__).with_name('run_ci.py').resolve()
         previous = Path.cwd()
         self.addCleanup(os.chdir,previous)
@@ -95,7 +102,7 @@ class QuoteTests(unittest.TestCase):
         directory = Path('review-result')
         directory.mkdir()
         (directory/'reservation.json').write_text('{}')
-        for strategy, manifest in MANIFESTS.items():
+        for strategy, manifest in manifests.items():
             (directory/(strategy+'-manifest.json')).write_text(json.dumps({'manifest':manifest,'files':1,
                 'total_lines':2,'total_chunks':1,'total_units':1,'excluded_assets':[],'test_evidence':{'head':'head'}}))
         # One chunk with cached qualification fits the fixed policy.
@@ -111,7 +118,7 @@ class QuoteTests(unittest.TestCase):
                 'synthesis_complete':True,'review_failures':[],'overview':'word '*50,'disposition':'APPROVE','findings':[]}))
         envelope = {'usage':{'inputTokens':100,'outputTokens':10},'stopReason':'end_turn',
                     'output':{'message':{'content':[{'text':'{}'}]}}}
-        with patch.object(preflight,'restore',return_value=self.ledger), patch('qualify.qualify',return_value={'qualified':True,'strategy':'baseline'}), \
+        with patch.object(preflight,'restore',return_value=self.ledger), patch('qualify.qualify',return_value=QUALIFIED), \
                 patch('subprocess.run',side_effect=assessment), patch('bedrock_client.invoke',return_value=envelope) as provider, \
                 patch.dict(os.environ,REVIEW_BUDGET_LEDGER=str(self.ledger.path),GITHUB_STEP_SUMMARY=''):
             runpy.run_path(str(script),run_name='__main__')

@@ -14,11 +14,12 @@ def digest(value):
 
 
 def configuration():
+    from result_cache import SOURCES, source_identity
     root = Path(__file__).parent
-    files = sorted([*root.glob('*.py'), *root.glob('*.cjs'), *root.glob('*.json')])
-    files.append(root/'requirements.txt')
+    files = [root/name for name in sorted(set(SOURCES) | {'run_ci.py', 'preflight.py', 'cost_policy.py', 'requirements.txt'})]
+    files.extend(sorted(root.glob('*.cjs')))
     files.append(root.parent.parent/'.github/workflows/adversarial-review.yml')
-    return digest({str(p.relative_to(root.parent.parent)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files})
+    return digest({str(p.relative_to(root.parent.parent)): source_identity(p) for p in files})
 
 
 def item(name, inputs, outputs, role='elephant'):
@@ -37,8 +38,8 @@ def estimate(manifest):
     for role in ('correctness', 'security', 'compatibility'):
         items.extend([item(role, [c['input_tokens'] for c in fresh], 1024, role),
                       item(role+' retry', [48000]*len(fresh), 4096, role),
-                      item(role+' verification', [48000]*len(fresh), 1536, 'verification'),
-                      item(role+' verification retry', [48000]*len(fresh), 4096, 'verification')])
+                      item(role+' verification', [48000]*len(fresh)*2, 1536, 'verification'),
+                      item(role+' verification retry', [48000]*len(fresh)*2, 4096, 'verification')])
     items.extend([item('elephant', [48000]*len(fresh), 1024),
                   item('elephant retry', [48000]*len(fresh), 4096),
                   item('summary and retry', [48000]*(2*(len(chunks)+1)), 256)])
@@ -61,19 +62,51 @@ def qualification_estimate():
             ('calls', 'estimated_nanodollars', 'reserved_nanodollars')}}
 
 
+def qualified_strategy(manifests, qualification):
+    from chunk_plan import ASSESSMENT_LIMIT
+    if not qualification or not qualification.get('qualified'):
+        return None
+    options = [name for name, result in qualification.get('comparison', {}).items()
+               if result.get('passed') is True and name in manifests
+               and len(manifests[name]['chunks']) <= ASSESSMENT_LIMIT
+               and not any(c.get('omitted_support') for c in manifests[name]['chunks'])]
+    if not options:
+        raise ValueError('no qualified feasible plan')
+    return min(options, key=lambda name: (sum(i['reserved_nanodollars'] for i in estimate(manifests[name])), name))
+
+
+def plan_digest(manifest):
+    return digest({**manifest, 'chunks': [{k: v for k, v in c.items() if k != 'cached_assessment'}
+                                        for c in manifest['chunks']]})
+
+
+def execution_strategy(quote, manifests, qualification):
+    validate(quote)
+    selected = quote.get('strategy')
+    if selected is None or selected not in manifests:
+        raise ValueError('qualification required; execution quote unavailable')
+    if (quote['binding']['qualification'] != digest(qualification_identity(qualification))
+            or quote['binding']['plans'][selected] != plan_digest(manifests[selected])):
+        raise ValueError('quoted plan or qualification changed')
+    if not qualification.get('comparison', {}).get(selected, {}).get('passed'):
+        raise ValueError('quoted strategy is not qualified')
+    return selected
+
+
+def qualification_identity(qualification):
+    if qualification is None:
+        return None
+    return {k: v for k, v in qualification.items() if k not in ('budget', 'cache_hit')}
+
+
 def create(manifests, summary, qualification, *, now=None):
-    from chunk_plan import bounded_strategy
     from model_catalog import manifest
     routing = manifest()
     if os.environ['AWS_REGION'] != 'us-east-1':
         raise ValueError('unsupported_pricing')
     now = int(time.time() if now is None else now)
-    preferred = qualification['strategy'] if qualification else 'baseline'
-    selected = bounded_strategy(preferred, manifests)
-    # Before qualification picks a strategy, quote the more expensive feasible plan.
-    options = [selected] if qualification else [s for s in manifests if len(manifests[s]['chunks']) <= 512]
-    selected = max(options, key=lambda s: sum(i['reserved_nanodollars'] for i in estimate(manifests[s])))
-    items = estimate(manifests[selected])
+    selected = qualified_strategy(manifests, qualification)
+    items = estimate(manifests[selected]) if selected else []
     items.insert(0, {'phase': 'qualification', 'calls': 0, 'estimated_nanodollars': 0, 'reserved_nanodollars': 0}
                  if qualification else qualification_estimate())
     binding = {'repository': os.environ['GITHUB_REPOSITORY'], 'pr': int(os.environ['PR_NUMBER']),
@@ -81,12 +114,13 @@ def create(manifests, summary, qualification, *, now=None):
                'model': 'elephant-goldfish', 'region': os.environ['AWS_REGION'],
                'routing': routing, 'pricing': {n: m['pricing'] for n, m in routing['models'].items()},
                # Cache availability changes remaining cost, not the quoted evidence.
-               'plans': {s: digest({**m, 'chunks': [{k:v for k,v in c.items() if k != 'cached_assessment'}
-                                                  for c in m['chunks']]}) for s, m in manifests.items()}}
+               'qualification': digest(qualification_identity(qualification)),
+               'plans': {s: plan_digest(m) for s, m in manifests.items()}}
     maximum = sum(i['reserved_nanodollars'] for i in items)
-    quote = {'schema': 1, 'binding': binding, 'issued_at': now, 'expires_at': now+86400,
-             'items': items, 'strategy': selected, 'chunks': len(manifests[selected]['chunks']),
-             'cached_assessments': sum(bool(c.get('cached_assessment')) for c in manifests[selected]['chunks']),
+    quote = {'schema': 2, 'binding': binding, 'issued_at': now, 'expires_at': now+86400,
+             'phase': 'review' if selected else 'qualification_required',
+             'items': items, 'strategy': selected, 'chunks': len(manifests[selected]['chunks']) if selected else 0,
+             'cached_assessments': sum(bool(c.get('cached_assessment')) for c in manifests[selected]['chunks']) if selected else 0,
              'estimated_nanodollars': sum(i['estimated_nanodollars'] for i in items),
              'projected_nanodollars': maximum,
              'pilot_committed_nanodollars': summary['pilot_committed_nanodollars']}
@@ -108,7 +142,7 @@ def apply_policy(quote, allowance):
 
 def validate(quote, *, now=None):
     now = int(time.time() if now is None else now)
-    if (quote.get('schema') != 1 or quote.get('id') != digest({k:v for k,v in quote.items() if k != 'id'})
+    if (quote.get('schema') != 2 or quote.get('id') != digest({k:v for k,v in quote.items() if k != 'id'})
             or type(quote.get('issued_at')) is not int or type(quote.get('expires_at')) is not int
             or quote['expires_at']-quote['issued_at'] != 86400 or not quote['issued_at'] <= now < quote['expires_at']):
         raise ValueError('quote expired or invalid')

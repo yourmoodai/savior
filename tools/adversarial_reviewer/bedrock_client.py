@@ -26,10 +26,14 @@ def conversation(messages):
             'messages': [{'role': m['role'], 'content': [{'text': m['content']}]} for m in messages if m['role'] != 'system']}
 
 
-def count_tokens(messages, deadline=None):
+def estimate_input_units(messages, deadline=None):
     """Estimate packing size without claiming an exact model token count."""
     # DeepSeek V3.2 has no CountTokens API. Spending reserves full context separately.
     return 1024 + sum(128 + len(m['content'].encode('utf-8')) for m in messages)
+
+
+# Compatibility for stored research protocols; these units are not measured tokens.
+count_tokens = estimate_input_units
 
 
 def invoke(operation, payload, deadline):
