@@ -1,4 +1,4 @@
-# Homepage
+# Public website
 
 The public site is a Zola build of Markdown, HTML templates, and CSS. Python 3.11+
 is the only prerequisite for the launcher. It downloads Zola 0.23.6 during first
