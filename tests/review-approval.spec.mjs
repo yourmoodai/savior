@@ -157,6 +157,35 @@ test('cost display rounds reservations up and available balances down',()=>{
   assert.match(body,/Daily allowance remaining: \$4.99/);
 });
 
+test('planning failures expose bounded diagnostics without submitting a review',async()=>{
+  for (const details of [undefined, null, {reason:'invalid'},
+    'no feasible evidence plan: required semantic closure exceeds request capacity; unresolved dynamic dependency: bridge/bootstrap.mjs:107',
+    '\u001b[31mcontext gap\n::error::forged\r'+'x'.repeat(5000)]) {
+    const f=fixture(), failures=[];
+    f.core.setFailed=message=>failures.push(message);
+    const report={commit_id:head,blocked_reason:'planning_failed',planning_failure:details};
+    await publish({...f,head,pr:5,phase:'complete',report});
+    assert.equal(failures.length,1);
+    assert.match(failures[0],/^adversarial review blocked \(planning_failed\):/);
+    assert.ok(failures[0].length<1000);
+    assert.doesNotMatch(failures[0],/[\u0000-\u001f\u007f-\u009f]/);
+    if (typeof details==='string' && details.startsWith('no feasible')) assert.ok(failures[0].includes(details));
+    assert.equal(f.created.length,0);
+    assert.match(f.comments[0].body,/Review blocked: no complete evidence plan fits/);
+  }
+});
+
+test('failed workflows preserve the reason and never publish an approval',async()=>{
+  for (const [reason, expected] of [[undefined,'infrastructure_failed'],['qualification_failed','qualification_failed'],['unknown\nreason','infrastructure_failed']]) {
+    const f=fixture(), failures=[];
+    f.core.setFailed=message=>failures.push(message);
+    await publish({...f,head,pr:5,phase:'failed',reason});
+    assert.equal(failures.length,1);
+    assert.ok(failures[0].includes(`(${expected})`));
+    assert.equal(f.created.length,0);
+  }
+});
+
 test('workflow serializes waivers and spending, keeps trusted checkouts, and gates AWS after offline projection',()=>{
   const workflow=yaml.load(fs.readFileSync(new URL('../.github/workflows/adversarial-review.yml',import.meta.url),'utf8'));
   assert.deepEqual(workflow.on.issue_comment.types,['created']);
