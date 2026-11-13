@@ -67,5 +67,6 @@ module.exports = async function publish({github, context, core, head, pr, phase,
     core.setFailed(blocked_reason ? require('./status.cjs').failure(blocked_reason, report)
       : 'adversarial review did not establish a clean result');
   }
+  return clean;
 };
 module.exports.verdict = verdict;

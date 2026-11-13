@@ -26,9 +26,10 @@ async function execute({github,context,core,phase,binding,results}) {
   const run_url=`${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/attempts/${target.attempt || process.env.GITHUB_RUN_ATTEMPT}`;
   async function status(state,description) {
     if (phase==='finish') {
-      const statuses=await github.paginate(github.rest.repos.listCommitStatuses,{...context.repo,ref:target.head,per_page:100});
-      const current=statuses.find(s=>s.context===context_name);
-      if (current?.target_url!==run_url) throw Error('validation status superseded');
+      const {data}=await github.rest.repos.getCombinedStatusForRef({...context.repo,ref:target.head,per_page:100});
+      const current=data.statuses.find(s=>s.context===context_name);
+      if (current?.target_url!==run_url)
+        throw Error(`validation status superseded: expected ${run_url}; current ${current?.target_url || 'missing'}`);
     }
     for (const name of ['pr verification','pr qualification','pr site','pr commits',context_name])
       await github.rest.repos.createCommitStatus({...context.repo,sha:target.head,context:name,state,description,

@@ -1,15 +1,16 @@
 +++
 title = "The interception boundary"
+description = "What Savior tests in Claude Code: local phrase replacement, blocked failures, bypasses, and privacy limits. Understand the evidence before trying the unreleased mod."
 template = "page.html"
 +++
-Savior replaces detected offensive phrases in supported Claude Code prompts.
-Its mod connects the host’s prompt box to a local Rust detector, then continues
-with the resulting text. A failed transformation blocks that submission.
-The host may have other paths for sending text; this submission handler does not
-control them.
+Savior replaces detected offensive phrases locally before supported Claude Code
+prompt-box submissions continue. If replacement fails, it stops that submission.
+Text outside the detected phrases stays as written. Detection can miss wording
+or select text you wanted to keep; it does not remove identifying information.
 
-The release remains **unreleased**. Code inspection and controlled tests do not
-establish that every host path keeps original text away from Anthropic.
+**Savior is unreleased.** Controlled tests cover the supported submission path.
+They do not establish that every route through Claude Code keeps original text
+away from Anthropic. The details below explain what is tested and what remains open.
 
 ## What the implementation covers
 

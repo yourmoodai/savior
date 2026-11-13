@@ -15,6 +15,16 @@ pub(crate) fn wide(value: &str) -> Vec<u16> {
 }
 
 #[cfg(any(test, feature = "judge"))]
+fn client_connected(pipe: HANDLE) -> bool {
+    // With PIPE_NOWAIT, success only starts listening. A client is present
+    // only when a subsequent call reports ERROR_PIPE_CONNECTED.
+    unsafe {
+        windows_sys::Win32::System::Pipes::ConnectNamedPipe(pipe, null_mut()) == 0
+            && GetLastError() == ERROR_PIPE_CONNECTED
+    }
+}
+
+#[cfg(any(test, feature = "judge"))]
 fn write_reply(
     pipe: HANDLE,
     bytes: &[u8],
@@ -197,28 +207,25 @@ pub fn serve() -> ReviewResult<()> {
     let thread = std::thread::spawn(move || runner.run());
     let result = (|| -> ReviewResult<()> {
         let mut activity = Instant::now();
+        let pipe = unsafe {
+            CreateNamedPipeW(
+                name.as_ptr(),
+                PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_NOWAIT | PIPE_REJECT_REMOTE_CLIENTS,
+                1,
+                16_777_216,
+                1_048_576,
+                0,
+                &attributes,
+            )
+        }; // 16 MiB output, 1 MiB input
+        if pipe == INVALID_HANDLE_VALUE {
+            return Err("worker_unavailable".into());
+        }
+        // Retain the first instance while clients release their previous handles.
         while !worker.stopping.load(Ordering::Acquire) {
-            let pipe = unsafe {
-                CreateNamedPipeW(
-                    name.as_ptr(),
-                    PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
-                    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_NOWAIT | PIPE_REJECT_REMOTE_CLIENTS,
-                    1,
-                    16_777_216,
-                    1_048_576,
-                    0,
-                    &attributes,
-                )
-            }; // 16 MiB output, 1 MiB input
-            if pipe == INVALID_HANDLE_VALUE {
-                return Err("worker_unavailable".into());
-            }
             while !worker.stopping.load(Ordering::Acquire) {
-                let connected = unsafe {
-                    ConnectNamedPipe(pipe, null_mut()) != 0
-                        || GetLastError() == ERROR_PIPE_CONNECTED
-                };
-                if connected {
+                if client_connected(pipe) {
                     activity = Instant::now();
                     let mut input = Vec::new();
                     let mut buffer = [0u8; 8192]; // 8 KiB
@@ -299,8 +306,11 @@ pub fn serve() -> ReviewResult<()> {
                 std::thread::sleep(Duration::from_millis(25));
             }
             unsafe {
-                CloseHandle(pipe);
+                DisconnectNamedPipe(pipe);
             }
+        }
+        unsafe {
+            CloseHandle(pipe);
         }
         Ok(())
     })();
@@ -321,7 +331,7 @@ mod transport_tests {
     };
     use windows_sys::Win32::{Storage::FileSystem::*, System::Pipes::*};
 
-    fn pair() -> (OwnedHandle, std::fs::File) {
+    fn listening_pipe() -> (OwnedHandle, String) {
         static NEXT: AtomicUsize = AtomicUsize::new(0);
         let name = format!(
             "\\\\.\\pipe\\savior-write-test-{}-{}",
@@ -342,16 +352,38 @@ mod transport_tests {
         }; // 1 KiB buffers force backpressure
         assert_ne!(pipe, INVALID_HANDLE_VALUE);
         let server = unsafe { OwnedHandle::from_raw_handle(pipe) };
+        assert!(!client_connected(pipe));
+        (server, name)
+    }
+
+    fn pair() -> (OwnedHandle, std::fs::File) {
+        let (server, name) = listening_pipe();
         let client = std::fs::OpenOptions::new()
             .read(true)
             .write(true)
             .open(name)
             .unwrap();
-        let connected = unsafe {
-            ConnectNamedPipe(pipe, null_mut()) != 0 || GetLastError() == ERROR_PIPE_CONNECTED
-        };
-        assert!(connected);
+        assert!(client_connected(server.as_raw_handle()));
         (server, client)
+    }
+
+    #[test]
+    fn reconnect_waits_for_a_client_while_previous_handles_remain_open() {
+        let (server, name) = listening_pipe();
+        let mut previous_clients = Vec::new();
+        for _ in 0..4 {
+            assert!(!client_connected(server.as_raw_handle()));
+            let client = std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(&name)
+                .unwrap();
+            assert!(client_connected(server.as_raw_handle()));
+            assert_ne!(unsafe { DisconnectNamedPipe(server.as_raw_handle()) }, 0);
+            // The first call transitions to listening, without a new client.
+            assert!(!client_connected(server.as_raw_handle()));
+            previous_clients.push(client);
+        }
     }
 
     #[test]

@@ -24,7 +24,7 @@
   .wordmark { display: inline-flex; align-items: center; gap: .5rem; font: 600 1.7rem/1 var(--sans); letter-spacing: -.08em; text-decoration: none; }
   .wordmark-dot { color: #82691b; margin-left: -.5rem; }
   .release-pill { padding: .65rem 1.1rem; border: 1px solid #705b16; border-radius: 100px; background: var(--gold); color: #29250e; font-weight: 700; text-decoration: none; letter-spacing: .06em; text-align: center; }
-  .source-link { font-size: .8rem; }
+  .source-link { display: inline-flex; align-items: center; gap: .5rem; font-size: .8rem; }
   main { padding-top: 88px; }
   .hero { position: relative; isolation: isolate; overflow: clip; padding: 3rem 7vw 0; min-height: calc(100svh - 88px); display: flex; flex-direction: column; justify-content: space-between; }
   .hero-top, .hero-bottom { display: flex; justify-content: space-between; align-items: baseline; gap: 2rem; }
@@ -82,7 +82,7 @@
   .privacy { border-top: 1px solid var(--line); }
   .installation { padding: 7rem 7vw 8rem; background: #272e24; color: var(--paper); }
   .installation h2 { margin-bottom: 3rem; }
-  .install-panel { border: 1px solid #69715f; max-width: 65rem; padding: 2rem; }
+  .install-panel { border: 1px solid #69715f; max-width: 65rem; padding: 2rem; margin-top: 3rem; }
   .install-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
   .install-heading span { color: #edcf71; font-size: .75rem; }
   #install-notice { font-size: .85rem; margin: 1rem 0 1.5rem; color: #edcf71; }

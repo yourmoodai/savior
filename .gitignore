@@ -1,6 +1,7 @@
 node_modules/
 site/public/
 site/static/savior.svg
+site/static/social-preview.png
 dist/
 .cache/
 *.heapprofile

@@ -9,6 +9,19 @@ import {socket_directory} from '../bridge/directories.mjs';
 
 const root=resolve(import.meta.dirname,'..');
 const day=86400000;
+test('Windows worker survives repeated overlapping pipe clients', {skip:process.platform!=='win32',timeout:60000},async()=>{
+  const profile=await mkdtemp(join(tmpdir(),'savior-pipe-clients-'));
+  try {
+    await invoke(profile,{command:'consent',live:true,history:false});
+    for(let batch=0;batch<4;batch++) {
+      const results=await Promise.all(Array.from({length:6},()=>invoke(profile,{command:'status'})));
+      assert.ok(results.every(state=>state.consent.live===true && state.consent.history===false));
+    }
+  } finally {
+    await invoke(profile,{command:'shutdown'}).catch(()=>{});
+    await rm(profile,{recursive:true,force:true,maxRetries:50,retryDelay:100});
+  }
+});
 test('long Unix profiles retain private isolated worker sockets', {skip:process.platform==='win32',timeout:30000}, async()=>{
   const temporary=await mkdtemp(join(tmpdir(),'savior-long-'));
   const profiles=['a','b'].map(name=>join(temporary,name.repeat(140)));
@@ -123,7 +136,8 @@ test('history uses lexical selection and rejects changed artifact provenance', {
     await assert.rejects(invoke(profile,{command:'status'},env),/review_unavailable/);
   } finally {
     await invoke(profile,{command:'shutdown'},env).catch(()=>{});
-    await rm(profile,{recursive:true,force:true});
+    // Shutdown acknowledges before the worker closes SQLite on Windows.
+    await rm(profile,{recursive:true,force:true,maxRetries:50,retryDelay:100});
   }
 });
 

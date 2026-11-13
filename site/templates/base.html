@@ -6,8 +6,26 @@
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <title>{% block title %}{{ config.title }}{% endblock title %}</title>
-  <meta name="description" content="{{ config.description }}">
+  {% block metadata %}
+  {% if page %}{% set meta_title = page.title ~ " — Savior" %}{% set meta_description = page.description | default(value=config.description) %}{% else %}{% set meta_title = config.title %}{% set meta_description = config.description %}{% endif %}
+  <meta name="description" content="{{ meta_description }}">
   <link rel="canonical" href="{{ current_url | default(value=config.base_url) }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Savior">
+  <meta property="og:title" content="{{ meta_title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="{{ current_url | default(value=config.base_url) }}">
+  <meta property="og:image" content="{{ get_url(path='social-preview.png') }}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Savior. Depersonalize the prompt. Keep the point. Local phrase replacement for Claude Code. Unreleased.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ meta_title }}">
+  <meta name="twitter:description" content="{{ meta_description }}">
+  <meta name="twitter:image" content="{{ get_url(path='social-preview.png') }}">
+  <meta name="twitter:image:alt" content="Savior. Depersonalize the prompt. Keep the point. Local phrase replacement for Claude Code. Unreleased.">
+  {% endblock metadata %}
   <link rel="icon" href="{{ get_url(path='savior.svg') | replace(from=config.base_url, to='') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ get_url(path='style.css') | replace(from=config.base_url, to='') }}">
 </head>
@@ -16,9 +34,9 @@
   <header class="masthead">
     <a class="wordmark" href="/" aria-label="Savior home"><img src="{{ get_url(path='savior.svg') | replace(from=config.base_url, to='') }}" width="32" height="32" alt="">savior<span class="wordmark-dot">.</span></a>
     <a class="release-pill" href="/#install">{{ config.extra.release_label }}</a>
-    <a class="source-link" href="{{ config.extra.source_url }}">Source ↗</a>
+    <a class="source-link" href="{{ config.extra.source_url }}"><img src="{{ get_url(path='github-invertocat.svg') | replace(from=config.base_url, to='') }}" width="32" height="32" alt="">Source on GitHub ↗</a>
   </header>
   <main id="main">{% block content %}{% endblock content %}</main>
-  <footer><a class="wordmark" href="/">savior.</a><p>Your words. Your machine. Your choice.</p><a href="{{ config.extra.source_url }}/blob/main/LICENSE">AGPL-3.0-or-later ↗</a></footer>
+  <footer><a class="wordmark" href="/">savior.</a><p>Depersonalize the prompt. Keep the point.</p><a href="{{ config.extra.source_url }}/blob/main/LICENSE">AGPL-3.0-or-later ↗</a></footer>
 </body>
 </html>

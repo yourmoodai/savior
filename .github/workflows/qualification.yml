@@ -3,6 +3,23 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      test_sha:
+        description: Commit to test; manual dispatch authorizes testing only
+        required: false
+        type: string
+      pr_number:
+        description: Pull request number
+        required: false
+        type: string
+      head_sha:
+        description: Expected pull request head commit
+        required: false
+        type: string
+      base_sha:
+        description: Expected main commit
+        required: false
+        type: string
   workflow_call:
     inputs:
       test_sha:

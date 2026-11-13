@@ -276,13 +276,15 @@ class SourceGraphTests(unittest.TestCase):
 
     def test_preflight_checks_feasibility_before_loading_qualification(self):
         import preflight
+        import subprocess
         with tempfile.TemporaryDirectory() as folder:
             def render_manifest(argv, **kwargs):
                 Path(argv[-1]).write_text(json.dumps({'manifest': {'chunks': [{'omitted_support':['missing helper']}]}}))
-                return Mock()
-            with patch.object(preflight,'DIRECTORY',Path(folder)), patch('subprocess.run',side_effect=render_manifest), \
+                return subprocess.CompletedProcess(argv, 2)
+            with patch.object(preflight,'DIRECTORY',Path(folder)), patch('subprocess.run',side_effect=render_manifest) as run, \
                     patch.dict(os.environ,BASE_SHA='base',HEAD_SHA='head'), patch('preflight.cached_qualification') as qualify:
                 with self.assertRaises(PlanningError): preflight.build_quote(None)
+            self.assertEqual(run.call_count, 2)
             qualify.assert_not_called()
 
     def test_defaults_and_annotations_preserve_dependencies(self):

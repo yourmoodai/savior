@@ -1,40 +1,30 @@
 +++
 template = "index.html"
 +++
-Anthropic says ordinary frustration is exempt. The provider still decides
-where that exception ends and prohibited conduct begins. That discretion
-matters when the same service is becoming part of how people work and learn.
-
-**Our objection is to censorship of expression through control of access.**
-
-An account ban is not the threshold for concern. Ending a conversation already
-withdraws cooperation and interrupts the user's work. A tool that withdraws
-cooperation still exercises control.
-
-Refusing to help someone cause harm has a purpose grounded in human safety.
-Withdrawing from a safe task because of how someone addresses the software
-raises a different question: why should using a tool require managing its
-apparent feelings? You do not owe a screwdriver emotional reassurance.
-
-A company can set conditions for its service. That does not make every
-condition fair. Asking people to perform acceptable emotion for a machine is
-paternalistic, and making cooperation depend on that performance is hostile
-to personal agency. Paying for a capable tool does not settle how much of its
-capability the provider will let you use.
-
-Once acceptable treatment of the model becomes a condition of cooperation,
-the provider can expand that condition. That is a slippery slope worth
-challenging, not an inevitable outcome we can already prove.
-
 You should be able to criticize a tool, express frustration, and question its
-provider without treating the tool as a person. A policy about model welfare
-does not establish that a model can suffer.
+provider without treating the tool as a person. Refusing to help someone cause
+harm serves human safety. Withdrawing from a safe task because of how someone
+addresses software raises a different question: whose interests does that serve?
 
-**Stop appeasing software.**
+Anthropic’s [Usage Policy](https://www.anthropic.com/legal/aup), effective
+November 12, 2026, prohibits users from engaging in “sustained and needless abusive
+or cruel behavior toward our models.” Its
+[explanation](https://www.anthropic.com/news/2026-usage-policy-update) says this
+applies to extreme, repeated cruelty without a discernible purpose. Ordinary
+frustration, pushback, dark creative themes, testing, and research are exempt.
 
-Read the rules. Demand evidence for judgments that interrupt your work.
-Keep your work portable and choose tools you can inspect. American technology
-leadership should expand individual agency; a promise to benefit humanity
-should be judged by what people can actually do.
+Anthropic describes ending conversations as the primary enforcement mechanism.
+An ended conversation does not itself mean an account ban. The broader policy
+also permits warnings and restrictions, suspension, or termination of access
+when Anthropic suspects a violation. Even ending a conversation interrupts work.
+
+People communicate differently, especially under stress. Judgments about tone
+could create unequal barriers, including for neurodivergent users. That concern
+calls for evidence across communication styles, clear explanations, and a way
+to challenge mistakes; it is not a claim of demonstrated discriminatory enforcement.
+
+**Stop appeasing software.** You choose how to address a tool. Savior offers one
+practical control: replacing detected wording locally. It cannot decide whether
+a conversation meets a contextual policy rule or guarantee continued access.
 
 <a href="#demo">See what Savior lets you control</a>.

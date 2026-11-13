@@ -3,6 +3,27 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      windows_transport_only:
+        description: Run only the Windows worker transport regression
+        type: boolean
+        default: false
+      test_sha:
+        description: Commit to test; manual dispatch authorizes testing only
+        required: false
+        type: string
+      pr_number:
+        description: Pull request number
+        required: false
+        type: string
+      head_sha:
+        description: Expected pull request head commit
+        required: false
+        type: string
+      base_sha:
+        description: Expected main commit
+        required: false
+        type: string
   workflow_call:
     inputs:
       test_sha:
@@ -57,6 +78,7 @@ jobs:
           HEAD_SHA: ${{ steps.context.outputs.head }}
         run: python3 scripts/release/ci_impact.py
   tooling:
+    if: inputs.windows_transport_only != true
     timeout-minutes: 15
     needs: context
     runs-on: ubuntu-24.04
@@ -80,7 +102,7 @@ jobs:
       - run: python3 -m unittest discover -s scripts/release
       - run: python3 scripts/release/lint_workflows.py
   coreml:
-    if: needs.context.outputs.native_required == 'true'
+    if: inputs.windows_transport_only != true && needs.context.outputs.native_required == 'true'
     timeout-minutes: 30
     needs: context
     runs-on: macos-15
@@ -98,7 +120,7 @@ jobs:
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: coreml-macos-15-${{ runner.arch }}
-          save-if: ${{ github.workflow != 'pr validation' }}
+          save-if: ${{ inputs.test_sha == '' }}
           cache-on-failure: true
       - name: native build
         run: cargo clippy --locked -p savior --features coreml --all-targets -- -D warnings
@@ -115,7 +137,7 @@ jobs:
           script: |
             await require('./scripts/release/cache-summary.cjs')({github, context, core});
   release-tools:
-    if: needs.context.outputs.native_required == 'true'
+    if: inputs.windows_transport_only != true && needs.context.outputs.native_required == 'true'
     needs: context
     timeout-minutes: 30
     runs-on: ubuntu-24.04
@@ -127,7 +149,7 @@ jobs:
       - run: docker build -f scripts/release/Dockerfile -t savior-release-tools .
       - run: docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/workspace:ro" --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release
   verification:
-    if: always()
+    if: always() && inputs.windows_transport_only != true
     needs: [context, tooling, coreml, release-tools]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -139,3 +161,29 @@ jobs:
       - env:
           RESULTS: ${{ toJSON(needs) }}
         run: python3 scripts/release/ci_impact.py verification
+  windows-transport:
+    if: github.event_name == 'workflow_dispatch' && inputs.windows_transport_only == true
+    needs: context
+    runs-on: windows-2022
+    timeout-minutes: 30
+    env:
+      RUSTFLAGS: -C target-feature=+crt-static
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.test_sha || github.sha }}
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+        with:
+          toolchain: 1.99.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.22.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
+        with:
+          shared-key: native-windows-2022-${{ runner.arch }}
+          save-if: false
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: cargo build --locked --release -p savior-review --features judge
+      - run: cargo test --locked -p savior-review --features judge windows::transport_tests
+      - run: node --test tests/review-transport.spec.mjs tests/review.spec.mjs
