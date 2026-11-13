@@ -27,8 +27,10 @@ try {
     const requests = [];
     page.on('request', request => requests.push(request.url()));
     await page.goto(origin, {waitUntil:'networkidle'});
-    await expect(page).toHaveTitle('Savior — your tools shouldn’t police your frustration');
-    await expect(page.locator('#hero-title')).toContainText('police your frustration.');
+    await expect(page).toHaveTitle('Savior — choose the wording you submit');
+    await expect(page.locator('#hero-title')).toContainText('Your choice.');
+    assert.deepEqual(await page.locator('main > section').evaluateAll(sections =>
+      sections.map(section => section.id)), ['', 'demo', '', '', 'install', 'policy', 'manifesto', '', '']);
     await expect(page.locator('.policy-plaque blockquote')).toHaveText('Engage in sustained and needless abusive or cruel behavior toward our models');
     await expect(page.locator('.policy-pedestal figcaption a')).toHaveAttribute('href', 'https://www.anthropic.com/legal/aup');
     await expect(page.locator('.policy-pedestal time')).toHaveAttribute('datetime', '2026-11-12');
@@ -37,8 +39,8 @@ try {
     await expect(page.locator('.policy-enforcement')).toContainText('An ended conversation does not itself mean an account ban.');
     await expect(page.locator('#agency-title')).toHaveText('More capability is not more agency.');
     await expect(page.locator('#human-impact-title')).toHaveText('People bear the consequences.');
-    await expect(page.locator('.hero-bottom .standfirst')).toHaveText('Stop appeasing software.');
-    await expect(page.locator('.slogan-support')).toHaveText('You paid for a tool. You shouldn’t have to manage its feelings.');
+    await expect(page.locator('.hero-bottom .standfirst')).toHaveText('Choose the wording you submit to Claude.');
+    await expect(page.locator('.slogan-support')).toContainText('If processing fails, that submission stops.');
     await expect(page.locator('.manifesto')).toContainText('A tool that withdraws cooperation still exercises control.');
     await expect(page.locator('.human-impact a[href="https://www.anthropic.com/research/end-subset-conversations"]')).toHaveCount(1);
     await expect(page.locator('.draft .prompt-text')).toContainText('F**king useless id**t');
@@ -55,7 +57,7 @@ try {
     await page.getByRole('link', {name:'See what Savior lets you control'}).click();
     await expect(page.locator('#interception-title')).toBeInViewport();
     await page.getByRole('link', {name:'Read the policy behind our objection'}).click();
-    await expect(page.locator('#hero-title')).toBeInViewport();
+    await expect(page.locator('#policy-title')).toBeInViewport();
     await page.locator('.release-pill').click();
     await expect(page.locator('#install-notice')).toBeInViewport();
     await expect(page.locator('#install-notice')).toContainText('These commands do not install Savior yet.');
@@ -69,7 +71,7 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.goto(origin + '/404.html');
     await page.getByRole('link', {name:'Return to Savior'}).click();
-    await expect(page.locator('h1')).toContainText('Your tools shouldn’t');
+    await expect(page.locator('h1')).toContainText('Your words.');
     assert.ok(requests.every(url => url.startsWith(origin + '/')));
     await page.screenshot({path:`.cache/site/home-${width}.png`});
     await context.close();

@@ -30,16 +30,18 @@ Maintainer procedures are in [release preparation](releases.md).
 
 ## Everyday use
 
-Type into the Claude Code prompt box and submit as usual. Savior replaces
-detected offensive phrases and preserves text outside the selected spans.
-Slash commands and non-composer submissions bypass this integration.
+Type into the Claude Code prompt box and submit as usual. Savior detects
+offensive phrases in ranges of text called spans. It replaces selected spans
+and preserves everything outside them.
+Slash commands and submissions originating outside the prompt box bypass this
+integration.
 The current terminal qualification uses Claude Code 2.1.322. That client restores
 a refused draft; Savior leaves the prompt box under the host's control. Review
 the draft before retrying, especially after updating Claude.
 The current adapter refuses supported submissions on other client versions.
 From a source checkout, `npm run check:claude` reports the matching adapter without
-installing anything. Future releases may ship separate adapters for different
-Claude APIs; an unknown version must not silently use the nearest adapter.
+installing anything. See the [adapter contract](adr/0001-local-span-replacement.md#client-api-compatibility)
+for compatibility qualification and its limits.
 
 Open `/savior` to see the latest original and replacement. That inspection
 does not add either text to model context and is cleared when the session starts

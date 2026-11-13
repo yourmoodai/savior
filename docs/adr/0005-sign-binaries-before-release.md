@@ -10,6 +10,11 @@ tests do not establish credentialed OS acceptance.
 
 ## Context
 
+A manifest lists the artifacts expected in a release. Its signature lets setup
+check that inventory against a trusted key. A platform signature identifies the
+publisher to the operating system. Notarization is Apple's assessment of a
+submitted build; stapling attaches its ticket to a distributable bundle.
+
 An Ed25519 manifest establishes integrity relative to the installed plugin's
 trusted key. Operating systems separately assess publisher identity and
 downloaded executable trust. Savior needs both boundaries to accept the same
@@ -23,6 +28,15 @@ timestamps. Sigstore provenance could supplement these checks, but would not
 replace either platform's publisher identity.
 
 ## Decision
+
+The same final bytes must pass both the release's integrity checks and the
+platform's acceptance checks:
+
+```text
+native builds → signing and notarization → final inventory → native checks
+                                                               ↓
+marketplace promotion ← public-download checks ← publication
+```
 
 Build native artifacts on their supported hosts. A pinned Linux signing toolchain
 consumes all three stages from one revision, signs Savior's native components,
@@ -80,6 +94,13 @@ revocation, and provider availability. Node certificate updates require explicit
 identity review. Windows reputation and managed-machine policies can still
 block an otherwise valid signed release. Support claims must state conditions
 actually verified.
+
+### Open questions
+
+Production identity provisioning and credentialed native acceptance remain
+prerequisites. Which managed-device and reputation policies permit a release
+must be established in the environments being claimed; a valid signature alone
+cannot answer that question.
 
 [Release preparation](../releases.md) owns provisioning, evidence, and recovery.
 [ADR 1](0001-local-span-replacement.md) retains the transformation boundary;

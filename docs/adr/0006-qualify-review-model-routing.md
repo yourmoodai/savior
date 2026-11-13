@@ -14,6 +14,12 @@ application inference or release qualification in ADR 2.
 
 ## Context
 
+The development reviewer assesses repository changes through remote model APIs.
+It is separate from Savior's offline prompt detector and personal-review judges.
+A model catalog records invocation targets and capabilities; routing assigns a
+catalog entry to each review role. Qualification tests a chosen routing before
+it may assess changes automatically.
+
 One hardcoded model couples review quality, API compatibility, and pricing.
 Provider access does not establish that a model can find defects, and a cheap
 model can increase cost through retries or missed findings. Retrying a review
@@ -33,8 +39,10 @@ resources, and provider offers. CI qualification consumes the same PR and daily
 allowances as assessment.
 
 Adapt [Elephant–Goldfish review](https://github.com/google/elephant-goldfish-model/blob/main/docs/designs/review.md)
-to code review. Three independent Goldfish assess correctness, security, and
-compatibility using source evidence and fresh requests. A fresh verifier checks
+to code review. Goldfish are reviewers given separate contexts; the Elephant is
+the synthesizer that receives their combined findings. Three independent
+Goldfish assess correctness, security, and compatibility using source evidence
+and fresh requests. A fresh verifier checks
 candidate findings once. The Elephant receives all resulting findings and
 context, deduplicates exact duplicates, and explains the combined result. It
 cannot dismiss a verified finding. This conservative reconciliation avoids an
@@ -45,6 +53,8 @@ qualification of the resulting routing manifest. Model size does not define a
 Goldfish, and different contexts do not establish independent model training.
 Fast candidates must pass the same applicable evidence checks. There is no
 implicit fallback or automatic latest-model selection.
+
+### Spending and waivers
 
 The reviewer projects remaining inference cost before calling a model. A PR has
 a $2 lifetime allowance across all revisions; the repository has a $5 daily

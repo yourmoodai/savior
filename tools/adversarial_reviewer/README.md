@@ -1,15 +1,32 @@
 # Adversarial code review
 
+The development reviewer sends numbered code-change evidence to models through
+AWS APIs, checks their findings, and reports an assessment on the pull request.
+A model catalog records candidate invocation targets; routing selects a model
+for each review role. Qualification tests that selection before automated review
+can run. The application detector and personal-review judges remain offline.
+
+```text
+trusted-base workflow → separate reviews → fresh verification → combined findings
+                                                                      ↓
+                                                           pull request assessment
+```
+
+The workflow applies spending and evidence checks before it can call models or
+approve a change. For a blocked PR, start with [cost and waivers](#review-cost-and-admin-waivers).
+For configuration changes, follow [model onboarding](#model-onboarding) and
+[activation](#review-contexts-and-activation). [Offline checks](#offline-planning-and-verification)
+exercise the implementation without establishing live provider access.
+
 Adapted from [awill1988/whip-it](https://github.com/awill1988/whip-it/tree/main/tools/adversarial_reviewer)
-under the retained MIT license. Bedrock evaluates concrete failure scenarios against
-numbered diff evidence; this is separate from Markdown and commit-message linting.
+under the retained MIT license. Model assessment is separate from Markdown and
+commit-message linting.
 
 Run `python3 -m unittest discover -s tools/adversarial_reviewer` for transport,
 evidence, coverage, and disposition tests. CI uses AWS CLI v2 for Converse and
 SigV4-signed Chat Completions for compatible AWS models in `us-east-1`.
 Install the signing dependency with
 `python3 -m pip install -r tools/adversarial_reviewer/requirements.txt`.
-The application detector and personal-review judges remain offline.
 
 ## Review cost and admin waivers
 
@@ -140,6 +157,8 @@ Run `npm run test:reviewer`, `node --test tests/review-*.spec.mjs`, and
 `python3 scripts/release/lint_workflows.py` to check quoting, authorization,
 ledger recovery, and workflow guards without paid inference.
 
+### Evidence packing
+
 Use `--strategy baseline` for one primary file per request, bounded at 48 KiB. Manifests list primary units,
 stable evidence IDs, full input estimates, repeated supporting context, omissions,
 and maximum first-pass cost. Verification and subdivision need additional funds.
@@ -169,12 +188,21 @@ input rate and labelled `standard_input_upper_bound`, without assuming a discoun
 Unknown cache pricing and cache writes retain the full reservation.
 Validated assessment results are reusable for seven days from trusted workflow artifacts. Cache keys include model settings, reviewer implementation, diff, supporting evidence, and test context. Incomplete results are never cached. Formatting-only changes reuse assessments; approval and current-head coverage are computed again.
 
+### Qualification
+
 Qualification exercises benign changes and seeded defects, then compares both
 strategies on the same clean and four-defect batches. Adaptive packing is selected
 only when coverage and expected labels survive and its measured cost is lower;
 otherwise the qualified baseline remains selected. Full-PR plans must also fit
 the 512-assessment limit; an oversized adaptive plan falls back to baseline. Neither strategy is qualified
 by unit tests alone. Account model access remains a prerequisite for the live comparison.
+
+Qualification includes paired Node evaluation cases whose expected behavior is
+checked by executing fixed fixtures. The reviewer receives observations from
+fixed, reviewer-owned runtime probes to distinguish valid lexical shadowing from
+duplicate declarations. These probes never execute code supplied by a PR.
+
+### Response validation
 
 Calls have no tools or agent execution. Only trusted checkout code runs; PR diffs
 are data. A private temporary request file is removed after each invocation.
@@ -202,6 +230,8 @@ enabled. Local evidence and length checks remain authoritative. Valid JSON alone
 does not establish review quality. See the
 [model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-oss-20b.html).
 
+### Transport failures
+
 Chat transport retries only transient network failures and HTTP 429/500/502/503/504,
 at most twice with one- and two-second delays inside the existing deadline.
 Every attempt reserves separately; a lost response keeps its reservation. Quotes
@@ -210,17 +240,15 @@ model output do not trigger transport retries. Diagnostics retain status,
 allowlisted error categories, request IDs, and elapsed time without provider error
 bodies. Full responses are captured only in private synthetic qualification runs.
 
-Qualification includes paired Node evaluation cases whose expected behavior is
-checked by executing fixed fixtures. The reviewer receives observations from
-fixed, reviewer-owned runtime probes to distinguish valid lexical shadowing from
-duplicate declarations. These probes never execute code supplied by a PR.
-
-Each review begins with a 50–100 word overview synthesized from all chunk results,
-followed by **Approved** or **Request changes**. Concise findings appear below the verdict; full evidence and exclusions remain in the artifact.
+### Assessment publication
 
 One bot-owned PR comment tracks review progress, failed prerequisites, and the
-latest assessment. It includes a 50–100 word overview, verdict, coverage, and
-committed cost. A qualified, complete, clean current-head assessment submits a
+latest assessment. It is limited to 2,500 characters: a 50–100-word overview
+synthesized from all chunk results, **Approved** or **Request changes**, coverage,
+committed cost, and up to three concise findings. Full findings, chunk evidence,
+and exclusions remain in the `adversarial-report` artifact.
+
+A qualified, complete, clean current-head assessment submits a
 formal GitHub approval. Independent verification, commit-message, and release checks
 must also pass before the PR is ready to merge. Validated findings submit `REQUEST_CHANGES`; infrastructure
 failures fail the check without submitting a defect review. Repeated publication
@@ -232,19 +260,20 @@ Non-executable PNG/JPEG/WebP files under `docs/assets` are excluded from code-re
 coverage and listed as unreviewed assets. Other binary changes remain unresolved
 coverage. Stale results are discarded. Model agreement is not proof of correctness.
 
+### Build caches
+
 Native verification and release jobs share dependency caches by runner image and
 architecture; Core ML uses a separate namespace. Compiler, Cargo inputs, and Rust
 flags remain part of the cache key. Builds and tests always execute. Job summaries
 record cache hits, restore/build duration, and existing cache bytes for comparison;
 cache size is sampled before the current job saves its cache.
 
+### Provider references
+
 Model limits and API support are documented in the [AWS DeepSeek V3.2 model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-deepseek-deepseek-v3-2.html).
 Usage and stop reasons come from [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html).
 Pilot rates use [Bedrock standard pricing](https://aws.amazon.com/bedrock/pricing/);
 recheck catalog rates before approving model onboarding or paid qualification.
-
-The single PR comment is limited to 2,500 characters: a 50–100-word overview, verdict, coverage, cost, and up to three concise findings. Full findings and chunk evidence remain in the `adversarial-report` artifact.
-
 
 ## Model onboarding
 

@@ -12,6 +12,10 @@ rules remain.
 
 ## Context
 
+A trace is a local record of a replacement attempt. It can retain the original
+prompt and the resulting text, unlike metrics that retain counts and judgments
+without that text.
+
 Counts cannot explain a disputed edit. Full traces retain the original context
 and exact output, which may contain secrets; excerpts can omit decisive context.
 Existing metrics consent authorizes neither form of text retention. Live viewing
@@ -20,6 +24,8 @@ provides immediate visibility without needing a retained record.
 ## Decision
 
 Rust owns trace admission, span validation, consent generations, and retention.
+A consent generation identifies the permission under which work was admitted;
+revoking it prevents that earlier work from recording text afterward.
 Records reuse actual detector spans. The adapter separately reports delivery;
 human annotations distinguish profanity removal, targeted abuse, and preservation.
 `forwarded` means the host continuation returned; `forwarding_unknown` means its
@@ -32,6 +38,9 @@ per-launch token and an atomically replaced, revision-bound Parquet projection
 queried through embedded DuckDB. The initial single snapshot is invalidated by
 annotation changes; the journal supports recovery and regeneration. Downloads
 use cache storage; retained records use private, profile-isolated state storage.
+
+The journal is the source of truth; the projection is a derived copy for queries.
+This separation lets inspection rebuild its view without repeating detection.
 
 Starting `savior watch` authorizes ephemeral display from the same profile until
 it stops. It uses actual applied edits, keeps no history, and neither grants nor

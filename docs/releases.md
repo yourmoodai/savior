@@ -1,5 +1,16 @@
 # Release preparation
 
+Releasing Savior has three separate outcomes: a candidate archive ready for
+testing, immutable published assets, and a marketplace entry that directs users
+to a qualified release. Publication does not update that entry. Promotion is
+the separately approved step that does.
+
+```text
+native stages → signed candidate → native checks → published assets
+                                                       ↓
+marketplace entry ← approved promotion ← public-download checks
+```
+
 This guide is for maintainers. Users should start with [installation](usage.md#installation).
 [ADR 2](adr/0002-release-and-quality-evidence.md) defines integrity and evidence
 requirements; [ADR 5](adr/0005-sign-binaries-before-release.md) defines platform
@@ -8,6 +19,12 @@ must be completed before advertising a release. Placeholders cannot pass those g
 
 For a resumable account-setup walkthrough with browser automation, login prompts
 and validation handoffs, use [signing onboarding](signing-onboarding.md).
+
+For an enrolled publisher, follow the [release sequence](#release-sequence).
+For a local candidate, use [local preparation](#local-preparation).
+[Interception evidence](#interception-evidence) defines the installed-client
+matrix; [recovery](#evidence-and-recovery) distinguishes resumable work from
+failures that require a new candidate or version.
 
 ## Release sequence
 

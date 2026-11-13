@@ -9,6 +9,12 @@ promote a model, backend, or judge.
 
 ## Context
 
+Artifact integrity means the downloaded bytes match the signed inventory.
+Replacement correctness means selected spans change while surrounding text is
+preserved. Reference labels are judgments attached to evaluation examples;
+judges are models that assess those examples. Their agreement depends on what
+was tested and how the labels were reviewed.
+
 Artifact integrity, exact replacement, agreement with reference labels, and
 agreement between judges answer different questions. A successful package or a
 fast experiment cannot establish all of them.
@@ -18,11 +24,13 @@ fast experiment cannot establish all of them.
 Distribute immutable versioned bundles. The installed plugin pins an Ed25519
 verification key and signed runtime manifest; setup verifies matching platform
 artifacts and separately pinned models before execution. Bundled Node supplies
-bootstrap execution without a user compiler, GitHub CLI, or PATH Node.
+bootstrap execution without a user compiler, GitHub CLI, or Node on `PATH`.
 
 Promote a new default only with complete evidence for its applicable safety,
 parity, quality, and performance gates. Report provider-policy work as
 **measured policy alignment**.
+
+### Interception evidence
 
 Keep three interception evidence classes separate. Handler tests use the engine
 test kit to check continuation, refusal, cancellation, and draft races.
@@ -42,6 +50,8 @@ worker reaching the production deadline. Recovery checks retained drafts and
 the exact subsequent receiver payload. The startup failure case checks refusal
 and draft retention only. [Release preparation](../releases.md#interception-evidence)
 owns the executable matrix and evidence locations.
+
+### Adapter distribution
 
 For multiple mod APIs, distribute immutable adapter-specific bundles sharing the
 same Rust protocol. A future installer must resolve the client selected by the
@@ -115,8 +125,11 @@ The rolling window increases native execution and artifact-storage costs. It
 also exposes older releases without a compatible Savior adapter instead of
 silently treating patch releases as interchangeable.
 
+### Open questions
+
 Reviewed corpus coverage, additional backends, and host routes beyond this
 matrix remain open questions for claims beyond the existing evidence.
+
 [Evaluation](../evaluation.md) owns recorded findings,
 [benchmarking](../benchmarking.md) owns reproduction, and
 [release preparation](../releases.md) owns operational procedure.

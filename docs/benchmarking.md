@@ -5,6 +5,22 @@ classification labels, exact span replacement, and execution cost. A detector
 can preserve surrounding text perfectly while missing abuse. Read the three
 results together; no single score represents all of them.
 
+A span is a range of text selected for replacement. Classification labels judge
+an example as a whole; reviewed span annotations identify the exact text that
+should change. A benchmark screen gathers diagnostic evidence. Qualification
+applies the complete gates required before a backend or default can be promoted.
+
+```text
+local fixtures and models → quality / replacement / performance runs
+                                              ↓
+published evidence ← assembled report ← content-free measurements
+```
+
+Start with [setup](#setup-and-execution) to reproduce a screen. Use
+[failure triage](#failure-triage-and-review) to investigate observations and
+[performance interpretation](#performance-interpretation) before making latency
+claims. Recorded findings belong in [the evidence page](evaluation.md).
+
 ## Setup and execution
 
 Run commands from the repository root with Node 24 or later and the Rust
@@ -84,31 +100,10 @@ these commands do not produce training data or tune thresholds.
 Upstream sentence labels are not replacement spans. HateCheck focus words
 produce unreviewed proposals only when they occur exactly once. Missing or
 ambiguous spans remain `null`; they never become a clean empty-span label.
-Manual annotation overlays are optional JSON arrays:
-
-```json
-[
-  {
-    "id": "hatecheck-1",
-    "text_sha256": "sha256-of-exact-upstream-text",
-    "annotation": {
-      "unit": "utf16",
-      "spans": [[2, 6]],
-      "origin": "manual",
-      "reviewed": true,
-      "reviewer": "review-record-id",
-      "reviewed_at": "2026-10-20",
-      "policy": "offensive_spans",
-      "policy_version": "1",
-      "review_status": "reviewed",
-      "classification": "detection_false_positive"
-    }
-  }
-]
-```
-
-The example illustrates the format, not an approved annotation. Supply a
-completed overlay with `bench:quality -- --annotations FILE --output NEW_FILE`.
+Manual annotation overlays supply reviewed spans separately from the source
+corpus. The [annotation example](#appendix-annotation-format) shows the JSON
+format. Supply a completed overlay with
+`bench:quality -- --annotations FILE --output NEW_FILE`.
 Validate an overlay without inference using
 `npm run corpus:validate -- .cache/bench-corpus ANNOTATIONS.json`.
 The runner checks IDs, source-text hashes, review metadata, ordering, and UTF-16
@@ -340,3 +335,35 @@ The README is not modified. Standalone reports link to their own `snapshot.json`
 the published evidence page links to the canonical snapshot. The old
 `bench:readme` command and `readme` subcommand remain deprecated aliases for
 `publish`, with a warning on stderr. Both publish to the evidence page.
+
+## Appendix: annotation format
+
+Manual annotation overlays are optional JSON arrays:
+
+```json
+[
+  {
+    "id": "hatecheck-1",
+    "text_sha256": "sha256-of-exact-upstream-text",
+    "annotation": {
+      "unit": "utf16",
+      "spans": [[2, 6]],
+      "origin": "manual",
+      "reviewed": true,
+      "reviewer": "review-record-id",
+      "reviewed_at": "2026-10-20",
+      "policy": "offensive_spans",
+      "policy_version": "1",
+      "review_status": "reviewed",
+      "classification": "detection_false_positive"
+    }
+  }
+]
+```
+
+The example illustrates the format, not an approved annotation. Supply a
+completed overlay with `bench:quality -- --annotations FILE --output NEW_FILE`.
+
+[Corpus provenance](../benchmarks/NOTICE.md) records licensing and adaptations.
+[Evaluation](evaluation.md) presents dated findings; [ADR 2](adr/0002-release-and-quality-evidence.md)
+defines the evidence required for promotion.

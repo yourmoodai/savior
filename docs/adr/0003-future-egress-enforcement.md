@@ -10,6 +10,10 @@ deployment or expand the accepted mod boundary in ADR 1.
 
 ## Context
 
+A proxy is an intermediary between a client and its provider. Egress is traffic
+leaving the machine. Intercepting one request path does not establish control
+over every outbound path.
+
 A proxy could preserve a supported client's interface while applying local
 replacement to outbound requests. A host integration has a smaller maintenance
 surface; a proxy could support additional clients but must handle transport and
@@ -45,3 +49,13 @@ The proxy could extend [ADR 1's boundary](0001-local-span-replacement.md) to
 another transport. It must track provider formats, HTTP/1.1 and HTTP/2, QUIC or
 opaque traffic, trust configuration, routing changes, privileges, and OS
 updates. Support and bypass resistance remain separate, unproven gates.
+
+### Open questions
+
+Which client request formats can be reconstructed without changing their
+meaning? Which platform controls can contain alternate outbound routes? Those
+questions need client and platform evidence before support can be advertised.
+
+[ADR 1](0001-local-span-replacement.md) defines the accepted adapter boundary.
+[Release evidence](0002-release-and-quality-evidence.md) distinguishes observed
+delivery from claims about all traffic leaving the host.

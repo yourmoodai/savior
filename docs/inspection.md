@@ -1,6 +1,8 @@
 # See what Savior changed
 
-Choose how much you want to see and whether to keep it.
+Savior can show an edit as it happens or save it for later inspection. Saved
+records, called traces, can contain the original text and require separate
+consent. Choose how much you want to see and whether to keep it.
 
 | View | What it shows | What it retains |
 | --- | --- | --- |
@@ -52,16 +54,6 @@ phrases, or whole prompts in `prompt-diff`; anyone viewing that terminal can
 read them. Shell redirection and terminal recording can retain copies outside
 Savior's control.
 
-The native binary exposes the same command:
-`./target/release/savior watch` on macOS/Linux or
-`.\target\release\savior.exe watch` on Windows. The watcher needs no model load.
-In a packaged plugin, run `bridge/cli.mjs watch` from the plugin directory
-using its bundled executable: `runtime/linux-x64/node` on Linux,
-`runtime/win32-x64/node.exe` on Windows, or
-`runtime/darwin-arm64/SaviorRuntime.app/Contents/MacOS/savior-bootstrap` on macOS.
-Use the same launcher for `inspect` and `traces`; the bridge prepares verified
-runtime artifacts when necessary.
-
 ## Saved history
 
 Recording is off by default. Enable it before submitting prompts you want to
@@ -88,6 +80,9 @@ Disabling stops new text capture. Deletion also disables capture and removes
 managed records, annotations, and projections. Exports and backups remain
 outside that deletion. Records have private permissions but are not encrypted.
 
+For native launchers and export fields, see the
+[technical appendix](#appendix-launchers-and-data-format).
+
 ## Storage and interpretation
 
 On Unix, downloads use `$XDG_CACHE_HOME/savior` (default `~/.cache/savior`), and
@@ -103,6 +98,24 @@ runs when capturing or inspecting records; stopped software cannot enforce a
 wall-clock deletion deadline. Existing text-free personal-review metrics remain
 in their original store and keep their separate consent and retention policy.
 
+`processed` means local rewriting completed. `forwarded` means the adapter's
+downstream call returned; it does not prove provider receipt. Failed or cancelled
+attempts have no successful output. Adapter-level failures without a worker
+result retain unavailable model identity rather than an invented one. A recording
+gap warns without changing the successful replacement.
+
+## Appendix: launchers and data format
+
+The native binary exposes the same command:
+`./target/release/savior watch` on macOS/Linux or
+`.\target\release\savior.exe watch` on Windows. The watcher needs no model load.
+In a packaged plugin, run `bridge/cli.mjs watch` from the plugin directory
+using its bundled executable: `runtime/linux-x64/node` on Linux,
+`runtime/win32-x64/node.exe` on Windows, or
+`runtime/darwin-arm64/SaviorRuntime.app/Contents/MacOS/savior-bootstrap` on macOS.
+Use the same launcher for `inspect` and `traces`; the bridge prepares verified
+runtime artifacts when necessary.
+
 `traces.sqlite3` is the canonical journal. `traces.parquet` is a revision-bound
 projection rebuilt only after data changes, with the same event IDs and joined
 annotations. Export columns are `schema`, `id`, `timestamp_ms`, `outcome`, `event`,
@@ -110,16 +123,16 @@ and `annotation`. The latter two contain versioned JSON; trace spans use UTF-8
 byte offsets. Opening the inspector does not rerun detection or recover old
 originals from Claude history.
 
-`processed` means local rewriting completed. `forwarded` means the adapter's
-downstream call returned; it does not prove provider receipt. Failed or cancelled
-attempts have no successful output. Adapter-level failures without a worker
-result retain unavailable model identity rather than an invented one. A recording
-gap warns without changing the successful replacement. Capture is currently
-wired to the Claude adapter's version-3 bridge requests and the explicit native
-`rewriteTraced` method; existing version-1/2 callers do not gain persistence.
+Capture is currently wired to the Claude adapter's version-3 bridge requests
+and the explicit native `rewriteTraced` method; existing version-1/2 callers do
+not gain persistence.
 
 The native binary also exposes `savior inspect` and `savior traces`, which
 delegate to the adjacent `savior-review` executable.
-[Verification commands](benchmarking.md#inspection-and-live-feed-checks) and
-[dated inspection evidence](evaluation.md#inspection-evidence) are maintained
-separately.
+
+## Further reading
+
+[Everyday settings](usage.md#choose-a-replacement) covers replacement choices.
+[Dated inspection evidence](evaluation.md#inspection-evidence) records what was
+tested, and [verification commands](benchmarking.md#inspection-and-live-feed-checks)
+explain how to reproduce those checks.
