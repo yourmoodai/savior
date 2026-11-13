@@ -15,6 +15,16 @@ release evidence; [ADR 3](0003-future-egress-enforcement.md) owns proposed proxy
 A draft is unsent text in the host's prompt box. Prompt input is user-authored
 material prepared for an AI request. An adapter connects that host or transport
 to Savior's local replacement core before a submission continues to a provider.
+A span is a range of source text selected for replacement. Protected text, such
+as code or quoted material, can make that edit unsafe even when detection found
+an offensive phrase.
+
+```text
+host prompt box → adapter → Rust detection and replacement → adapter → provider
+```
+
+This picture follows a supported submission. It does not account for other
+traffic the host may send.
 
 Users need control at that boundary without depending on one host forever.
 Savior cannot establish control over unsubmitted drafts outside its process,
@@ -96,9 +106,11 @@ Visible refusal gives the user a chance to resolve a failed edit. Keeping text
 semantics in Rust lets another adapter replace the host integration without
 changing that behavior. It also limits claims to the paths actually tested.
 
-Open questions remain: which other hosts can preserve this boundary, which
-reviewed evidence supports stronger detection claims, and whether independent
-egress control can resist bypass across platform failures.
+### Open questions
+
+Which other hosts can preserve this boundary? What reviewed evidence supports
+stronger detection claims? Can independent egress control resist bypass across
+platform failures? These questions remain unresolved.
 
 ### Related mod designs
 

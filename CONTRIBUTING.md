@@ -47,6 +47,11 @@ and releases in the accepted issue.
 
 ## Architecture records
 
+Architecture Decision Records (ADRs) explain why a boundary exists and when the
+system must refuse to act. Start with ADR 1 for prompt processing, ADR 4 for
+inspection, and ADRs 2 and 5 for distribution. ADR 6 concerns development review,
+which is separate from the offline application. ADR 3 is proposed research.
+
 ADRs describe enduring boundaries, not implementation logs. Keep their language
 visual and audience-first; put commands, thresholds, and mechanical procedure
 in the relevant benchmark, release, or tool guide.
@@ -58,6 +63,7 @@ in the relevant benchmark, release, or tool guide.
 | [ADR 3](docs/adr/0003-future-egress-enforcement.md) | Proposed; unimplemented | Transparent proxy and limits on egress claims |
 | [ADR 4](docs/adr/0004-consented-local-traces.md) | Accepted | Inspection, ephemeral viewing, and consented retention |
 | [ADR 5](docs/adr/0005-sign-binaries-before-release.md) | Accepted for implementation | Platform signing, offline macOS launch, and approved promotion |
+| [ADR 6](docs/adr/0006-qualify-review-model-routing.md) | Accepted; live activation gated | Development-review routing, qualification, and spending limits |
 
 `.github/CODEOWNERS` explicitly assigns `docs/adr/**` to the maintainer. A
 repository administrator must enable GitHub's **Require review from Code

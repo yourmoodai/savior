@@ -1,6 +1,6 @@
 base_url = "https://savior.yourmood.ai"
-title = "Savior — your tools shouldn’t police your frustration"
-description = "A case for personal agency in the face of Anthropic’s model-abuse policy. Choose what you send with a local, open source Claude mod."
+title = "Savior — choose the wording you submit"
+description = "Local, open source replacement of detected offensive phrases in supported Claude Code prompts. Choose your wording, inspect edits, and understand the limits."
 compile_sass = false
 build_search_index = false
 minify_html = false

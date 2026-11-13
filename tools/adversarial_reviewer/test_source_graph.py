@@ -8,10 +8,11 @@ import runpy
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
+from collections import Counter
 
 from adversarial_review import review_messages
 from bedrock_client import estimate_input_units
-from chunk_plan import anchors, render, manifest
+from chunk_plan import anchors, render, manifest, parse
 from source_graph import Graph, MemorySnapshot, digest, git_snapshots, SourceError, snapshots
 from review_plan import pack, restore, require_feasible, admit, PlanningError, frozen_execution
 
@@ -111,6 +112,50 @@ class SourceGraphTests(unittest.TestCase):
                 require_feasible({'baseline':manifest(packed)})
         qualify.assert_not_called()
         reserve.assert_not_called()
+
+    def test_same_dependencies_fit_after_splitting_primary_evidence(self):
+        for dynamic in (False, True):
+            source = 'def f(callback):\n'+''.join(f'    value_{i} = "'+('x'*24)+'"\n' for i in range(300))
+            source += '    return callback()\n' if dynamic else '    return value_299\n'
+            new = {'a.py': source}
+            diff, snapshot = difference({}, new), sources({}, new)
+            for strategy in ('baseline', 'adaptive'):
+                with self.subTest(dynamic=dynamic, strategy=strategy):
+                    packed = pack(diff, estimate_input_units, messages, snapshot, strategy)
+                    self.assertGreater(len(packed['chunks']), 1)
+                    required = {tuple(c['required_evidence']) for c in packed['chunks']}
+                    self.assertEqual(len(required), 1)
+                    for chunk in packed['chunks']:
+                        self.assertIn(source.rstrip(), chunk['support'])
+                        self.assertLessEqual(chunk['input_tokens'], 48000)
+                        self.assertLessEqual(chunk['verification_input_units'], 48000)
+                    expected = Counter(a['id'] for a in anchors(parse(diff)))
+                    actual = Counter(a['id'] for c in packed['chunks'] for a in anchors(c['units']))
+                    self.assertEqual(actual, expected)
+                    if dynamic:
+                        self.assertTrue(all(any('unresolved dynamic dependency' in gap for gap in c['omitted_support'])
+                                            for c in packed['chunks']))
+                        with self.assertRaises(PlanningError):
+                            require_feasible({'plan': manifest(packed)})
+                    else:
+                        require_feasible({'plan': manifest(packed)})
+                        restore(packed['review_plan'], diff, snapshot)
+
+    def test_indivisible_source_and_subdivision_limits_preserve_coverage(self):
+        for rows, limit, reason in [(1500, 512, 'required semantic closure exceeds request capacity'),
+                                    (300, 1, 'planning subdivision limit exceeded')]:
+            source = 'def f():\n'+''.join(f'    value_{i} = "'+('x'*24)+'"\n' for i in range(rows))
+            new = {'a.py': source}
+            diff, snapshot = difference({}, new), sources({}, new)
+            measured = Mock(wraps=messages)
+            with patch('review_plan.ASSESSMENT_LIMIT', limit):
+                packed = pack(diff, estimate_input_units, measured, snapshot, 'baseline')
+            self.assertTrue(any(reason in c['omitted_support'] for c in packed['chunks']))
+            self.assertLessEqual(measured.call_count, 8)
+            self.assertEqual(Counter(a['id'] for c in packed['chunks'] for a in anchors(c['units'])),
+                             Counter(a['id'] for a in anchors(parse(diff))))
+            with self.assertRaises(PlanningError):
+                require_feasible({'plan': manifest(packed)})
 
     def test_shadowed_parameter_and_unrelated_declarations(self):
         files = {'a.py': 'def helper():\n    return 1\ndef f(helper):\n    return helper\n'}

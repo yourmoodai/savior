@@ -2,7 +2,7 @@
 
 <img src="docs/assets/savior.png" width="180" alt="Savior golden sparkle">
 
-**You shouldn’t have to tiptoe around a chatbot.**
+**Choose the wording you submit to Claude.**
 
 Savior gives you control over the wording you submit to Claude. It runs on your
 computer and replaces detected offensive language in supported Claude Code

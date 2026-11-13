@@ -2,10 +2,11 @@
 title = "The interception boundary"
 template = "page.html"
 +++
-Savior’s purpose is to change what leaves your machine. Its current Claude mod
-intercepts supported prompt-box submissions and calls a local Rust detector
-before continuing with the resulting text. A failed transformation blocks that
-submission.
+Savior replaces detected offensive phrases in supported Claude Code prompts.
+Its mod connects the host’s prompt box to a local Rust detector, then continues
+with the resulting text. A failed transformation blocks that submission.
+The host may have other paths for sending text; this submission handler does not
+control them.
 
 The release remains **unreleased**. Code inspection and controlled tests do not
 establish that every host path keeps original text away from Anthropic.
@@ -55,6 +56,10 @@ version is supported. Each release must list passing versions and visible gaps;
 newly discovered clients do not enter the support list automatically.
 
 ## What still blocks a stronger claim
+
+Which client versions and platforms have qualified release artifacts? Can
+original text leave through a route outside the submission handler? These remain
+separate questions from whether a local replacement is correct.
 
 Release evidence must identify the exact client version and platform, demonstrate
 the installed artifact, and observe supported success and failure paths. Broader
