@@ -22,7 +22,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from diagnostics import record
 from prompt_profiles import prompts
 from evidence import locations, location_ranges, validate as validate_evidence
-from bedrock_client import BedrockError, complete
+from bedrock_client import BedrockError, complete, estimate_input_units
 from runtime_facts import runtime_facts
 
 CHUNK_BYTES = 49152  # 48 KiB; group related file diffs into larger requests.
@@ -95,6 +95,10 @@ Report up to three demonstrated defects; three findings signals that this batch 
 """
 
 VERIFICATION_PROMPT = """Evaluate each candidate neutrally against its stated invariant.
+Check that its numbered location identifies the actual operation causing the defect,
+not a nearby brace or unrelated line. Do not substitute source line numbers for IDs.
+Check that the concrete input satisfies the function's preconditions. If its outputs
+or source attachment are wrong, do not retain the allegation as written.
 For the same concrete input, determine the OLD outcome and the NEW outcome.
 Retain the candidate when the NEW outcome violates the invariant and the OLD outcome
 does not. Evidence that reproduces the alleged failure supports retaining the finding.
@@ -202,11 +206,10 @@ def supporting_diffs(header, chunk, chunks, files):
 
 
 def run_heuristic_reviewer(diff: str, files: List[str]) -> Tuple[str, List[Dict], str]:
-    """Deterministic heuristic reviewer checking core repository invariants."""
+    """Heuristic matches can request changes; they cannot establish a complete review or approve."""
     findings = []
     disposition = "COMMENT"
 
-    # Invariant 1: DEP001 - Check for non-empty runtime dependencies in pyproject.toml
     if "pyproject.toml" in files:
         in_runtime_deps = False
         for line in diff.splitlines():
@@ -229,7 +232,6 @@ def run_heuristic_reviewer(diff: str, files: List[str]) -> Tuple[str, List[Dict]
             elif in_runtime_deps and re.search(r"^[-+ ]*\]", line):
                 in_runtime_deps = False
 
-    # Invariant 2: PERF001 - Network calls in synchronous hook path
     for file in files:
         if file.startswith("src/whipit/"):
             if "requests." in diff or "urllib.request" in diff:
@@ -245,7 +247,6 @@ def run_heuristic_reviewer(diff: str, files: List[str]) -> Tuple[str, List[Dict]
                 )
                 disposition = "REQUEST_CHANGES"
 
-    # Invariant 7: CONV001 - AI attribution
     if re.search(r"Co-authored-by:\s*(?:AI|Claude|Gemini|ChatGPT|Assistant)", diff, re.IGNORECASE):
         findings.append(
             {
@@ -325,11 +326,38 @@ def run_model_reviewer(diff, files, doc_context, anchors=None, *, candidate=None
                         deadline=deadline, supporting_context=supporting_context)
     else:
         with select('verification'):
-            result = _run_model_reviewer(diff, files, doc_context, evidence, candidate=candidate,
-                                         deadline=deadline, supporting_context=supporting_context)
+            result = verify_candidates(diff, files, doc_context, evidence, candidate,
+                                       deadline=deadline, supporting_context=supporting_context)
     if result[0] in ('APPROVE', 'REQUEST_CHANGES') and not result[2].startswith('review incomplete:'):
         put(identity, result)
     return result
+
+
+def verify_candidates(diff, files, docs, anchors, candidates, *, deadline, supporting_context):
+    """Never truncate source evidence to make verification fit."""
+    batches, batch = [], []
+    for finding in candidates:
+        proposed = batch + [finding]
+        if estimate_input_units(review_messages(diff, files, docs, anchors, proposed, supporting_context)) > 48000:
+            if batch:
+                batches.append(batch)
+            batch = [finding]
+        else:
+            batch = proposed
+        if estimate_input_units(review_messages(diff, files, docs, anchors, batch, supporting_context)) > 48000:
+            return 'COMMENT', [], 'review incomplete: indivisible verification exceeds capacity; subdivision required.'
+    if batch:
+        batches.append(batch)
+    findings, summaries, incomplete = [], [], False
+    for batch in batches:
+        disposition, retained, summary = _run_model_reviewer(
+            diff, files, docs, anchors, candidate=batch, deadline=deadline,
+            supporting_context=supporting_context)
+        findings.extend(retained)
+        summaries.append(summary)
+        incomplete |= disposition == 'COMMENT' or summary.startswith('review incomplete:')
+    return ('COMMENT' if incomplete else 'REQUEST_CHANGES' if findings else 'APPROVE',
+            findings, ('review incomplete: ' if incomplete else '') + '\n'.join(summaries))
 
 
 def _run_model_reviewer(
@@ -350,7 +378,7 @@ def _run_model_reviewer(
     anchors = list(locations(diff).values()) if anchors is None else anchors
     anchors = [anchor for anchor in anchors if anchor["evidence"].strip()]
     messages = review_messages(diff, files, doc_context, anchors, candidate, supporting_context)
-    if sum(len(m['content'].encode()) for m in messages) > CONTEXT_TOKENS:
+    if estimate_input_units(messages) > 48000:
         return "COMMENT", [], "review incomplete: prompt exceeds the context budget; subdivision required."
     try:
         response = complete(messages, deadline, purpose="verification" if candidate is not None else "assessment")
@@ -376,9 +404,7 @@ def _run_model_reviewer(
             deadline=deadline,
             supporting_context=supporting_context,
         )
-    if candidate is not None and any(
-        item["location"] not in {finding["location"] for finding in candidate} for item in evidence
-    ):
+    if candidate is not None and any(item not in candidate for item in response['findings']):
         return "COMMENT", [], "review incomplete: verification introduced a new finding; subdivision required."
 
     findings = []

@@ -61,7 +61,8 @@ class DiagnosticTests(unittest.TestCase):
             from quote import configuration, digest
             import time
             issued = int(time.time())
-            quote = {'schema':1,'issued_at':issued,'expires_at':issued+86400,'projected_nanodollars':1,
+            quote = {'schema':3,'issued_at':issued,'expires_at':issued+86400,'projected_nanodollars':1,
+                     'projection_informational':True,'next_call_reserved_nanodollars':1,
                      'binding':{'head':'test','base':'base','repository':'org/repo','pr':1,'configuration':configuration()}}
             quote['id'] = digest(quote)
             Path('review-result/preflight.json').write_text(json.dumps({'blocked_reason':None,'commit_id':'test','quote':quote}))

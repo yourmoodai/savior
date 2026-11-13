@@ -63,6 +63,6 @@ def remaining(db, repository, pr):
 def check(amount, allowance):
     from budget import BudgetError, BudgetExhausted
     if type(amount) is not int or amount < 0:
-        raise BudgetError('invalid projected cost')
+        raise BudgetError('invalid call reservation')
     if amount > min(allowance['pr_remaining_nanodollars'], allowance['daily_remaining_nanodollars']):
-        raise BudgetExhausted('projected cost exceeds repository policy')
+        raise BudgetExhausted('call reservation exceeds repository policy')

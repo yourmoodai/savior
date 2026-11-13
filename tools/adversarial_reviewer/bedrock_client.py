@@ -26,10 +26,14 @@ def conversation(messages):
             'messages': [{'role': m['role'], 'content': [{'text': m['content']}]} for m in messages if m['role'] != 'system']}
 
 
-def count_tokens(messages, deadline=None):
+def estimate_input_units(messages, deadline=None):
     """Estimate packing size without claiming an exact model token count."""
     # DeepSeek V3.2 has no CountTokens API. Spending reserves full context separately.
     return 1024 + sum(128 + len(m['content'].encode('utf-8')) for m in messages)
+
+
+# Compatibility for stored research protocols; these units are not measured tokens.
+count_tokens = estimate_input_units
 
 
 def invoke(operation, payload, deadline):
@@ -132,7 +136,8 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
         measure('call', input_tokens=envelope['usage']['inputTokens'], output_tokens=envelope['usage']['outputTokens'])
     except BudgetError as error:
         (Path(path).parent / 'budget-blocked.json').write_text(json.dumps({
-            'reason': 'budget_exhausted' if isinstance(error, BudgetExhausted) else 'spending_unresolved'}))
+            'reason': 'budget_exhausted' if isinstance(error, BudgetExhausted) else 'spending_unresolved',
+            'required_nanodollars': model_cost(model, model['context_tokens'], payload['inferenceConfig']['maxTokens'])}))
         raise BedrockError(str(error)) from None
     try:
         if envelope['usage']['inputTokens'] > 48000:

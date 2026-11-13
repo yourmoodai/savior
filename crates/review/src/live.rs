@@ -66,6 +66,19 @@ fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, "invalid_watch_event")
 }
 
+#[cfg(any(feature = "watch", test))]
+fn receive_failure(error: &io::Error) -> &'static str {
+    match error.kind() {
+        // The publisher may abandon a frame at its bounded deadline. This is
+        // expected display loss, not evidence of a malformed event.
+        io::ErrorKind::TimedOut
+        | io::ErrorKind::UnexpectedEof
+        | io::ErrorKind::BrokenPipe
+        | io::ErrorKind::ConnectionReset => "watch_event_dropped",
+        _ => "invalid_watch_event",
+    }
+}
+
 impl Event {
     fn new(
         text: &str,
@@ -355,7 +368,7 @@ pub fn watch(args: &[String]) -> ReviewResult<()> {
                         eprintln!("savior: watch_event_dropped");
                     }
                 }
-                Err(_) => eprintln!("savior: invalid_watch_event"),
+                Err(error) => eprintln!("savior: {}", receive_failure(&error)),
             },
             Ok(None) => std::thread::sleep(Duration::from_millis(2)),
             Err(_) => return Err("watch_unavailable".into()),

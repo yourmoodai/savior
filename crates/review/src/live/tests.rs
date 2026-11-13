@@ -117,17 +117,21 @@ impl Write for Peer {
 
 #[test]
 fn framing_rejects_oversize_truncated_and_stalled_publishers() {
-    for input in [
-        (MAX_FRAME_BYTES as u32 + 1).to_be_bytes().to_vec(),
-        vec![0, 0, 0, 2, b'{'],
-        vec![0, 0, 0, 2, b'{', b'}'],
+    for (input, diagnostic) in [
+        (
+            (MAX_FRAME_BYTES as u32 + 1).to_be_bytes().to_vec(),
+            "invalid_watch_event",
+        ),
+        (vec![0, 0, 0, 2, b'{'], "watch_event_dropped"),
+        (vec![0, 0, 0, 2, b'{', b'}'], "invalid_watch_event"),
     ] {
         let mut peer = Peer {
             input: io::Cursor::new(input),
             output: Vec::new(),
             stall: false,
         };
-        assert!(receive(&mut peer, View::Spans).is_err());
+        let error = receive(&mut peer, View::Spans).unwrap_err();
+        assert_eq!(receive_failure(&error), diagnostic);
     }
     let mut peer = Peer {
         input: io::Cursor::new(Vec::new()),
@@ -135,10 +139,9 @@ fn framing_rejects_oversize_truncated_and_stalled_publishers() {
         stall: true,
     };
     let start = Instant::now();
-    assert_eq!(
-        receive(&mut peer, View::Spans).unwrap_err().kind(),
-        io::ErrorKind::TimedOut
-    );
+    let error = receive(&mut peer, View::Spans).unwrap_err();
+    assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+    assert_eq!(receive_failure(&error), "watch_event_dropped");
     assert!(start.elapsed() < Duration::from_secs(1));
 }
 
