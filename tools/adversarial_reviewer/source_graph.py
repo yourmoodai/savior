@@ -1,6 +1,6 @@
 """Revision-bound syntax evidence; source is parsed as data, never executed."""
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib.metadata import version
 from pathlib import PurePosixPath
 import hashlib
@@ -170,6 +170,7 @@ class Evidence:
     refs: set
     dynamic: bool
     imports: str = ''
+    limitations: list = field(default_factory=list)
 
 
 class Graph:
@@ -219,15 +220,6 @@ class Graph:
         root = parser(language).parse(data).root_node
         if len(root.named_children) > 4096 or len(self.nodes)+len(root.named_children) > 16384:
             raise SourceError('source declarations exceed analysis capacity: '+path)
-        module_bindings = set()
-        for declaration in root.named_children:
-            if language == 'python' and declaration.type == 'import_statement':
-                for name in declaration.named_children:
-                    alias = name.child_by_field_name('alias')
-                    module_bindings.add(alias.text.decode() if alias else name.text.decode().split('.')[0])
-            elif language != 'python' and declaration.type == 'import_statement':
-                module_bindings.update(n.text.decode() for parent in walk(declaration) if parent.type == 'namespace_import'
-                                       for n in parent.named_children if n.type == 'identifier')
         nodes = []
         for node in root.named_children:
             if node.type in ('comment', 'line_comment', 'block_comment'):
@@ -250,10 +242,11 @@ class Graph:
                 or (n.type == 'export_statement' and n.child_by_field_name('source'))
                 or (n.type == 'call_expression' and n.child_by_field_name('function') is not None
                     and n.child_by_field_name('function').text == b'require')]
-            # Attribute dispatch, macros and runtime loading need evidence beyond syntax.
+            # Dispatch uncertainty is disclosed; runtime loading still requires missing source.
             parameters = set().union(*(parameter_names(n) for n in walk(node)
                                        if n.type in ('parameters', 'formal_parameters')))
             dynamic = False
+            limitations = []
             for call in walk(node):
                 if call.type == 'macro_invocation':
                     dynamic = True
@@ -265,12 +258,18 @@ class Graph:
                     dynamic |= arguments is None or len(arguments.named_children) != 1 or arguments.named_children[0].type != 'string'
                 if function is not None and function.type in ('attribute', 'member_expression', 'field_expression'):
                     receiver = function.child_by_field_name('object') or function.child_by_field_name('value')
-                    known = receiver is not None and (receiver.type in ('string', 'string_literal') or (
-                        receiver.type == 'identifier' and receiver.text.decode() in module_bindings-parameters))
-                    dynamic |= not known
+                    if receiver is None or receiver.type not in ('string', 'string_literal'):
+                        limitations.append({'path': path, 'side': side,
+                            'line': call.start_point.row + 1,
+                            'expression': function.text.decode(),
+                            'reason': 'runtime receiver target is not statically established'})
             dynamic |= bool(refs & {'eval', 'exec', '__import__', 'getattr', 'importlib'})
-            dynamic |= any(n.type in ('call', 'call_expression') and n.child_by_field_name('function') is not None
-                           and n.child_by_field_name('function').text.decode() in parameters for n in walk(node))
+            for call in walk(node):
+                function = call.child_by_field_name('function') if call.type in ('call', 'call_expression') else None
+                if function is not None and function.text.decode() in parameters:
+                    limitations.append({'path': path, 'side': side,
+                        'line': call.start_point.row + 1, 'expression': function.text.decode(),
+                        'reason': 'injected callback target is not statically established'})
             own_parameters = node.child_by_field_name('parameters')
             if own_parameters is not None:
                 refs -= parameter_names(own_parameters)
@@ -280,7 +279,7 @@ class Graph:
                             for n in walk(child.child_by_field_name(field)) if n.type in ('identifier', 'type_identifier'))
             identity = digest([self.sources[side].revision, path, node.start_byte, node.end_byte, text])
             evidence = Evidence(identity, path, side, node.start_point.row+1, node.end_point.row+1,
-                                text, names, refs-names, dynamic, '\n'.join(import_nodes))
+                                text, names, refs-names, dynamic, '\n'.join(import_nodes), limitations)
             self.nodes[identity] = evidence
             nodes.append(identity)
         self.modules[key] = nodes

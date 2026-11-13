@@ -31,6 +31,7 @@ def assess_plan(diff, files, context, report, deadline, strategy, dry_run):
             context, anchors(chunk['units']),
             supporting_context='\nSupporting evidence (context only):\n'+chunk['support'] if chunk['support'] else '')
         item['cached_assessment'] = cached is not None
+    report['analysis_limitations'] = [item for c in planned['chunks'] for item in c.get('analysis_limitations', [])]
     report['subdivisions'] = []
     report['context_gaps'] = [{'chunk': i, 'omitted_support': c['omitted_support']}
                               for i, c in enumerate(planned['chunks'], 1) if c['omitted_support']]

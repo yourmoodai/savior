@@ -10,6 +10,14 @@ OVERVIEW = ('This change updates the review pipeline to assess independent code 
 
 
 class ReportingTests(unittest.TestCase):
+    def test_runtime_limitations_are_disclosed_without_claiming_runtime_proof(self):
+        limitations = [{'path': 'a.py', 'line': 2, 'expression': 'client.send'}]
+        result = finalize(self.report(analysis_limitations=limitations), qualified=True)
+        self.assertEqual(result['analysis_limitations'], limitations)
+        self.assertIn('1 disclosed uncertainties', result['body'])
+        self.assertIn('does not prove runtime targets', result['body'])
+        self.assertEqual(result['disposition'], 'APPROVE')
+
     def report(self, **changes):
         result=dict(files=2, complete=True, disposition='APPROVE', findings=[], total_chunks=2, completed_chunks=2,
                     chunks=[dict(index=n, file=f'file{n}', complete=True, disposition='APPROVE', summary=f'behavior{n}') for n in [1,2]],
