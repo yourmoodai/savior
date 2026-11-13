@@ -55,6 +55,8 @@ def render(report):
     verdict = 'Approved' if report['disposition'] == 'APPROVE' else 'Request changes'
     lines = [prose(report['overview'], 900), '', f'**Verdict: {verdict}**', '',
              f"Coverage: {report.get('completed_chunks', 0)}/{report.get('total_chunks', 0)} chunks."]
+    if report.get('analysis_limitations'):
+        lines.append(f"Runtime analysis: {len(report['analysis_limitations'])} disclosed uncertainties; source coverage does not prove runtime targets. See the artifact.")
     if report.get('budget'):
         budget = report['budget']
         if 'settled_usage_nanodollars' in budget and 'outstanding_reserved_nanodollars' in budget:
