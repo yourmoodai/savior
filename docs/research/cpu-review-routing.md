@@ -115,6 +115,41 @@ The inference child-process peak RSS was approximately 2.57 GiB. These are local
 CPU measurements, not results from the GitHub runner. The manual workflow has not
 yet run.
 
+### Offline packing qualification
+
+The follow-up [context qualification](packing-quality-results.json) passes 29
+offline cases: the 22 original fixtures, six new paired stress cases, and one
+oversized-context control. Twenty-eight have executable labels and are eligible
+for a later live comparison. The oversized control is deliberately excluded:
+both strategies preserve its lines but cannot present its complete function in
+one request. It must not count as a successful quality review.
+
+This check found and repaired a candidate bug. Semantic splits shared an original
+unit ID, causing sibling functions to be excluded from support without a context
+gap marker. Support now considers individual pieces, prioritizes referenced
+declarations, and records omitted siblings. This is a heuristic dependency aid,
+not a complete call graph or semantic equivalence proof.
+
+The helper-first and helper-last fixtures require the caller and helper contract
+in the same request. The candidate now preserves that context in both defective
+and benign counterparts; baseline does not. These fixtures cost three candidate
+chunks versus two baseline chunks. JSON-record fixtures use three versus four.
+The original research diff remains at seven candidate chunks versus fifteen
+baseline chunks. Cheapest coverage alone therefore cannot qualify a plan.
+
+Run `npm run reviewer:packing:qualify` to freeze fixture labels, required evidence
+groups, per-role assessment prompts, routing, source fingerprints, and alternating
+arm order in `.cache/packing-quality/frozen.json`. Repeating an identical freeze
+is allowed; changed protocols require a new `--output` directory. That artifact
+does not authorize inference or contain an execution command. The manual CPU
+workflow also runs the offline gate and uploads its frozen artifact.
+
+A live comparison remains pending. It must use the existing evidence validation
+and finding verification rules, disable assessment-cache reuse, compare matched
+cases, and retain unresolved labels separately. Any additional missed defect or
+false positive blocks recommendation. It needs a separately authorized ceiling
+and persistent ledger; the completed one-pass $4 trial is not reopened.
+
 1. Pursue packing qualification first. Coverage preservation supports further
    testing, but splitting and omitted context still require quality evaluation.
 2. Expand adjudicated, paired cheap/strong-model evidence before training a

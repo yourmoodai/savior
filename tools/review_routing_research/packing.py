@@ -3,6 +3,7 @@ import ast
 from collections import Counter
 from dataclasses import replace
 import json
+import re
 from pathlib import Path
 import sys
 
@@ -66,6 +67,12 @@ def cut(unit, point):
                     new=unit.new+sum(r.startswith((' ', '+')) for r in left))]
 
 
+def references(units, other):
+    names = re.findall(r'^[ +\-](?:async )?(?:def|class) (\w+)', ''.join(other.rows), re.M)
+    primary = render(units)
+    return any(re.search(r'\b'+re.escape(name)+r'\b', primary) for name in names)
+
+
 def candidate(diff):
     original = parse(diff)
     pending = [(u, []) for u in original]
@@ -95,9 +102,12 @@ def candidate(diff):
         groups[-1][1].update(gaps)
     chunks = []
     for units, gaps in groups:
-        owners = {u.id.split('/')[0] for u in units}
+        owners = {u.id for u in units}
         support, omitted = [], set(gaps)
-        for other in original:
+        # Semantic siblings remain context candidates even though their primary owner differs.
+        alternatives = sorted((u for u, _ in pieces), key=lambda u:
+                              (not references(units, u), len(u.render().encode()), u.id))
+        for other in alternatives:
             if other.id in owners or not any(related(u, other) <= 1 for u in units):
                 continue
             if len(render(support+[other]).encode()) <= 8000 and count_tokens(messages(units, render(support+[other]))) <= LIMIT-1024:
@@ -107,6 +117,7 @@ def candidate(diff):
         marker = f'Context gaps: {len(omitted)} omitted or split units; manifest digest {digest(sorted(omitted))}.\n' if omitted else ''
         prompt = messages(units, marker+render(support))
         chunks.append({'units': units, 'support': marker+render(support), 'input_tokens': count_tokens(prompt),
+                       'support_evidence_ids': [a['id'] for a in anchors(support)],
                        'prompt_sha256': digest(prompt), 'support_tokens': count_tokens([{'content': render(support)}]) if support else 0,
                        'omitted_support': sorted(omitted), 'split_context': sorted(gaps)})
     return {'strategy': 'semantic_bytes', 'original_units': len(original),
