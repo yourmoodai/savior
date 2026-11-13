@@ -18,12 +18,12 @@ def native_required(paths):
 
 
 def changed_paths(base, head, event):
-    if event == 'workflow_dispatch':
+    if event == 'workflow_dispatch' and not os.environ.get('VALIDATION_TEST'):
         return None
     if any(not re.fullmatch(r'[0-9a-f]{40}', sha) or sha == '0' * 40
            for sha in (base, head)):
         return None
-    revisions = [f'{base}...{head}'] if event == 'pull_request' else [base, head]
+    revisions = [f'{base}...{head}'] if event in ('pull_request', 'pull_request_target') or bool(os.environ.get('VALIDATION_TEST')) else [base, head]
     try:
         output = subprocess.check_output(
             ['git', 'diff', '--name-only', '--no-renames', '-z', *revisions, '--'])

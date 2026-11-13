@@ -1,33 +1,41 @@
 name: commit messages
 on:
-  pull_request:
-  push:
-    branches: [main, develop]
   workflow_dispatch:
+  workflow_call:
     inputs:
+      test_sha:
+        required: true
+        type: string
       pr_number:
-        description: Generated release pull request number
-        required: false
+        required: true
         type: string
       head_sha:
-        description: Exact generated pull request head
-        required: false
+        required: true
+        type: string
+      base_sha:
+        required: true
         type: string
 concurrency:
-  group: commit-messages-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: commit-messages-${{ github.event_name }}-${{ inputs.pr_number || github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
   pull-requests: read
+env:
+  VALIDATION_PR: ${{ inputs.pr_number }}
+  VALIDATION_HEAD: ${{ inputs.head_sha }}
+  VALIDATION_BASE: ${{ inputs.base_sha }}
+  VALIDATION_TEST: ${{ inputs.test_sha }}
 jobs:
   check:
+    if: inputs.test_sha != '' || github.ref == 'refs/heads/main'
     timeout-minutes: 15
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
@@ -43,6 +51,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: commit-check-ubuntu-24.04-${{ runner.arch }}
+          save-if: ${{ github.workflow != 'pr validation' }}
           cache-on-failure: true
       - run: cargo test --locked -p commit_check
       - name: check new commits
@@ -64,24 +73,3 @@ jobs:
         env:
           PR_TITLE: ${{ steps.context.outputs.title }}
         run: printf '%s\n' "$PR_TITLE" | cargo run --locked --quiet -p commit_check
-  cancel-siblings:
-    needs: check
-    if: >-
-      always() && needs.check.result == 'failure' &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ github.sha }}
-      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            await require('./tools/ci/cancel_siblings.cjs').from_failed_commit_check({
-              github, context, core, run_attempt: Number(process.env.GITHUB_RUN_ATTEMPT),
-            });

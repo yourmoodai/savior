@@ -1,27 +1,37 @@
 name: verify
 on:
   push:
-    branches: [main, develop]
-  pull_request:
+    branches: [main]
   workflow_dispatch:
+  workflow_call:
     inputs:
+      test_sha:
+        required: true
+        type: string
       pr_number:
-        description: Generated release pull request number
-        required: false
+        required: true
         type: string
       head_sha:
-        description: Exact generated pull request head
-        required: false
+        required: true
+        type: string
+      base_sha:
+        required: true
         type: string
 concurrency:
-  group: verify-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: verify-${{ github.event_name }}-${{ inputs.pr_number || github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
   actions: read
   pull-requests: read
+env:
+  VALIDATION_PR: ${{ inputs.pr_number }}
+  VALIDATION_HEAD: ${{ inputs.head_sha }}
+  VALIDATION_BASE: ${{ inputs.base_sha }}
+  VALIDATION_TEST: ${{ inputs.test_sha }}
 jobs:
   context:
+    if: inputs.test_sha != '' || github.ref == 'refs/heads/main'
     outputs:
       native_required: ${{ steps.impact.outputs.native_required }}
     timeout-minutes: 15
@@ -30,7 +40,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
@@ -54,7 +64,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.22.2
@@ -78,7 +88,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
           toolchain: 1.99.1
@@ -88,6 +98,7 @@ jobs:
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: coreml-macos-15-${{ runner.arch }}
+          save-if: ${{ github.workflow != 'pr validation' }}
           cache-on-failure: true
       - name: native build
         run: cargo clippy --locked -p savior --features coreml --all-targets -- -D warnings
@@ -112,7 +123,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
       - run: docker build -f scripts/release/Dockerfile -t savior-release-tools .
       - run: docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/workspace:ro" --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release
   verification:
@@ -124,7 +135,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
       - env:
           RESULTS: ${{ toJSON(needs) }}
         run: python3 scripts/release/ci_impact.py verification

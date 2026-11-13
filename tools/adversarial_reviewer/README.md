@@ -142,6 +142,23 @@ change, never a comment-based budget override. A changed row, conflicting owner,
 or incomplete attribution group fails closed; applying the same evidence twice
 does not change costs.
 
+## Approval before builds
+
+`pr-validation.yml` runs the trusted source review before admitting PR builds.
+A complete assessment and its formal approval must match the head, base, workflow
+run, and attempt. Cost waivers do not unlock this pipeline. The gate checks the
+merge commit's parents before passing its immutable SHA to validation workflows.
+
+Failed review skips build work and fails the aggregate PR statuses. Applicable
+verification, qualification, site, and commit checks must pass before
+`pr readiness` succeeds. Website-only changes skip native qualification; unrelated
+changes skip site builds. A changed base or dismissed approval invalidates readiness.
+Source review does not claim that downstream runtime tests have passed.
+
+After merging these workflows, verify both rejected and approved test PRs, then
+add `pr readiness` as a required status check without changing review requirements
+or administrator enforcement. See [ADR 12](../../docs/adr/0012-approve-before-building.md).
+
 ## Offline planning and verification
 
 For a local packing dry run (no AWS calls or inference charges):
@@ -271,7 +288,7 @@ remain blocking. See [ADR 11](../../docs/adr/0011-disclose-runtime-review-uncert
 
 Native verification and release jobs share dependency caches by runner image and
 architecture; Core ML uses a separate namespace. Compiler, Cargo inputs, and Rust
-flags remain part of the cache key. Builds and tests always execute. Job summaries
+flags remain part of the cache key. Approved, impacted builds and tests execute. Job summaries
 record cache hits, restore/build duration, and existing cache bytes for comparison;
 cache size is sampled before the current job saves its cache.
 

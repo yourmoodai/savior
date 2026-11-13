@@ -19,7 +19,7 @@ module.exports = async function publish({github, context, core, head, pr, phase,
   let clean = false;
   const runUrl = `${context.serverUrl || 'https://github.com'}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
   let content;
-  if (phase === 'waiting') content = 'Checking review prerequisites and estimating cost before inference. Test checks run independently.';
+  if (phase === 'waiting') content = 'Checking review prerequisites and estimating cost before inference. Builds and tests start only after a complete approval.';
   else if (phase === 'failed') content = require('./status.cjs').render(reason || 'infrastructure_failed');
   else if (phase === 'blocked') content = require('./status.cjs').render(reason,quote,report?.budget);
   else if (phase === 'complete') {
@@ -55,9 +55,10 @@ module.exports = async function publish({github, context, core, head, pr, phase,
       const reviews = await github.paginate(github.rest.pulls.listReviews,{...args,per_page:100});
       const latest = reviews.filter(review=>review.user?.login==='github-actions[bot]' && review.user?.type==='Bot' && review.commit_id===head && ['APPROVED','CHANGES_REQUESTED'].includes(review.state)).at(-1);
       const state = event === 'APPROVE' ? 'APPROVED' : 'CHANGES_REQUESTED';
-      if (latest?.state !== state) {
+      const marker = `<!-- savior-assessment:${head}:${process.env.BASE_SHA}:${context.runId}:${process.env.GITHUB_RUN_ATTEMPT} -->`;
+      if (latest?.state !== state || (clean && !latest.body?.startsWith(marker))) {
         if (!await current()) {core.notice('stale review discarded'); return;}
-        await github.rest.pulls.createReview({...args,commit_id:head,event,body:'The complete qualified assessment is recorded in the single review status comment. '+(clean ? 'No validated defects were found.' : 'Validated defects require changes.')});
+        await github.rest.pulls.createReview({...args,commit_id:head,event,body:marker+'\n'+'The complete qualified assessment is recorded in the single review status comment. '+(clean ? 'No validated defects were found.' : 'Validated defects require changes.')});
       }
     }
   }

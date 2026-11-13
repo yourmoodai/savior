@@ -15,6 +15,7 @@ class ReviewPolicyTests(unittest.TestCase):
         report['body']=changes.pop('body','**Verdict: '+('Approved' if clean else 'Request changes')+'**')
         case={'report':report,'head':'head','comments':[],'phase':'complete',**changes}
         harness='''
+process.env.BASE_SHA='base'; process.env.GITHUB_RUN_ATTEMPT='1';
 const input=JSON.parse(process.argv[1]); const calls=[]; const failures=[];
 const context={repo:{owner:'yourmoodai',repo:'savior'},runId:42};
 const core={notice:()=>{},setFailed:message=>failures.push(message)};
@@ -48,7 +49,7 @@ publish({github,context,core,head:'head',pr:1,report:input.report,phase:input.ph
     def test_repeated_assessments_keep_the_same_comment(self):
         body=self.publish()['calls'][0]['body']
         comment={'id':8,'user':{'login':'github-actions[bot]','type':'Bot'},'body':body}
-        self.assertEqual(self.publish(comments=[comment],reviews=[{'user':{'login':'github-actions[bot]','type':'Bot'},'commit_id':'head','state':'APPROVED'}])['calls'],[])
+        self.assertEqual(self.publish(comments=[comment],reviews=[{'user':{'login':'github-actions[bot]','type':'Bot'},'commit_id':'head','state':'APPROVED','body':'<!-- savior-assessment:head:base:42:1 -->'}])['calls'],[])
         changed=self.publish(comments=[comment],report={'complete':False})
         self.assertEqual(changed['calls'][0]['kind'],'update')
         self.assertEqual(changed['calls'][0]['comment_id'],8)

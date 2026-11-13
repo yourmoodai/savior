@@ -87,15 +87,10 @@ test('a rerun starting during cancellation protects the remaining siblings', asy
     {direct:true, trigger:checking, jobs:[failed_job],
       refresh:{1:()=> ++reads < 4 ? checking : {...checking,run_attempt:2}}}), [2]);
 });
-test('commit workflow invokes its failure handler with job-scoped cancellation permission', ()=>{
+test('reusable commit validation delegates failure to the PR coordinator', ()=>{
   const require = createRequire(import.meta.url);
   const workflow = require('js-yaml').load(readFileSync(new URL('../.github/workflows/commit-messages.yml',import.meta.url),'utf8'));
-  const handler = workflow.jobs['cancel-siblings'];
-  assert.equal(handler.needs,'check');
-  assert.match(handler.if, /always\(\) && needs.check.result == 'failure'/);
-  assert.match(handler.if, /head.repo.full_name == github.repository/);
-  assert.equal(handler.permissions.actions,'write');
+  assert.ok(Object.hasOwn(workflow.on,'workflow_call'));
+  assert.equal(workflow.jobs['cancel-siblings'],undefined);
   assert.notEqual(workflow.permissions.actions,'write');
-  assert.match(handler.steps.at(-1).with.script,/\.from_failed_commit_check\(/);
-  assert.match(handler.steps.at(-1).with.script,/GITHUB_RUN_ATTEMPT/);
 });

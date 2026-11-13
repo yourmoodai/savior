@@ -192,8 +192,8 @@ class PreparationTests(unittest.TestCase):
         self.assertIn("refs/heads/release/v0.2.0", refs)
         self.assertFalse(any(ref.startswith("refs/tags/") for ref in refs))
         dispatches = [payload for args, payload in self.calls if any("/dispatches" in arg for arg in args)]
-        self.assertEqual(len(dispatches), 3)
-        self.assertTrue(all(p["inputs"] == {"pr_number": "7", "head_sha": "a" * 40} for p in dispatches))
+        self.assertEqual(len(dispatches), 1)
+        self.assertEqual(dispatches, [{"ref": "main", "inputs": {"pr_number": "7"}}])
         commit = next(payload for args, payload in self.calls if args[:2] == ("api", "graphql"))
         additions = commit["variables"]["input"]["fileChanges"]["additions"]
         self.assertEqual(len(additions), 5)
@@ -202,7 +202,7 @@ class PreparationTests(unittest.TestCase):
         self.existing = True
         self.run_prepare()
         writes = [args for args, _ in self.calls if "POST" in args]
-        self.assertEqual(len(writes), 3)
+        self.assertEqual(len(writes), 1)
         self.assertTrue(all(any("/dispatches" in arg for arg in args) for args in writes))
 
     def test_stale_branch_blocks_before_writes(self):
