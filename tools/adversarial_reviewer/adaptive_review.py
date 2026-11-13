@@ -45,7 +45,9 @@ def assess_plan(diff, files, context, report, deadline, strategy, dry_run):
             disposition, findings, summary = run_model_reviewer(
                 render(units), sorted({u.path for u in units}), context, anchors(units),
                 deadline=deadline, supporting_context='\nSupporting evidence (context only):\n'+support if support else '')
-        if 'subdivision required' in summary and attempts < ASSESSMENT_LIMIT and time.monotonic() < deadline:
+        if 'subdivision required' in summary and os.environ.get('REVIEW_PLAN_DIGEST'):
+            summary = 'review incomplete: subdivision requires a fresh evidence plan and quote'
+        elif 'subdivision required' in summary and attempts < ASSESSMENT_LIMIT and time.monotonic() < deadline:
             try:
                 children = subdivide(units)
                 report['subdivisions'].append({'parent': identity, 'unit_ids': [u.id for u in units], 'reason': summary})
