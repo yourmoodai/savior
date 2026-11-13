@@ -144,11 +144,100 @@ is allowed; changed protocols require a new `--output` directory. That artifact
 does not authorize inference or contain an execution command. The manual CPU
 workflow also runs the offline gate and uploads its frozen artifact.
 
-A live comparison remains pending. It must use the existing evidence validation
-and finding verification rules, disable assessment-cache reuse, compare matched
-cases, and retain unresolved labels separately. Any additional missed defect or
-false positive blocks recommendation. It needs a separately authorized ceiling
-and persistent ledger; the completed one-pass $4 trial is not reopened.
+A separate $4 ceiling was explicitly authorized for the paired live comparison.
+The runner uses existing evidence validation and finding verification rules,
+disables assessment-cache reuse, compares matched cases, and retains unresolved
+labels separately. Any additional missed defect or false positive blocks
+recommendation. The completed one-pass $4 trial is not reopened.
+
+The fixed `packing-quality-v1` identity lives under the shared Git directory in
+`reviewer-research/packing-quality-v1`, with a separate external checkpoint. It
+uses an isolated instance of the existing tested research-ledger implementation;
+its experiment identity does not modify the previous ledger or its constants.
+Each call reserves full model context plus bounded output before transport.
+Uncertain usage and interrupted calls retain reservations. Missing or conflicting
+history blocks execution. Restart skips started assessments rather than silently
+paying to repeat them; their missing results remain incomplete.
+
+Execution binds the reviewed prompt protocol and new execution-source fingerprint
+separately. It requires `AWS_PROFILE=awill`, `AWS_REGION=us-east-1`, the configured
+account identity, and the frozen DeepSeek routing. Profile, endpoint, routing,
+account, pricing, or source mismatches stop spending. Research cannot run through
+the production CI exemption boundary. Reporting is deterministic in both arms so
+the comparison isolates packing and assessment effects.
+
+With the authorized profile and region exported, use
+`npm run reviewer:packing:live -- prepare` once, then
+`npm run reviewer:packing:live -- run`. Use
+`npm run reviewer:packing:live -- report` for offline reconstruction. Preparing an
+existing identity is rejected; a completed pass cannot start another pass. The
+ledger, frozen requests, responses, and report survive worktree changes.
+
+### Live paired comparison
+
+The [live measurements and targeted audit](packing-live-results.json) cover one
+completed pass over 28 cases. The 296 calls cost **$0.63815688** at frozen usage
+prices, with **$0 outstanding** and **$3.36184312 unused** from the separate $4
+ceiling. These are usage-priced charges, not an AWS invoice reconciliation. The
+allowance is closed to another pass; there was no production promotion.
+
+Twenty-five cases completed in both arms: thirteen benign and twelve defective.
+Case-level accuracy below uses only those matched cases. Incomplete reviews are
+reported separately and never treated as clean reviews.
+
+| Measurement | Baseline | Semantic byte candidate |
+| --- | ---: | ---: |
+| Complete cases, of 28 | 25 | 26 |
+| Missed defects, of 12 matched defective cases | 2 | 2 |
+| False positives, of 13 matched benign cases | 0 | 0 |
+| Matched-case calls | 120 | 123 |
+| Matched-case usage-priced cost | $0.19870107 | $0.22610809 |
+| All calls | 146 | 150 |
+| Total usage-priced cost | $0.29529469 | $0.34286219 |
+| Input tokens | 415,557 | 492,052 |
+| Output tokens | 20,351 | 20,427 |
+| Summed call latency, seconds | 786.40 | 704.05 |
+
+The candidate cost **13.79% more** on matched complete cases. The lower reservation
+projection for the original PR diff did not predict savings on these fixtures.
+Neither the cost difference nor this small quality sample establishes behavior
+on other PRs. Both arms used the same three roles and deterministic reporting;
+this trial did not compare cheaper models or alternative prose synthesis.
+
+Both arms missed the large helper-first and helper-last defective fixtures.
+For `current=False, saved=True`, the new `retain` function returns `persist`
+although its contract requires `discard`. All three roles in both arms returned
+clean assessments on these cases. Preserving the relevant lines and helper
+context therefore did not establish adequate attention to the defect.
+
+Baseline was incomplete on both benign helper cases because verification
+expanded beyond the input limit. The candidate completed helper-first but had
+the same verification-limit failure on helper-last. The offline gate checked
+assessment prompts, not the eventual candidate-dependent verification payload;
+that distinction matters for future packing qualification.
+
+Both arms were incomplete on the defective JSON fixture. The candidate's three
+roles recognized `used=5` with `cap=4`, but returned location `224`, outside the
+allowed chunk-local ID range. Baseline had one invalid location and retained two
+findings attached to a closing brace at source line 157. The actual defective
+record occupies lines 225–227. Model verification retained these wrong source
+attachments. The trial recorded four invalid responses, zero output truncations,
+and zero unknown-usage calls; eight role assessments ended incomplete at the
+verification input limit. None of those incomplete cases enters accuracy counts.
+
+A targeted executable audit also found explanation errors in retained
+protected-span findings. For `text='abcdef', start=3, end=6, protected=[(2,5)],
+marker='X'`, the candidate claimed the new output was `abXf`; it is `abcX`.
+Another example used `end=12` on ten characters, outside the fixture's valid-offset
+contract, and also misstated the output. These findings flagged the correct
+defective case but do not constitute fully correct explanations. Other finding
+semantics have not been exhaustively adjudicated.
+
+**Recommendation: do not promote this packing candidate.** First validate source
+attachment and executable counterexamples more rigorously; then budget context
+for verification as well as assessment. Evaluate smaller semantic review units
+on the large-defect cases before optimizing for fewer requests. The prior
+deterministic-reporting result remains a separate potential cost reduction.
 
 1. Pursue packing qualification first. Coverage preservation supports further
    testing, but splitting and omitted context still require quality evaluation.

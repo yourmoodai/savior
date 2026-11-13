@@ -31,6 +31,7 @@
     "reviewer:cpu": "python3 tools/review_routing_research/run.py",
     "reviewer:cpu:test": "python3 -m unittest discover -s tools/review_routing_research",
     "reviewer:packing:qualify": "python3 tools/review_routing_research/qualify_packing.py",
+    "reviewer:packing:live": "python3 tools/review_routing_research/live_packing.py",
     "reviewer:cpu:debug": "python3 -m pdb tools/review_routing_research/run.py",
     "reviewer:cpu:profile": "python3 -X tracemalloc tools/review_routing_research/run.py benchmark --local-llm",
     "reviewer:cpu:build:debug": "python3 tools/review_routing_research/run.py setup --debug",
