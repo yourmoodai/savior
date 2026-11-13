@@ -197,22 +197,23 @@ pub fn serve() -> ReviewResult<()> {
     let thread = std::thread::spawn(move || runner.run());
     let result = (|| -> ReviewResult<()> {
         let mut activity = Instant::now();
+        let pipe = unsafe {
+            CreateNamedPipeW(
+                name.as_ptr(),
+                PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_NOWAIT | PIPE_REJECT_REMOTE_CLIENTS,
+                1,
+                16_777_216,
+                1_048_576,
+                0,
+                &attributes,
+            )
+        }; // 16 MiB output, 1 MiB input
+        if pipe == INVALID_HANDLE_VALUE {
+            return Err("worker_unavailable".into());
+        }
+        // Retain the first instance while clients release their previous handles.
         while !worker.stopping.load(Ordering::Acquire) {
-            let pipe = unsafe {
-                CreateNamedPipeW(
-                    name.as_ptr(),
-                    PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
-                    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_NOWAIT | PIPE_REJECT_REMOTE_CLIENTS,
-                    1,
-                    16_777_216,
-                    1_048_576,
-                    0,
-                    &attributes,
-                )
-            }; // 16 MiB output, 1 MiB input
-            if pipe == INVALID_HANDLE_VALUE {
-                return Err("worker_unavailable".into());
-            }
             while !worker.stopping.load(Ordering::Acquire) {
                 let connected = unsafe {
                     ConnectNamedPipe(pipe, null_mut()) != 0
@@ -299,8 +300,11 @@ pub fn serve() -> ReviewResult<()> {
                 std::thread::sleep(Duration::from_millis(25));
             }
             unsafe {
-                CloseHandle(pipe);
+                DisconnectNamedPipe(pipe);
             }
+        }
+        unsafe {
+            CloseHandle(pipe);
         }
         Ok(())
     })();
