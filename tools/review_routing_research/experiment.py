@@ -1,4 +1,4 @@
-"""Offline entry point for reviewer experiments; completed grants stay closed."""
+"""Reviewer experiments; paid calibration requires explicit manual execution."""
 import argparse
 import hashlib
 import json
@@ -98,13 +98,32 @@ def freeze_next():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('replay', 'freeze'))
+    parser.add_argument('command', choices=('replay', 'freeze', 'cost-freeze', 'cost-run', 'cost-report'))
     parser.add_argument('--output', type=Path, default=Path('.cache/review-experiment/report.json'))
+    parser.add_argument('--candidate', default='glm_4_7_flash')
+    parser.add_argument('--input', type=Path)
+    parser.add_argument('--approve')
+    parser.add_argument('--initialize', action='store_true')
     args = parser.parse_args()
-    result = replay() if args.command == 'replay' else freeze_next()
+    if args.command.startswith('cost-'):
+        import cost_calibration as calibration
+        if args.command == 'cost-freeze':
+            result = calibration.freeze(args.candidate)
+        elif args.command == 'cost-run':
+            if not args.input or not args.approve:
+                parser.error('cost-run requires --input and --approve <frozen-fingerprint>; authorizes at most $1')
+            result = calibration.run(json.loads(args.input.read_text()), args.approve, initialize=args.initialize)
+        else:
+            ledger = calibration.budget.ResearchLedger(calibration.directory())
+            result = calibration.report(ledger, json.loads((ledger.root/'frozen.json').read_text()))
+    else:
+        result = replay() if args.command == 'replay' else freeze_next()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2)+'\n')
-    print(json.dumps(result if args.command == 'replay' else summary(result), indent=2))
+    display = summary(result) if args.command == 'freeze' else result
+    if args.command.startswith('cost-'):
+        display = {k: v for k, v in result.items() if k not in ('execution_sources', 'cases', 'assessment_prompts', 'calls')}
+    print(json.dumps(display, indent=2))
 
 
 if __name__ == '__main__':

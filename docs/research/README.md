@@ -18,8 +18,55 @@ Python has no separate release compilation mode. Native CPU experiments retain
 their existing explicit debug/release build commands.
 
 Both original paid grants are closed. Their command-line runners permit reporting
-only. No new paid execution command is enabled. A new trial needs an authorized
-ceiling, a reviewed frozen protocol, verified account routing and durable history.
+only. The manual calibration below uses a separate identity and ceiling; it cannot
+reuse those grants.
+
+## Manual cost calibration
+
+The next trial compares the request-size estimate and full-context reservation
+with usage-priced cost for the same completed calls. It uses the twelve synthetic
+defective/benign fixtures, three independent roles and finding verification.
+Assessment caching is disabled. GLM 4.7 Flash is a cheap catalog candidate with
+unproven review quality; no production routing changes are made.
+
+Prepare the protocol offline from this experiment checkout:
+
+```sh
+AWS_PROFILE=awill AWS_REGION=us-east-1 npm run reviewer:experiment -- cost-freeze \
+  --candidate glm_4_7_flash --output .cache/review-experiment/cost-frozen.json
+```
+
+Inspect that file's fixtures, prompts, prices, account and `fingerprint`. The
+following command explicitly authorizes **at most $1 total** for
+`review-cost-calibration-v1`, including verification and retries. It verifies the
+configured AWS account before inference and stops on access or routing failure.
+Replace `<fingerprint>` with the value from the frozen file:
+
+```sh
+AWS_PROFILE=awill AWS_REGION=us-east-1 npm run reviewer:experiment -- cost-run \
+  --input .cache/review-experiment/cost-frozen.json --approve <fingerprint> \
+  --initialize --output .cache/review-experiment/cost-report.json
+```
+
+For a restart, omit `--initialize` and retain the same file and ledger. A missing
+ledger, changed configuration or unresolved call blocks further inference. Do not
+delete the shared Git directory's experiment ledger or its adjacent anchor. A
+completed pass cannot be rerun under this identity. Recover interrupted history
+before considering further work; started assessments are never silently replayed.
+
+`npm run reviewer:experiment -- cost-report` regenerates the report without AWS.
+Its canonical copy remains beside the ledger. Read whole-plan projections as
+informational bounds and compare only `matched_*` totals and ratios: identical
+calls with both estimates and reported usage. Request-size estimates price UTF-8
+byte allowances and bounded output; they are not predicted token counts. Token
+usage, latency, truncations, invalid responses, abstentions and outstanding
+reservations are recorded separately. Usage-priced cost is not invoice evidence.
+
+The report exposes missed case flags and benign-case flags. Finding behavior and
+source attachment still need independent adjudication; unresolved findings are
+excluded from accuracy scores. A passing small sample does not qualify the model.
+The existing `:test`, `:debug` and `:profile` commands also cover calibration; use
+`cost-report` when debugging or profiling to avoid new inference.
 
 ## Historical evidence
 
@@ -37,7 +84,7 @@ the original revision and does not grant permission to run inference again.
 The source PRs were #14 (`033fa4dda2d60378c3f690707123e3e1555f583d`) and
 #15 (`1f4856aa7e161bf45f54707c689c6d757a11632c`). Their branches and discussions
 remain available. PR #13's reviewer clarification is incorporated into the harness
-foundation. PR #10 and release-test repairs are separate.
+foundation, including the targeted release-test repairs. PR #10 remains separate.
 
 Durable ledgers remain under the shared Git directory's `reviewer-research/`
 directory, with adjacent anchor files. Never recreate, relocate, or reset them to

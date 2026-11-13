@@ -87,10 +87,10 @@ def prepare(protocol):
 
 
 @contextmanager
-def transport(ledger, frozen, check=verify):
+def transport(ledger, frozen, check=verify, *, experiment=EXPERIMENT):
     old_ledger, old_invoke = bedrock_client.Ledger, bedrock_client.invoke
     overrides = {'BEDROCK_REVIEW_ENABLED': 'true', 'REVIEW_COST_POLICY': 'false',
-                 'REVIEW_BUDGET_GRANT': EXPERIMENT, 'REVIEW_BUDGET_LEDGER': str(ledger.path),
+                 'REVIEW_BUDGET_GRANT': experiment, 'REVIEW_BUDGET_LEDGER': str(ledger.path),
                  'REVIEW_BUDGET_PHASE': 'review', 'REVIEW_CACHE_DISABLED': 'true', 'REVIEW_RESULT_CACHE': None}
     previous = {k: os.environ.get(k) for k in overrides}
 
