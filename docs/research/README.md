@@ -33,24 +33,25 @@ reuse those grants.
 
 ## Manual cost calibration
 
-The next trial compares the request-size estimate and full-context reservation
-with usage-priced cost for the same completed calls. It uses the twelve synthetic
+The completed [verification and import repair trial](reviewer-repairs.md)
+compares the request-size estimate and full-context reservation with usage-priced
+cost for the same completed calls. It used the twelve synthetic
 defective/benign fixtures, three independent roles and finding verification.
 Assessment caching is disabled. GLM 4.7 Flash is a cheap catalog candidate with
 unproven review quality; no production routing changes are made.
 
-Prepare the protocol offline from this experiment checkout:
+The following preparation and execution commands document the completed pass.
+They do not authorize another trial. Its protocol was prepared offline:
 
 ```sh
 AWS_PROFILE=awill AWS_REGION=us-east-1 npm run reviewer:experiment -- cost-freeze \
   --candidate glm_4_7_flash --output .cache/review-experiment/cost-frozen.json
 ```
 
-Inspect that file's fixtures, prompts, prices, account and `fingerprint`. The
-following command explicitly authorizes **at most $1 total** for
-`review-cost-calibration-v1`, including verification and retries. It verifies the
-configured AWS account before inference and stops on access or routing failure.
-Replace `<fingerprint>` with the value from the frozen file:
+The approved protocol allowed **at most $1 total** for
+`review-cost-calibration-v1`, including verification and retries. The runner
+verified the configured AWS account before inference and stopped on access or
+routing failure. `<fingerprint>` denoted the inspected frozen file's fingerprint:
 
 ```sh
 AWS_PROFILE=awill AWS_REGION=us-east-1 npm run reviewer:experiment -- cost-run \
@@ -94,7 +95,8 @@ the original revision and does not grant permission to run inference again.
 The source PRs were #14 (`033fa4dda2d60378c3f690707123e3e1555f583d`) and
 #15 (`1f4856aa7e161bf45f54707c689c6d757a11632c`). Their branches and discussions
 remain available. PR #13's reviewer clarification is incorporated into the harness
-foundation, including the targeted release-test repairs. PR #10 remains separate.
+foundation, including the targeted release-test repairs. PR #10 now combines its
+development-prerelease work with the reviewer verification and import repairs.
 
 Durable ledgers remain under the shared Git directory's `reviewer-research/`
 directory, with adjacent anchor files. Never recreate, relocate, or reset them to

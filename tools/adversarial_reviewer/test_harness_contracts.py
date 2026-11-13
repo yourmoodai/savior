@@ -66,12 +66,12 @@ class HarnessContracts(unittest.TestCase):
     def test_verification_batches_preserve_findings_and_incompleteness(self):
         candidates = [{'location': 1}, {'location': 2}]
         def size(messages):
-            return 49000 if '"location": 1}, {"location": 2' in messages[-1]['content'] else 47000
+            return 49000 if messages[-1]['content'].count('"finding_id":') == 2 else 47000
         retained = [{'file': 'x:1', 'details': 'verified first finding'}]
         with patch('adversarial_review.estimate_input_units', side_effect=size), \
                 patch('adversarial_review._run_model_reviewer', side_effect=[
                     ('REQUEST_CHANGES', retained, 'verified'), ('COMMENT', [], 'review incomplete: missing context')]) as assess:
-            result = verify_candidates('', [], '', [], candidates, deadline=time.monotonic()+5, supporting_context='')
+            result = verify_candidates('', [], '', [{'file':'x', 'line':n} for n in (1,2)], candidates, deadline=time.monotonic()+5, supporting_context='')
         self.assertEqual(assess.call_count, 2)
         self.assertEqual(result[:2], ('COMMENT', retained))
         self.assertTrue(result[2].startswith('review incomplete:'))
@@ -79,7 +79,7 @@ class HarnessContracts(unittest.TestCase):
     def test_indivisible_verification_never_calls_transport(self):
         with patch('adversarial_review.estimate_input_units', return_value=48001), \
                 patch('adversarial_review.complete') as transport:
-            result = verify_candidates('', [], '', [], [{'location': 1}], deadline=time.monotonic()+5, supporting_context='')
+            result = verify_candidates('', [], '', [{'file':'x', 'line':1}], [{'location': 1}], deadline=time.monotonic()+5, supporting_context='')
         transport.assert_not_called()
         self.assertEqual(result[0], 'COMMENT')
 

@@ -20,10 +20,12 @@ def verification_bound(messages):
     from prompt_profiles import prompts
     from egm import FOCUS
     from bedrock_client import estimate_input_units
-    finding = {'location': 999999999, **{k: '\U0001f9ea'*600 for k in ('invariant', 'scenario', 'correction')}}
+    from verification import SCHEMA as verification_schema
+    finding = {'finding_id': 'f'*64, 'location': 999999999, **{k: '\U0001f9ea'*600 for k in ('invariant', 'scenario', 'correction')}}
     expanded = [dict(m) for m in messages]
     expanded[-1]['content'] += '\n'+prompts('', VERIFICATION_PROMPT)[1]+'\nCandidate findings to verify: '+json.dumps([finding])+'\n'
     expanded[-1]['content'] += '\nReviewer focus: '+max(FOCUS.values(), key=len)
+    expanded[-1]['content'] += json.dumps(verification_schema)
     return estimate_input_units(expanded)
 
 

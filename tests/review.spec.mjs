@@ -5,6 +5,7 @@ import {spawn, spawnSync, execFileSync} from 'node:child_process';
 import {randomUUID, createHash} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import {resolve, join} from 'node:path';
+import {socket_directory} from '../bridge/directories.mjs';
 
 const root=resolve(import.meta.dirname,'..');
 const day=86400000;
@@ -17,14 +18,30 @@ test('long Unix profiles retain private isolated worker sockets', {skip:process.
     assert.equal((await invoke(profiles[1],{command:'status'})).consent.live,false);
     assert.equal((await invoke(profiles[0],{command:'status'})).consent.live,true);
     for(const profile of profiles) {
-      const hash=createHash('sha256').update(await realpath(profile)).digest('hex');
-      const directory=`/tmp/savior-${process.geteuid()}-${hash}`;
+      const directory=await socket_directory(await realpath(profile));
       assert.equal((await stat(directory)).mode&0o777,0o700);
       assert.equal((await stat(join(directory,'s'))).mode&0o777,0o600);
     }
   } finally {
     for(const profile of profiles) await invoke(profile,{command:'shutdown'}).catch(()=>{});
     await rm(temporary,{recursive:true,force:true});
+  }
+});
+test('bridge and native worker agree on XDG runtime sockets', {skip:process.platform==='win32',timeout:30000},async()=>{
+  const runtime=await mkdtemp('/tmp/sv');
+  const profile=join(runtime,'profile');await mkdir(profile);
+  try {
+    for(const value of [runtime,runtime+'/./'.repeat(40)]) {
+      const env={XDG_RUNTIME_DIR:value};
+      try {
+        const result=await invoke(profile,{command:'status'},env);
+        assert.equal(result.consent.live,false);
+        const directory=await socket_directory(await realpath(profile),env);
+        assert.equal((await stat(join(directory,'s'))).mode&0o777,0o600);
+      } finally {await invoke(profile,{command:'shutdown'},env).catch(()=>{});}
+    }
+  } finally {
+    await rm(runtime,{recursive:true,force:true});
   }
 });
 test('review entrypoint responds through a directory alias', async()=>{

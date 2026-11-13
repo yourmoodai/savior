@@ -37,4 +37,11 @@ function render(reason, quote, budget, report) {
   if (Number.isInteger(report?.total_chunks)) lines.push(`Coverage: ${report.completed_chunks || 0}/${report.total_chunks} chunks. Partial results remain in the report artifact.`);
   return lines.join('\n');
 }
-module.exports = {render,reasons,usd};
+function failure(reason, report) {
+  const code = Object.hasOwn(reasons, reason) ? reason : 'infrastructure_failed';
+  const detail = code === 'planning_failed' && typeof report?.planning_failure === 'string'
+    ? report.planning_failure.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 900)
+    : '';
+  return `adversarial review blocked (${code}): ${detail || 'inspect the review status and report artifact'}`;
+}
+module.exports = {render,reasons,usd,failure};

@@ -15,12 +15,25 @@ an unchanged candidate, including its original evidence location. The verifier
 must check preconditions, compared outcomes, and whether the cited operation
 causes the alleged defect. This is model verification, not executable proof.
 
+Assessment responses retain the existing finding schema. Verification responses
+use `decisions`, each containing `finding_id`, `verdict` and `rationale`. Verdicts
+are `retain`, `reject` or `abstain`. Every unique candidate needs exactly one
+decision; response order is irrelevant. IDs bind the original finding and source
+anchor, and remain stable across verification batches. The harness reconstructs
+retained findings rather than accepting replacement text from the verifier.
+Malformed decisions cannot approve; abstentions retain any verified findings
+and keep the review incomplete. Diagnostics preserve the individual decisions.
+
 The source graph reads regular Git blobs at the merge base and head. Pinned
 Tree-sitter grammars cover Python, Rust, JavaScript and TypeScript; JSON records
 and Markdown sections supply non-code boundaries. Recognized local dependencies
 include unchanged helpers. The planner computes their transitive closure and
 preserves every required node in each request without a support byte cap.
 Primary diff locations retain unique ownership; support is not extra coverage.
+Python import nodes preserve parenthesized multiline names, aliases and relative
+paths. Rust import trees expand nested groups and aliases, including `self`,
+`super` and `crate` paths. Glob imports remain unresolved. Unchanged imports stay
+in the closure when only a caller changes.
 
 Dynamic dispatch, macros, parse errors, ambiguous or unsupported imports, missing
 source and oversized dependency sets remain explicit gaps. External packages and

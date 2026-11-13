@@ -47,16 +47,8 @@ pub fn prepare() -> Result<PathBuf, String> {
         .map_err(|_| "model_unavailable")?;
         return Ok(path);
     }
-    let root = if cfg!(windows) {
-        PathBuf::from(std::env::var_os("LOCALAPPDATA").ok_or("cache_unavailable")?)
-    } else if let Some(root) = std::env::var_os("XDG_CACHE_HOME") {
-        PathBuf::from(root)
-    } else {
-        PathBuf::from(std::env::var_os("HOME").ok_or("cache_unavailable")?).join(".cache")
-    };
-    if !root.is_absolute() {
-        return Err("invalid_cache_path".into());
-    }
+    let root = savior_review::directories::user_root("XDG_CACHE_HOME", ".cache")
+        .map_err(|_| "cache_unavailable")?;
     let dir = root.join("savior/models").join(savior::MODEL_REVISION);
     fs::create_dir_all(&dir).map_err(|_| "cache_unavailable")?;
     if fs::symlink_metadata(&dir)

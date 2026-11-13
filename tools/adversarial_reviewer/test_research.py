@@ -219,6 +219,11 @@ class TrialTests(unittest.TestCase):
     def test_matched_trial_reuses_assessments_and_resumes_without_repeating(self):
         def invoke(operation, payload, deadline):
             system = payload['system'][0]['text']
+            if 'exactly one decision per finding_id' in system:
+                content = payload['messages'][0]['content'][0]['text']
+                records, _ = json.JSONDecoder().raw_decode(content.split('Candidate findings to verify: ', 1)[1])
+                return response({'decisions': [{'finding_id': r['finding_id'], 'verdict': 'retain',
+                    'rationale': 'The original synthetic consent defect is supported.'} for r in records]})
             if 'Reconcile independent code reviews' in system:
                 return response({'summary': 'The verified findings identify a synthetic consent defect.'})
             if 'Summarize the combined behavior changes' in system:

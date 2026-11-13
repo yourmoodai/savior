@@ -4,10 +4,11 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-from version_gate import reject_existing_release, validate_tag
+from version_gate import development_version, reject_existing_release, validate_tag
 from archive import validate
 
 version=validate_tag(Path.cwd(), os.environ.get('GITHUB_REF', ''), os.environ.get('GITHUB_SHA', ''))
+if development_version(version):raise SystemExit('development release requires dedicated publisher')
 tag='v'+version
 reject_existing_release(os.environ['GITHUB_REPOSITORY'], version)
 if not os.environ.get('SAVIOR_RELEASE_PUBLIC_KEY'):raise SystemExit('release public key required')

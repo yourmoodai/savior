@@ -27,6 +27,10 @@ def fixture(root):
         destination = root / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / name, destination)
+    current = release_version(root)
+    for name in ('package.json','package-lock.json','Cargo.toml','Cargo.lock','.claude-plugin/plugin.json'):
+        path = root/name
+        path.write_text(path.read_text().replace('"'+current+'"', '"0.1.0"'))
 
 
 class VersionTests(unittest.TestCase):
@@ -243,7 +247,7 @@ class WorkflowBoundaryTests(unittest.TestCase):
     def test_only_tag_events_can_enter_production_workflow(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
         triggers = workflow.split("on:\n", 1)[1].split("concurrency:", 1)[0]
-        self.assertEqual(triggers, "  push:\n    tags: ['v*']\n")
+        self.assertEqual(triggers, "  push:\n    tags: ['v*', '!v*-dev.*']\n")
         self.assertIn("needs: gate", workflow)
         self.assertLess(workflow.index("version_gate.py --tag"), workflow.index("environment: release"))
 

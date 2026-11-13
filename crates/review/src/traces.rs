@@ -74,18 +74,13 @@ fn regular(path: &Path) -> ReviewResult<()> {
     Ok(())
 }
 pub fn state_directory() -> ReviewResult<PathBuf> {
-    let root = if cfg!(windows) {
-        std::env::var_os("LOCALAPPDATA")
-            .map(PathBuf::from)
-            .map(|p| p.join("savior/state"))
-    } else {
-        std::env::var_os("XDG_STATE_HOME")
-            .filter(|s| !s.is_empty())
-            .map(PathBuf::from)
-            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/state")))
-            .map(|p| p.join("savior"))
-    }
-    .ok_or("state_unavailable")?;
+    let root = crate::directories::user_root("XDG_STATE_HOME", ".local/state")
+        .map_err(|_| "state_unavailable")?
+        .join(if cfg!(windows) {
+            "savior/state"
+        } else {
+            "savior"
+        });
     let profile = std::env::var_os("CLAUDE_CONFIG_DIR")
         .map(PathBuf::from)
         .or_else(|| {

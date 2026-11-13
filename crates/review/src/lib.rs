@@ -1,4 +1,5 @@
 pub mod assessment;
+pub mod directories;
 pub mod history;
 #[cfg(feature = "inspector")]
 pub mod inspector;
