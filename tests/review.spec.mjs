@@ -135,9 +135,8 @@ test('history uses lexical selection and rejects changed artifact provenance', {
     await writeFile(join(model,'decision.json'),JSON.stringify({...artifact,weights:{idiot:0.8}}));
     await assert.rejects(invoke(profile,{command:'status'},env),/review_unavailable/);
   } finally {
-    // Restore the startup fingerprint so shutdown can reach the existing worker.
-    await writeFile(join(model,'decision.json'),JSON.stringify(artifact));
     await invoke(profile,{command:'shutdown'},env).catch(()=>{});
+    // Shutdown acknowledges before the worker closes SQLite on Windows.
     await rm(profile,{recursive:true,force:true,maxRetries:50,retryDelay:100});
   }
 });
