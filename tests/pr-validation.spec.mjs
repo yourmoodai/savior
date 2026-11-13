@@ -13,8 +13,8 @@ test('an obsolete run cannot replace a newer run or invalidation status',async()
   for(const url of [undefined,'https://github.com/owner/repo/actions/runs/43/attempts/1']) {
     const writes=[];
     const github={rest:{pulls:{get:async()=>({data:pr}),listReviews:'reviews'},
-      repos:{listCommitStatuses:'statuses',createCommitStatus:async s=>writes.push(s)}},
-      paginate:async api=>api==='reviews'?[approval]:[{context:'pr readiness',target_url:url}]};
+      repos:{getCombinedStatusForRef:async()=>({data:{statuses:[{context:'pr readiness',target_url:url}]}}),createCommitStatus:async s=>writes.push(s)}},
+      paginate:async()=>[approval]};
     await assert.rejects(execute({github,context,core:{},phase:'finish',binding,results:{}}),/superseded/);
     assert.deepEqual(writes,[]);
   }
@@ -34,7 +34,7 @@ test('failed and skipped required validation never establish readiness',async()=
       const statuses=[];
       const results=Object.fromEntries(['review','admission','commits','verify','qualification','site'].map(k=>[k,{result:'success',outputs:{site_required:'true'}}]));
       results[failure].result=state;
-      const github={rest:{pulls:{get:async()=>({data:pr}),listReviews:'reviews'},repos:{listCommitStatuses:'statuses',createCommitStatus:async s=>statuses.push(s)}},paginate:async api=>api==='statuses'?[{context:'pr readiness',target_url:'https://github.com/owner/repo/actions/runs/42/attempts/1'}]:[approval]};
+      const github={rest:{pulls:{get:async()=>({data:pr}),listReviews:'reviews'},repos:{getCombinedStatusForRef:async()=>({data:{statuses:[{context:'pr readiness',target_url:'https://github.com/owner/repo/actions/runs/42/attempts/1'}]}}),createCommitStatus:async s=>statuses.push(s)}},paginate:async()=>[approval]};
       await assert.rejects(execute({github,context,core:{},phase:'finish',binding,results}));
       assert.equal(statuses.at(-1).state,'failure');
     }
@@ -70,7 +70,7 @@ test('only an explicitly planned site skip can produce successful readiness',asy
     const statuses=[];
     const results=Object.fromEntries(['review','admission','commits','verify','qualification','site'].map(k=>[k,{result:'success',outputs:{site_required:required}}]));
     results.site.result='skipped';
-    const github={rest:{pulls:{get:async()=>({data:pr}),listReviews:'reviews'},repos:{listCommitStatuses:'statuses',createCommitStatus:async s=>statuses.push(s)}},paginate:async api=>api==='statuses'?[{context:'pr readiness',target_url:'https://github.com/owner/repo/actions/runs/42/attempts/1'}]:[approval]};
+    const github={rest:{pulls:{get:async()=>({data:pr}),listReviews:'reviews'},repos:{getCombinedStatusForRef:async()=>({data:{statuses:[{context:'pr readiness',target_url:'https://github.com/owner/repo/actions/runs/42/attempts/1'}]}}),createCommitStatus:async s=>statuses.push(s)}},paginate:async()=>[approval]};
     const call=execute({github,context,core:{},phase:'finish',binding,results});
     if(required==='false') {await call;assert.ok(statuses.every(s=>s.state==='success'));}
     else await assert.rejects(call);

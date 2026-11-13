@@ -30,6 +30,20 @@ def resolve_context(event, repository, sha, lookup):
             "title": pr["title"], "pr_number": str(number)}
 
 
+def validation_context(pr, repository, number, head, base, test, checkout, parents):
+    """Manual testing grants no review verdict; bind its evidence to a live PR."""
+    if (not re.fullmatch(r'[1-9][0-9]*', number)
+            or any(not re.fullmatch(r'[0-9a-f]{40}', sha) for sha in (head, base, test))):
+        raise ValueError('invalid validation revision')
+    if (pr['state'] != 'open' or pr['head']['sha'] != head or pr['base']['sha'] != base
+            or pr['base']['ref'] != 'main'
+            or any(pr[side]['repo']['full_name'] != repository for side in ('head', 'base'))):
+        raise ValueError('validation revision changed')
+    if checkout != test or (test != head and parents != [base, head]):
+        raise ValueError('checkout does not match validation revision')
+    return {'pr_number': number, 'head': head, 'base': base, 'title': pr['title']}
+
+
 def main():
     repository = os.environ["GITHUB_REPOSITORY"]
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
@@ -42,9 +56,10 @@ def main():
         number = os.environ['VALIDATION_PR']
         pr = lookup(number)
         head, base = os.environ['VALIDATION_HEAD'], os.environ['VALIDATION_BASE']
-        if pr['state'] != 'open' or pr['head']['sha'] != head or pr['base']['sha'] != base:
-            raise ValueError('approved revision changed')
-        context = {'pr_number': number, 'head': head, 'base': base, 'title': pr['title']}
+        checkout = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+        parents = subprocess.check_output(['git', 'show', '-s', '--format=%P', 'HEAD'], text=True).split()
+        context = validation_context(pr, repository, number, head, base,
+                                     os.environ['VALIDATION_TEST'], checkout, parents)
     else:
         context = resolve_context(event, repository, os.environ["GITHUB_SHA"], lookup)
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:

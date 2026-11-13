@@ -1,6 +1,23 @@
 name: commit messages
 on:
   workflow_dispatch:
+    inputs:
+      test_sha:
+        description: Commit to test; manual dispatch authorizes testing only
+        required: false
+        type: string
+      pr_number:
+        description: Pull request number
+        required: false
+        type: string
+      head_sha:
+        description: Expected pull request head commit
+        required: false
+        type: string
+      base_sha:
+        description: Expected main commit
+        required: false
+        type: string
   workflow_call:
     inputs:
       test_sha:
@@ -51,7 +68,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: commit-check-ubuntu-24.04-${{ runner.arch }}
-          save-if: ${{ github.workflow != 'pr validation' }}
+          save-if: ${{ inputs.test_sha == '' }}
           cache-on-failure: true
       - run: cargo test --locked -p commit_check
       - name: check new commits

@@ -1,6 +1,11 @@
 name: site
 on:
   workflow_dispatch:
+    inputs:
+      test_sha:
+        description: Commit to test; manual dispatch authorizes testing only
+        required: false
+        type: string
   workflow_call:
     inputs:
       test_sha:

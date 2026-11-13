@@ -11,7 +11,7 @@ import zipfile
 from budget import Ledger, BudgetError
 from qualify import cached_qualification
 from quote import create, apply_policy
-from review_plan import PlanningError, require_feasible
+from review_plan import PlanningError, require_feasible, feasible
 
 ROOT = Path(__file__).parent
 DIRECTORY = Path('review-result')
@@ -60,7 +60,10 @@ def build_quote(ledger):
         report = json.loads(output.read_text())
         if report.get('blocked_reason') == 'planning_failed':
             raise PlanningError(report['planning_failure'])
-        result.check_returncode()
+        # Exit 2 preserves an infeasible plan for diagnostics. Try both
+        # strategies before deciding whether any complete plan is admissible.
+        if not (result.returncode == 2 and not feasible(report.get('manifest', {}))):
+            result.check_returncode()
         if report.get('omitted_binary_changes'):
             raise ValueError('unsupported binary changes require manual review')
         manifests[strategy] = report['manifest']

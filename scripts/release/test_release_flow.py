@@ -11,7 +11,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from pr_context import resolve_context
+from pr_context import resolve_context, validation_context
 from prepare import prepare, version_changes
 from version_gate import parse_version, reject_existing_release, release_version, validate_tag
 
@@ -126,6 +126,27 @@ def pull_request():
 
 
 class ContextTests(unittest.TestCase):
+    def test_manual_testing_binds_checkout_and_live_pr(self):
+        pr = pull_request()
+        head, base, merge = 'a' * 40, 'b' * 40, 'c' * 40
+        for revision, parents in ((head, [base]), (merge, [base, head])):
+            context = validation_context(pr, 'example/project', '7', head, base,
+                                         revision, revision, parents)
+            self.assertEqual(context['head'], head)
+        for revision, checkout, parents in ((merge, head, [base, head]),
+                                           (merge, merge, [head, base]),
+                                           (merge, merge, [base]), ('main', 'main', [])):
+            with self.assertRaises(ValueError):
+                validation_context(pr, 'example/project', '7', head, base,
+                                   revision, checkout, parents)
+        for boundary in ('head', 'base'):
+            for key, value in (('sha', 'd' * 40), ('repo', {'full_name': 'other/project'})):
+                stale = copy.deepcopy(pr)
+                stale[boundary][key] = value
+                with self.assertRaises(ValueError):
+                    validation_context(stale, 'example/project', '7', head, base,
+                                       merge, merge, [base, head])
+
     def test_generated_pr_checks_require_exact_current_head(self):
         pr = pull_request()
         event = {"inputs": {"pr_number": "7", "head_sha": "a" * 40}}

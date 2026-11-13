@@ -55,7 +55,7 @@ jobs:
             });
   review:
     outputs:
-      approved: ${{ steps.verdict.outputs.published }}
+      approved: ${{ steps.verdict.outputs.approved }}
     timeout-minutes: 120
     name: adversarial verdict
     needs: scope
@@ -210,7 +210,8 @@ jobs:
           script: |
             const report = JSON.parse(require('node:fs').readFileSync('review-result/report.json', 'utf8'));
             const publish = require('./tools/adversarial_reviewer/publish.cjs');
-            await publish({github, context, core, head:process.env.HEAD_SHA, pr:process.env.PR_NUMBER, phase:'complete', report});
+            const approved = await publish({github, context, core, head:process.env.HEAD_SHA, pr:process.env.PR_NUMBER, phase:'complete', report});
+            core.setOutput('approved', String(approved === true));
             core.setOutput('published', 'true');
         id: verdict
       - name: publish unavailable status

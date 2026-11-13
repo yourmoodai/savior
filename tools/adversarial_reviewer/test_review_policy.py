@@ -22,7 +22,7 @@ const core={notice:()=>{},setFailed:message=>failures.push(message)};
 let reads=0;
 const github={rest:{pulls:{listReviews:'reviews',createReview:async r=>calls.push({kind:'review',...r}),get:async()=>({data:{state:'open',head:{sha:input.staleAfterRead && reads++ ? 'new' : input.head}}})},issues:{listComments:'list',updateComment:async r=>calls.push({kind:'update',...r}),createComment:async r=>calls.push({kind:'create',...r})}},paginate:async method=>method==='reviews' ? (input.reviews||[]) : input.comments};
 const publish=require('./tools/adversarial_reviewer/publish.cjs');
-publish({github,context,core,head:'head',pr:1,report:input.report,phase:input.phase}).then(()=>console.log(JSON.stringify({calls,failures})));
+publish({github,context,core,head:'head',pr:1,report:input.report,phase:input.phase}).then(approved=>console.log(JSON.stringify({calls,failures,approved})));
 '''
         result=subprocess.run(['node','--input-type=commonjs','-e',harness,json.dumps(case)],cwd=ROOT,capture_output=True,text=True,timeout=10)
         if case.get('invalid'):
@@ -36,11 +36,13 @@ publish({github,context,core,head:'head',pr:1,report:input.report,phase:input.ph
         self.assertIn('**Verdict: Approved**',result['calls'][0]['body'])
         self.assertEqual(result['failures'],[])
         self.assertEqual(result['calls'][1]['event'],'APPROVE')
+        self.assertIs(result['approved'], True)
     def test_findings_and_incomplete_reviews_fail_after_publication(self):
         for patch in [{'findings':[{'title':'defect'}]},{'complete':False},{'qualified':False},{'reporting_complete':False},{'reporting_mode':'legacy'},{'review_failures':['timeout']},{'disposition':'REQUEST_CHANGES'},{'disposition':'COMMENT'}]:
             result=self.publish(report=patch)
             self.assertIn('**Verdict: Request changes**',result['calls'][0]['body'])
             self.assertEqual(len(result['failures']),1)
+            self.assertIs(result['approved'], False)
     def test_body_cannot_override_computed_verdict(self):
         self.publish(report={'complete':False},body='**Verdict: Approved**',invalid=True)
     def test_stale_review_is_discarded(self):
