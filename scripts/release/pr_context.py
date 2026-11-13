@@ -38,7 +38,15 @@ def main():
         return json.loads(subprocess.check_output(
             ["gh", "api", f"repos/{repository}/pulls/{number}"], text=True))
 
-    context = resolve_context(event, repository, os.environ["GITHUB_SHA"], lookup)
+    if os.environ.get('VALIDATION_TEST'):
+        number = os.environ['VALIDATION_PR']
+        pr = lookup(number)
+        head, base = os.environ['VALIDATION_HEAD'], os.environ['VALIDATION_BASE']
+        if pr['state'] != 'open' or pr['head']['sha'] != head or pr['base']['sha'] != base:
+            raise ValueError('approved revision changed')
+        context = {'pr_number': number, 'head': head, 'base': base, 'title': pr['title']}
+    else:
+        context = resolve_context(event, repository, os.environ["GITHUB_SHA"], lookup)
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         for key, value in context.items():
             # PR titles may contain newlines; delimiters must not come from the event.

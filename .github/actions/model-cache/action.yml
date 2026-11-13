@@ -18,7 +18,7 @@ runs:
       run: node scripts/fetch-model.mjs
     # Save verified downloads before later tests can fail or be cancelled.
     - name: save verified detector downloads
-      if: steps.restore.outputs.cache-hit != 'true'
+      if: github.workflow != 'pr validation' && steps.restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .cache/models/mudes-en-base

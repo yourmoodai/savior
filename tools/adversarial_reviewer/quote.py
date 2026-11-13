@@ -19,6 +19,7 @@ def configuration():
     files = [root/name for name in sorted(set(SOURCES) | {'run_ci.py', 'preflight.py', 'cost_policy.py', 'requirements.txt'})]
     files.extend(sorted(root.glob('*.cjs')))
     files.append(root.parent.parent/'.github/workflows/adversarial-review.yml')
+    files.append(root.parent.parent/'.github/workflows/pr-validation.yml')
     return digest({str(p.relative_to(root.parent.parent)): source_identity(p) for p in files})
 
 

@@ -11,7 +11,7 @@ function parse(body) {
 }
 
 function trusted_run(run, repository, branch) {
-  return run.repository?.full_name === repository && run.path === '.github/workflows/adversarial-review.yml' &&
+  return run.repository?.full_name === repository && ['.github/workflows/adversarial-review.yml','.github/workflows/pr-validation.yml'].includes(run.path) &&
     (run.event === 'pull_request_target' ||
       (['push','workflow_dispatch','issue_comment'].includes(run.event) && [branch,'develop'].includes(run.head_branch)));
 }

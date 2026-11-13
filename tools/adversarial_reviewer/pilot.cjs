@@ -4,7 +4,10 @@ const pilot = 'haiku45-pilot-20261015';
 
 module.exports = async function restore({github,context}) {
   const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo,{...context.repo,per_page:100});
-  const allRuns = await github.paginate(github.rest.actions.listWorkflowRuns,{...context.repo,workflow_id:'adversarial-review.yml',created:'>=2026-10-15',per_page:100});
+  const history=[];
+  for (const workflow_id of ['adversarial-review.yml','pr-validation.yml'])
+    history.push(...await github.paginate(github.rest.actions.listWorkflowRuns,{...context.repo,workflow_id,created:'>=2026-10-15',per_page:100}));
+  const allRuns=[...new Map(history.map(run=>[run.id,run])).values()];
   const runs = allRuns.filter(run=>run.event==='pull_request_target' ||
     (['push','workflow_dispatch','issue_comment'].includes(run.event) && ['main','develop'].includes(run.head_branch)));
   const owned = artifacts.filter(a=>runs.some(run=>run.id===a.workflow_run?.id));

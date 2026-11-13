@@ -1,0 +1,163 @@
+name: pr validation
+run-name: 'pr validation #${{ github.event.pull_request.number || inputs.pr_number }}'
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, edited]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: pr-validation-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+jobs:
+  start:
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    outputs:
+      pr: ${{ steps.control.outputs.pr }}
+      head: ${{ steps.control.outputs.head }}
+      base: ${{ steps.control.outputs.base }}
+      test_sha: ${{ steps.control.outputs.test_sha }}
+      site_required: ${{ steps.control.outputs.site_required }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        id: control
+        env:
+          BINDING: '{}'
+          RESULTS: ${{ toJSON(needs) }}
+        with:
+          script: |
+            const binding = process.env.BINDING && JSON.parse(process.env.BINDING);
+            await require('./tools/ci/pr_validation.cjs').execute({github,context,core,phase:'start',
+              binding: 'start' === 'start' ? undefined : {...binding,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT},
+              results: JSON.parse(process.env.RESULTS)});
+  review:
+    needs: start
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+      id-token: write
+    uses: ./.github/workflows/adversarial-review.yml
+  admission:
+    needs: [start, review]
+    if: needs.review.outputs.approved == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    outputs:
+      pr: ${{ steps.control.outputs.pr }}
+      head: ${{ steps.control.outputs.head }}
+      base: ${{ steps.control.outputs.base }}
+      test_sha: ${{ steps.control.outputs.test_sha }}
+      site_required: ${{ steps.control.outputs.site_required }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        id: control
+        env:
+          BINDING: ${{ toJSON(needs.start.outputs) }}
+          RESULTS: ${{ toJSON(needs) }}
+        with:
+          script: |
+            const binding = process.env.BINDING && JSON.parse(process.env.BINDING);
+            await require('./tools/ci/pr_validation.cjs').execute({github,context,core,phase:'admit',
+              binding: 'admit' === 'start' ? undefined : {...binding,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT},
+              results: JSON.parse(process.env.RESULTS)});
+  commits:
+    needs: [start, admission]
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    uses: ./.github/workflows/commit-messages.yml
+    with:
+      test_sha: ${{ needs.admission.outputs.test_sha }}
+      pr_number: ${{ needs.start.outputs.pr }}
+      head_sha: ${{ needs.start.outputs.head }}
+      base_sha: ${{ needs.start.outputs.base }}
+  verify:
+    needs: [start, admission]
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    uses: ./.github/workflows/verify.yml
+    with:
+      test_sha: ${{ needs.admission.outputs.test_sha }}
+      pr_number: ${{ needs.start.outputs.pr }}
+      head_sha: ${{ needs.start.outputs.head }}
+      base_sha: ${{ needs.start.outputs.base }}
+  qualification:
+    needs: [start, admission]
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    uses: ./.github/workflows/qualification.yml
+    with:
+      test_sha: ${{ needs.admission.outputs.test_sha }}
+      pr_number: ${{ needs.start.outputs.pr }}
+      head_sha: ${{ needs.start.outputs.head }}
+      base_sha: ${{ needs.start.outputs.base }}
+  site:
+    if: needs.admission.outputs.site_required == 'true'
+    needs: [start, admission]
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    uses: ./.github/workflows/site.yml
+    with:
+      test_sha: ${{ needs.admission.outputs.test_sha }}
+  readiness:
+    if: always() && needs.start.result == 'success'
+    needs: [start, review, admission, commits, verify, qualification, site]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    outputs:
+      pr: ${{ steps.control.outputs.pr }}
+      head: ${{ steps.control.outputs.head }}
+      base: ${{ steps.control.outputs.base }}
+      test_sha: ${{ steps.control.outputs.test_sha }}
+      site_required: ${{ steps.control.outputs.site_required }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        id: control
+        env:
+          BINDING: ${{ toJSON(needs.start.outputs) }}
+          RESULTS: ${{ toJSON(needs) }}
+        with:
+          script: |
+            const binding = process.env.BINDING && JSON.parse(process.env.BINDING);
+            await require('./tools/ci/pr_validation.cjs').execute({github,context,core,phase:'finish',
+              binding: 'finish' === 'start' ? undefined : {...binding,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT},
+              results: JSON.parse(process.env.RESULTS)});
