@@ -22,6 +22,8 @@ permissions:
   pull-requests: read
 jobs:
   context:
+    outputs:
+      native_required: ${{ steps.impact.outputs.native_required }}
     timeout-minutes: 15
     runs-on: ubuntu-24.04
     steps:
@@ -29,6 +31,7 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.sha }}
+          fetch-depth: 0
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12.10'
@@ -37,6 +40,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/release/pr_context.py
+      - name: determine build impact
+        id: impact
+        env:
+          BASE_SHA: ${{ steps.context.outputs.base }}
+          HEAD_SHA: ${{ steps.context.outputs.head }}
+        run: python3 scripts/release/ci_impact.py
   tooling:
     timeout-minutes: 15
     needs: context
@@ -61,6 +70,7 @@ jobs:
       - run: python3 -m unittest discover -s scripts/release
       - run: python3 scripts/release/lint_workflows.py
   coreml:
+    if: needs.context.outputs.native_required == 'true'
     timeout-minutes: 30
     needs: context
     runs-on: macos-15
@@ -94,6 +104,7 @@ jobs:
           script: |
             await require('./scripts/release/cache-summary.cjs')({github, context, core});
   release-tools:
+    if: needs.context.outputs.native_required == 'true'
     needs: context
     timeout-minutes: 30
     runs-on: ubuntu-24.04
@@ -110,6 +121,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
       - env:
           RESULTS: ${{ toJSON(needs) }}
-        run: python3 -c 'import json,os; assert all(j["result"]=="success" for j in json.loads(os.environ["RESULTS"]).values())'
+        run: python3 scripts/release/ci_impact.py verification

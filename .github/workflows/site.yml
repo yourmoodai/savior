@@ -1,10 +1,10 @@
 name: site
 on:
   pull_request:
-    paths: ['site/**', 'scripts/site.py', 'scripts/test-site.mjs', 'package*.json', 'docs/assets/savior.svg', '.github/workflows/site.yml']
+    paths: ['site/**', 'scripts/site.py', 'scripts/test-site.mjs', 'package*.json', 'docs/assets/savior.svg', 'docs/assets/social-preview.png', '.github/workflows/site.yml']
   push:
     branches: [main]
-    paths: ['site/**', 'scripts/site.py', 'scripts/test-site.mjs', 'package*.json', 'docs/assets/savior.svg', '.github/workflows/site.yml']
+    paths: ['site/**', 'scripts/site.py', 'scripts/test-site.mjs', 'package*.json', 'docs/assets/savior.svg', 'docs/assets/social-preview.png', '.github/workflows/site.yml']
   workflow_dispatch:
 permissions:
   contents: read

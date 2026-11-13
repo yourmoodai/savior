@@ -110,6 +110,7 @@ def main():
     if config['extra']['release_status'] != 'unreleased':
         raise ValueError('release assurance has not been established')
     shutil.copyfile(ROOT / 'docs/assets/savior.svg', SITE / 'static/savior.svg')
+    shutil.copyfile(ROOT / 'docs/assets/social-preview.png', SITE / 'static/social-preview.png')
     binary = zola()
     if command == 'serve':
         subprocess.run([binary, '--root', str(SITE), 'serve', '--interface', '127.0.0.1'], check=True)
