@@ -130,6 +130,15 @@ def related(left, right):
 
 
 def plan(diff, count, messages, *, strategy='adaptive'):
+    from source_graph import snapshots
+    if snapshots.get() is not None:
+        from review_plan import pack
+        return pack(diff, count, messages, snapshots.get(), strategy)
+    return historical_plan(diff, count, messages, strategy=strategy)
+
+
+def historical_plan(diff, count, messages, *, strategy='adaptive'):
+    """Preserved diff-only algorithm for historical synthetic experiment replay."""
     original = parse(diff)
     target = ceiling(len(original))
     pending = sorted(original, key=lambda u: (u.path, u.start))

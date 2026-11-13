@@ -1,4 +1,5 @@
 const reasons = {
+  planning_failed:'Review blocked: no complete evidence plan fits. Inspect planning-failure.json and context gaps in the manifest. Qualification and spending cannot repair missing context.',
   draft:'Review not performed: this PR is a draft. Mark it ready for review to start the eligibility checks.',
   author_unauthorized:'Review not performed: the PR author is neither a repository admin nor a named CODEOWNER with write access.',
   disabled:'Review not performed: the Bedrock reviewer is disabled.',

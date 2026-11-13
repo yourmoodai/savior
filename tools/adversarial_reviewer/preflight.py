@@ -11,6 +11,7 @@ import zipfile
 from budget import Ledger, BudgetError
 from qualify import cached_qualification
 from quote import create, apply_policy
+from review_plan import PlanningError, require_feasible
 
 ROOT = Path(__file__).parent
 DIRECTORY = Path('review-result')
@@ -52,13 +53,18 @@ def build_quote(ledger):
     manifests = {}
     for strategy in ('baseline', 'adaptive'):
         output = DIRECTORY/(strategy+'-manifest.json')
-        subprocess.run([sys.executable, str(ROOT/'adversarial_review.py'), '--base', os.environ['BASE_SHA'],
+        output.unlink(missing_ok=True)
+        result = subprocess.run([sys.executable, str(ROOT/'adversarial_review.py'), '--base', os.environ['BASE_SHA'],
                         '--head', os.environ['HEAD_SHA'], '--strategy', strategy, '--dry-run',
-                        '--json-output', str(output)], check=True, timeout=2400)
+                        '--json-output', str(output)], check=False, timeout=2400)
         report = json.loads(output.read_text())
+        if report.get('blocked_reason') == 'planning_failed':
+            raise PlanningError(report['planning_failure'])
+        result.check_returncode()
         if report.get('omitted_binary_changes'):
             raise ValueError('unsupported binary changes require manual review')
         manifests[strategy] = report['manifest']
+    require_feasible(manifests)
     _, qualification = cached_qualification()
     quote = apply_policy(create(manifests, ledger.summary(), qualification), ledger.policy_budget())
     (DIRECTORY/'quote.json').write_text(json.dumps(quote, indent=2)+'\n')
@@ -80,6 +86,9 @@ def main():
                 raise BudgetError('prior reservation overrun')
             quote = build_quote(ledger)
             reason = quote['blocked_reason']
+    except PlanningError as error:
+        reason = 'planning_failed'
+        (DIRECTORY/'planning-failure.json').write_text(json.dumps({'reason': reason, 'details': str(error)})+'\n')
     except BudgetError:
         reason = 'spending_unresolved'
         quote = None
@@ -88,6 +97,8 @@ def main():
         quote = None
     report = {'commit_id': os.environ['HEAD_SHA'], 'blocked_reason': reason,
               'quote': quote, 'budget': ledger.summary() if ledger else None}
+    if reason == 'planning_failed':
+        report['planning_failure'] = json.loads((DIRECTORY/'planning-failure.json').read_text())['details']
     (DIRECTORY/'preflight.json').write_text(json.dumps(report, indent=2)+'\n')
     (DIRECTORY/'report.json').write_text(json.dumps(report, indent=2)+'\n')
     if not reason:

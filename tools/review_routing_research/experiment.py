@@ -98,14 +98,20 @@ def freeze_next():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('replay', 'freeze', 'cost-freeze', 'cost-run', 'cost-report'))
+    parser.add_argument('command', choices=('replay', 'freeze', 'cost-freeze', 'cost-run', 'cost-report', 'context-audit'))
     parser.add_argument('--output', type=Path, default=Path('.cache/review-experiment/report.json'))
     parser.add_argument('--candidate', default='glm_4_7_flash')
     parser.add_argument('--input', type=Path)
     parser.add_argument('--approve')
     parser.add_argument('--initialize', action='store_true')
+    parser.add_argument('--base', default='origin/main')
+    parser.add_argument('--head', default='HEAD')
+    parser.add_argument('--test-evidence', type=Path)
     args = parser.parse_args()
-    if args.command.startswith('cost-'):
+    if args.command == 'context-audit':
+        from context_audit import audit
+        result = audit(args.base, args.head, json.loads(args.test_evidence.read_text()) if args.test_evidence else None)
+    elif args.command.startswith('cost-'):
         import cost_calibration as calibration
         if args.command == 'cost-freeze':
             result = calibration.freeze(args.candidate)

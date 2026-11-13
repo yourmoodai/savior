@@ -101,6 +101,7 @@ class QuoteTests(unittest.TestCase):
         manifests = copy.deepcopy(MANIFESTS)
         for manifest in manifests.values():
             manifest['chunks'] *= 3
+            manifest['review_plan'] = {'test': 'execution is mocked in this integration test'}
         self.quote = apply_policy(create(manifests, self.ledger.summary(), QUALIFIED), self.ledger.policy_budget())
         script = Path(__file__).with_name('run_ci.py').resolve()
         previous = Path.cwd()
@@ -127,6 +128,7 @@ class QuoteTests(unittest.TestCase):
         envelope = {'usage':{'inputTokens':100,'outputTokens':10},'stopReason':'end_turn',
                     'output':{'message':{'content':[{'text':'{}'}]}}}
         with patch.object(preflight,'restore',return_value=self.ledger), patch('qualify.qualify',return_value=QUALIFIED), \
+                patch('review_plan.admit'), \
                 patch('subprocess.run',side_effect=assessment), patch('bedrock_client.invoke',return_value=envelope) as provider, \
                 patch.dict(os.environ,REVIEW_BUDGET_LEDGER=str(self.ledger.path),GITHUB_STEP_SUMMARY=''):
             runpy.run_path(str(script),run_name='__main__')
@@ -148,7 +150,8 @@ class QuoteTests(unittest.TestCase):
         directory.mkdir()
         (directory/'preflight.json').write_text(json.dumps({'blocked_reason': None, 'commit_id': 'head', 'quote': self.quote}))
         (directory/'baseline-manifest.json').write_text(json.dumps({'files': 1, 'total_lines': 1, 'total_chunks': 1,
-            'total_units': 1, 'excluded_assets': [], 'test_evidence': {}}))
+            'total_units': 1, 'excluded_assets': [], 'test_evidence': {}, 'manifest': MANIFESTS['baseline']}))
+        (directory/'adaptive-manifest.json').write_text(json.dumps({'manifest': MANIFESTS['adaptive']}))
         self.ledger.reserve(2_000_000_000, 0, 'review', 'earlier-call',
                             model={'pricing': {'input_nanodollars': 1, 'output_nanodollars': 1}})
         def qualification(*args):
@@ -156,6 +159,7 @@ class QuoteTests(unittest.TestCase):
                 complete([{'role': 'user', 'content': 'synthetic'}], time.monotonic()+5)
             return {'qualified': False, 'cases': [], 'comparison': {}}
         with patch.object(preflight, 'restore', return_value=self.ledger), \
+                patch('review_plan.admit'), \
                 patch.object(preflight, 'build_quote', return_value={**self.quote, 'next_call_reserved_nanodollars': 0}), \
                 patch('qualify.qualify', side_effect=qualification), patch('bedrock_client.invoke') as provider, \
                 patch.dict(os.environ, REVIEW_BUDGET_LEDGER=str(directory/'ledger.db'), GITHUB_STEP_SUMMARY=''), \

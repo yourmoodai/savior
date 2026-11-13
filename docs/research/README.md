@@ -17,6 +17,16 @@ Run `npm run reviewer:experiment:test` for mocked transport and grading tests;
 Python has no separate release compilation mode. Native CPU experiments retain
 their existing explicit debug/release build commands.
 
+`npm run reviewer:experiment -- context-audit --base origin/main --head HEAD
+--output .cache/context-audit.json` compares historical and source-dependency
+planning offline, including exact primary ownership, context gaps, hypothetical
+reservations, local runtime and Python allocations. Install
+`tools/adversarial_reviewer/requirements.txt` first. An optional `--test-evidence`
+JSON file reproduces a recorded CI status snapshot for the exact head. The same
+`:debug` and `:profile` commands accept `context-audit`; the editor has an offline
+audit task. See the [context-planning report](context-planning.md) for the frozen
+PR #19 replay and its limitations.
+
 Both original paid grants are closed. Their command-line runners permit reporting
 only. The manual calibration below uses a separate identity and ceiling; it cannot
 reuse those grants.

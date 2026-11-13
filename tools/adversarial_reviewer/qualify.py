@@ -73,7 +73,13 @@ def _qualify(output, events):
             batches = []
             for disposition in ('APPROVE', 'REQUEST_CHANGES'):
                 fixtures = [fixture(i, c) for i, c in enumerate(CASES) if c[3] == disposition]
-                report = review_diff(''.join(d for d, _ in fixtures), [f for _, f in fixtures], strategy=strategy)
+                from source_graph import snapshots, fixture_snapshots
+                fixture_diff = ''.join(d for d, _ in fixtures)
+                token = snapshots.set(fixture_snapshots(fixture_diff))
+                try:
+                    report = review_diff(fixture_diff, [f for _, f in fixtures], strategy=strategy)
+                finally:
+                    snapshots.reset(token)
                 found = {finding['file'].rsplit(':', 1)[0] for finding in report['findings']}
                 expected = set() if disposition == 'APPROVE' else {f for _, f in fixtures}
                 batches.append({'passed': report['complete'] and found == expected, 'report': report,

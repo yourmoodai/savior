@@ -50,7 +50,13 @@ def qualification_estimate():
     for strategy in ('baseline', 'adaptive'):
         for disposition in ('APPROVE', 'REQUEST_CHANGES'):
             fixtures = [fixture(i, c) for i, c in enumerate(CASES) if c[3] == disposition]
-            plan = review_diff(''.join(d for d, _ in fixtures), [f for _, f in fixtures], strategy=strategy, dry_run=True)
+            from source_graph import snapshots, fixture_snapshots
+            fixture_diff = ''.join(d for d, _ in fixtures)
+            token = snapshots.set(fixture_snapshots(fixture_diff))
+            try:
+                plan = review_diff(fixture_diff, [f for _, f in fixtures], strategy=strategy, dry_run=True)
+            finally:
+                snapshots.reset(token)
             count += len(plan['manifest']['chunks'])
     items = estimate({'chunks': [{'input_tokens': 48000}]*count})
     return {'phase': 'qualification', **{k: sum(i[k] for i in items) for k in
@@ -66,7 +72,8 @@ def qualified_strategy(manifests, qualification):
                and len(manifests[name]['chunks']) <= ASSESSMENT_LIMIT
                and not any(c.get('omitted_support') for c in manifests[name]['chunks'])]
     if not options:
-        raise ValueError('no qualified feasible plan')
+        from review_plan import PlanningError
+        raise PlanningError('no qualified feasible plan')
     return min(options, key=lambda name: (sum(i['reserved_nanodollars'] for i in estimate(manifests[name])), name))
 
 
@@ -95,6 +102,8 @@ def qualification_identity(qualification):
 
 
 def create(manifests, summary, qualification, *, now=None):
+    from review_plan import require_feasible
+    require_feasible(manifests)
     from model_catalog import manifest, selected as selected_model, cost
     routing = manifest()
     if os.environ['AWS_REGION'] != 'us-east-1':
