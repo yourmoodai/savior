@@ -240,6 +240,8 @@ class Ledger:
             grants = db.execute('SELECT id,cap,context FROM grants ORDER BY id').fetchall()
             ceiling = db.execute('SELECT amount FROM ceiling WHERE id=1').fetchone()
         return {'ceiling_nanodollars': ceiling[0] if ceiling else None,
+                'settled_usage_nanodollars': sum(r[4] for r in rows if r[4] is not None),
+                'outstanding_reserved_nanodollars': sum(r[3] for r in rows if r[4] is None),
                 'limit_usd': LIMIT / 1e9, 'committed_usd': sum(r[4] if r[4] is not None else r[3] for r in rows) / 1e9,
                 'pilot_committed_nanodollars': sum(r[4] if r[4] is not None else r[3] for r in rows if r[0] not in funding),
                 'qualification_committed_nanodollars': sum(r[4] if r[4] is not None else r[3] for r in rows if r[0] not in funding and r[1] == 'qualification'),

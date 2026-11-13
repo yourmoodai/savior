@@ -57,8 +57,12 @@ def render(report):
              f"Coverage: {report.get('completed_chunks', 0)}/{report.get('total_chunks', 0)} chunks."]
     if report.get('budget'):
         budget = report['budget']
-        pilot = budget.get('pilot_committed_nanodollars', round(budget['committed_usd']*1e9))/1e9
-        lines.append(f"Inference committed: ${budget['committed_usd']:.4f}; pilot ${pilot:.4f} / ${budget['limit_usd']:.2f}.")
+        if 'settled_usage_nanodollars' in budget and 'outstanding_reserved_nanodollars' in budget:
+            lines.append(f"Usage-priced cost: ${budget['settled_usage_nanodollars']/1e9:.6f}; "
+                         f"outstanding reservations: ${budget['outstanding_reserved_nanodollars']/1e9:.6f}. "
+                         "Usage pricing is not invoice reconciliation.")
+        else:
+            lines.append(f"Inference committed (usage plus holds): ${budget['committed_usd']:.4f}.")
     findings = report.get('findings', [])
     if findings:
         lines += ['', 'Findings:']

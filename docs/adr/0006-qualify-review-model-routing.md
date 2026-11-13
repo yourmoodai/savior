@@ -5,7 +5,8 @@ Date: 2026-11-11
 ## Status
 
 [ADR 8](0008-render-qualified-review-results.md) proposes superseding the prose
-reconciliation and synthesis dependency. Its remaining decisions stay in force.
+reconciliation and synthesis dependency. [ADR 9](0009-reserve-review-calls.md)
+proposes superseding whole-plan projection admission. Other decisions stay in force.
 
 Accepted for the development reviewer. Live activation remains gated by account
 access, repository cost limits, and qualification. This does not change offline

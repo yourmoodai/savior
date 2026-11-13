@@ -40,13 +40,14 @@ function ready(pr, context) {
 
 function cost_block(quote, pr, repository) {
   const p = quote.policy;
-  if (quote.blocked_reason !== 'cost_limit' || quote.binding?.repository !== repository ||
+  if (quote.schema !== 3 || quote.projection_informational !== true ||
+      quote.blocked_reason !== 'cost_limit' || quote.binding?.repository !== repository ||
       quote.binding.pr !== pr.number || quote.binding.head !== pr.head.sha || quote.binding.base !== pr.base.sha ||
       !p || p.repository !== repository.toLowerCase() || p.pr !== pr.number ||
       p.pr_limit_nanodollars !== 2e9 || p.daily_limit_nanodollars !== 5e9 ||
-      ![quote.projected_nanodollars,p.pr_remaining_nanodollars,p.daily_remaining_nanodollars].every(n=>Number.isSafeInteger(n) && n>=0) ||
+      ![quote.next_call_reserved_nanodollars,quote.projected_nanodollars,p.pr_remaining_nanodollars,p.daily_remaining_nanodollars].every(n=>Number.isSafeInteger(n) && n>=0) ||
       p.pr_remaining_nanodollars > 2e9 || p.daily_remaining_nanodollars > 5e9 ||
-      quote.projected_nanodollars <= Math.min(p.pr_remaining_nanodollars,p.daily_remaining_nanodollars)) throw Error('quote_stale');
+      quote.next_call_reserved_nanodollars <= Math.min(p.pr_remaining_nanodollars,p.daily_remaining_nanodollars)) throw Error('quote_stale');
 }
 
 async function from_comment({github,context,core,pr,decode}) {
@@ -87,10 +88,11 @@ async function from_comment({github,context,core,pr,decode}) {
   await recheck();
   const existing = await recheck();
   const marker = `<!-- savior-cost-waiver:${pr.head.sha}:${pr.base.sha} -->`;
-  const body = `${marker}\nLGTM — automated review waived by @${comment.user.login} because projected cost exceeds repository policy. No automated code-review pass is asserted.\n\n`+
+  const body = `${marker}\nLGTM — automated review waived by @${comment.user.login} because the next-call reservation exceeds the remaining allowance. No automated code-review pass is asserted.\n\n`+
     `Authorization: ${context.serverUrl || 'https://github.com'}/${repository}/pull/${pr.number}#issuecomment-${comment.id}\n`+
     `Head: \`${pr.head.sha}\`; base: \`${pr.base.sha}\`; cost evidence: \`${quote.id}\`.\n`+
-    `Projected additional cost: ${usd(quote.projected_nanodollars,Math.ceil)}. `+
+    `Next-call reservation: ${usd(quote.next_call_reserved_nanodollars,Math.ceil)}. `+
+    `Whole-plan worst-case projection (informational): ${usd(quote.projected_nanodollars,Math.ceil)}. `+
     `PR remaining: ${usd(quote.policy.pr_remaining_nanodollars)} of $2.00; `+
     `daily remaining: ${usd(quote.policy.daily_remaining_nanodollars)} of $5.00 (${quote.policy.utc_day} UTC).\n`+
     `Actor ID: ${comment.user.id}. Other reviews and required checks still apply.`;

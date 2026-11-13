@@ -7,7 +7,7 @@ import sys
 import sqlite3
 
 from budget import Ledger, BudgetError
-from chunk_plan import ASSESSMENT_LIMIT, bounded_strategy
+from chunk_plan import ASSESSMENT_LIMIT
 from reporting import finalize, render, fallback_overview
 from qualify import qualify
 
@@ -31,14 +31,12 @@ try:
         raise ValueError('repository cost policy required')
     ledger = restore()
     from quote import validate, configuration
-    from cost_policy import check
     validate(preflight['quote'])
     binding = preflight['quote']['binding']
     if (binding['head'] != head or binding['base'] != os.environ['BASE_SHA']
             or binding['repository'] != os.environ['GITHUB_REPOSITORY']
             or binding['pr'] != int(os.environ['PR_NUMBER']) or binding['configuration'] != configuration()):
         raise ValueError('review plan changed')
-    check(preflight['quote']['projected_nanodollars'], ledger.policy_budget())
     starting_cost = ledger.summary()['committed_usd']
     baseline = json.loads(Path('review-result/baseline-manifest.json').read_text())
     for field in ('files', 'total_lines', 'total_chunks', 'total_units', 'excluded_assets', 'test_evidence'):
@@ -66,10 +64,8 @@ try:
     if execution_quote['phase'] == 'qualification_required':
         execution_quote = create(manifests, ledger.summary(), qualification)
         Path('review-result/execution-quote.json').write_text(json.dumps(execution_quote, indent=2)+'\n')
-    check(execution_quote['projected_nanodollars'], ledger.policy_budget())
     strategy = execution_strategy(execution_quote, manifests, qualification)
     os.environ['REVIEW_PLAN_DIGEST'] = execution_quote['binding']['plans'][strategy]
-    os.environ['REVIEW_PLAN_RESERVATION'] = str(execution_quote['projected_nanodollars'])
     Path('review-result/strategy.json').write_text(json.dumps({
         'qualified_preference': qualification['strategy'], 'selected': strategy,
         'assessment_limit': ASSESSMENT_LIMIT}))
@@ -93,13 +89,19 @@ finally:
         report['usage']['incremental_committed_usd'] = ledger.summary()['committed_usd']-starting_cost
     blocked = Path('review-result/budget-blocked.json')
     if blocked.exists():
-        report['blocked_reason'] = json.loads(blocked.read_text())['reason']
+        failed_call = json.loads(blocked.read_text())
+        report['complete'] = False
+        report['disposition'] = 'REQUEST_CHANGES'
+        report['blocked_reason'] = failed_call['reason']
         if report['blocked_reason'] == 'budget_exhausted':
             from preflight import build_quote
             try:
-                report['quote'] = build_quote(ledger)
+                from quote import apply_policy
+                report['quote'] = apply_policy({**build_quote(ledger),
+                    'next_call_reserved_nanodollars': failed_call['required_nanodollars']}, ledger.policy_budget())
+                Path('review-result/quote.json').write_text(json.dumps(report['quote'], indent=2)+'\n')
                 report['blocked_reason'] = report['quote']['blocked_reason'] or 'budget_exhausted'
-            except (OSError, ValueError, subprocess.SubprocessError):
+            except (OSError, ValueError, KeyError, BudgetError, subprocess.SubprocessError):
                 report['blocked_reason'] = 'infrastructure_failed'
     report['body'] = render(report)
     path.write_text(json.dumps(report, indent=2)+'\n')

@@ -31,12 +31,9 @@ def assess_plan(diff, files, context, report, deadline, strategy, dry_run):
     if dry_run:
         return report
     if os.environ.get('REVIEW_PLAN_DIGEST'):
-        from quote import plan_digest, estimate
+        from quote import plan_digest
         if plan_digest(report['manifest']) != os.environ['REVIEW_PLAN_DIGEST']:
             return {**report, 'summary': 'review incomplete: quoted plan changed before execution'}
-        reserved = sum(item['reserved_nanodollars'] for item in estimate(report['manifest']))
-        if reserved > int(os.environ.get('REVIEW_PLAN_RESERVATION', '-1')):
-            return {**report, 'summary': 'review incomplete: cached assessments changed; fresh quote required'}
     pending = [(str(i), c['units'], c['support']) for i, c in enumerate(planned['chunks'], 1)]
     attempts = 0
     while pending:
