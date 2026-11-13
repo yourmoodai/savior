@@ -41,7 +41,7 @@ class QuoteTests(unittest.TestCase):
         self.assertEqual(quote['projected_nanodollars'], sum(i['reserved_nanodollars'] for i in quote['items']))
         self.assertGreater(quote['projected_nanodollars'], quote['estimated_nanodollars'])
         cached = estimate({'chunks':[{'input_tokens':1000,'cached_assessment':True}]})
-        self.assertEqual([i['calls'] for i in cached], [0]*14+[4])
+        self.assertEqual([i['calls'] for i in cached], [0]*12)
 
     def test_digest_expiration_archive_and_pricing(self):
         validate(self.quote)

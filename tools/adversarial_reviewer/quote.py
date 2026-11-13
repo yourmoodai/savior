@@ -40,9 +40,6 @@ def estimate(manifest):
                       item(role+' retry', [48000]*len(fresh), 4096, role),
                       item(role+' verification', [48000]*len(fresh)*2, 1536, 'verification'),
                       item(role+' verification retry', [48000]*len(fresh)*2, 4096, 'verification')])
-    items.extend([item('elephant', [48000]*len(fresh), 1024),
-                  item('elephant retry', [48000]*len(fresh), 4096),
-                  item('summary and retry', [48000]*(2*(len(chunks)+1)), 256)])
     return items
 
 
@@ -56,8 +53,6 @@ def qualification_estimate():
             plan = review_diff(''.join(d for d, _ in fixtures), [f for _, f in fixtures], strategy=strategy, dry_run=True)
             count += len(plan['manifest']['chunks'])
     items = estimate({'chunks': [{'input_tokens': 48000}]*count})
-    # Extra summary groups cover each separately evaluated fixture batch.
-    items.append(item('qualification batch summaries', [48000]*16, 256))
     return {'phase': 'qualification', **{k: sum(i[k] for i in items) for k in
             ('calls', 'estimated_nanodollars', 'reserved_nanodollars')}}
 
