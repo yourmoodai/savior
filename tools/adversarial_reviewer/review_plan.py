@@ -7,7 +7,7 @@ import json
 from chunk_plan import Unit, anchors, parse, ASSESSMENT_LIMIT
 from source_graph import Graph, analyzer_versions, digest
 
-SCHEMA = 2
+SCHEMA = 3
 frozen_execution = ContextVar('frozen_review_plan', default=None)
 
 
@@ -21,18 +21,21 @@ def verification_bound(messages):
     from egm import FOCUS
     from bedrock_client import estimate_input_units
     from verification import SCHEMA as verification_schema
-    finding = {'finding_id': 'f'*64, 'location': 999999999, **{k: '\U0001f9ea'*600 for k in ('invariant', 'scenario', 'correction')}}
+    # UTF-8 JSON needs at most six bytes per character (escaped controls).
+    finding = {'finding_id': 'f'*64, 'location': 999999999, **{k: '\x00'*600 for k in ('invariant', 'scenario', 'correction')}}
     expanded = [dict(m) for m in messages]
-    expanded[-1]['content'] += '\n'+prompts('', VERIFICATION_PROMPT)[1]+'\nCandidate findings to verify: '+json.dumps([finding])+'\n'
+    expanded[-1]['content'] += '\n'+prompts('', VERIFICATION_PROMPT)[1]+'\nCandidate findings to verify: '+json.dumps([finding], ensure_ascii=False)+'\n'
     expanded[-1]['content'] += '\nReviewer focus: '+max(FOCUS.values(), key=len)
     expanded[-1]['content'] += json.dumps(verification_schema)
     return estimate_input_units(expanded)
 
 
 def limitation_context(items):
-    return json.dumps([[i['side'], i['path'], i['line'], i['expression'],
-                        'callback' if i['reason'].startswith('injected') else 'receiver']
-                       for i in items], separators=(',', ':'))
+    sources = sorted({(i['side'], i['path']) for i in items})
+    locations = {source: index for index, source in enumerate(sources)}
+    calls = sorted({(locations[(i['side'], i['path'])], i['line'], i['expression'],
+                     'callback' if i['reason'].startswith('injected') else 'receiver') for i in items})
+    return json.dumps({'sources': sources, 'calls': calls}, separators=(',', ':'))
 
 
 def pack(diff, count, messages, sources, strategy):
@@ -44,12 +47,15 @@ def pack(diff, count, messages, sources, strategy):
     def request(units, roots=None):
         roots = {n for u in units for n in graph.roots(u)} if roots is None else roots
         required, issues = graph.closure(roots)
-        support = '\n'.join(f'[{graph.nodes[n].side} {graph.nodes[n].path}:{graph.nodes[n].start}-{graph.nodes[n].end}]\n'
-                            +graph.nodes[n].text for n in required)
+        shared = {}
+        for n in required:
+            node = graph.nodes[n]
+            shared.setdefault(node.text, set()).add(f'{node.side} {node.path}:{node.start}-{node.end}')
+        support = '\n'.join('['+'; '.join(sorted(locations))+']\n'+text for text, locations in shared.items())
         limitations = [item for n in required for item in graph.nodes[n].limitations]
         if limitations:
             support += '\nRuntime analysis limitations (source coverage is not runtime proof):\n'
-            support += 'Each row: revision side, path, line, expression, unresolved target kind.\n'
+            support += 'sources maps indices to [revision side, path]. Each calls row: source index, line, expression, unresolved target kind.\n'
             support += limitation_context(limitations)
             support += '\nAssess these uncertainties using the supplied source. Abstain if a judgment requires unavailable runtime targets.'
         prompt = messages(units, support)

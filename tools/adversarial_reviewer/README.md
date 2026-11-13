@@ -161,6 +161,26 @@ or administrator enforcement. See [ADR 12](../../docs/adr/0012-approve-before-bu
 
 ## Offline planning and verification
 
+Before pushing, admit the exact base and head without provider calls:
+
+```sh
+python3 tools/adversarial_reviewer/admission.py --base origin/main --head HEAD \
+  --output .cache/reviewer-admission
+```
+
+This writes both packing strategies, requires at least one complete feasible
+strategy, and restores its frozen plan. Failure exits nonzero and keeps the
+diagnostics. The single-strategy `--dry-run` command also exits nonzero for
+infeasible evidence; writing a manifest is not a successful admission.
+
+Plan schema 3 distinguishes Python import-time initialization from function
+bodies and gives class methods separate source roots. Unchanged diff context
+remains visible without becoming an unrelated dependency root. Identical source
+text is rendered once with every applicable coordinate; runtime limitations use
+a source table. UTF-8 JSON preserves verification findings without ASCII expansion,
+and the capacity bound includes worst-case escaped controls. These are precision
+and representation changes, not permission to omit required evidence or raise limits.
+
 For a local packing dry run (no AWS calls or inference charges):
 
 ```sh

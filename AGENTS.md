@@ -14,6 +14,37 @@ See [README.md](README.md) for setup and [the architecture decision](docs/adr/00
 - Model changes also require `npm run eval:local` and reference parity verification.
 - Never add assistant attribution, signatures, or contributor footers.
 
+## Completion and CI repair
+
+- Define observable acceptance gates before editing, including the execution
+  environment when behavior depends on GitHub or an operating system.
+- Reproduce failures before claiming their cause. Label untested explanations
+  as hypotheses and add regression coverage for confirmed failures.
+- Before pushing, validate every new commit message and run offline reviewer
+  admission against the exact base and head. A generated manifest is not admission.
+- Missing evidence, unsupported analysis, failed checks, and unfinished runs are
+  unresolved work even when a command exits zero.
+- After pushing, follow that revision's CI to completion. Retrieve failed-job
+  logs, investigate, repair, and rerun affected checks without waiting for another
+  user instruction. New revisions invalidate earlier completion claims.
+- Keep repairs in the existing PR unless separation is technically necessary
+  and its dependencies and activation path have been established.
+- Report implemented, locally verified, CI verified, and activated separately.
+  A commit, PR link, passing linter, or mocked API test is not end-to-end evidence.
+- Stop only when acceptance gates pass, the user stops work, or progress requires
+  genuinely missing authorization or information. Complete independent work first
+  and identify the exact blocked action. Never bypass protections to satisfy a gate.
+- Keep feedback loops focused: rerun checks affected by changes or new failures;
+  do not repeatedly run unrelated passing suites as a substitute for diagnosis.
+
+These rules apply the short feedback loops and characterization tests described
+by Michael Feathers in *Working Effectively with Legacy Code*, chapters 2 and 13,
+and the integration/system testing distinctions in Mauricio Aniche's *Effective
+Software Testing*, sections 1.4 and chapter 9. For analyzer repairs, preserve
+soundness while improving precision, following Nielson, Nielson, and Hankin's
+*Principles of Program Analysis*. Tests and observed results establish completion;
+instructions and literature alone do not guarantee correctness.
+
 ## Evaluation language
 
 - Use **measured policy alignment** for provider-policy evaluations.

@@ -33,6 +33,65 @@ def messages(units, support):
 
 
 class SourceGraphTests(unittest.TestCase):
+    def test_unchanged_diff_context_is_not_a_dependency_root(self):
+        old = {'a.py': 'def changed():\n    return 1\ndef unrelated():\n    return eval("missing")\n'}
+        new = {'a.py': old['a.py'].replace('return 1', 'return 2')}
+        snapshot = sources(old, new)
+        planned = pack(difference(old, new), estimate_input_units, messages, snapshot, 'adaptive')
+        require_feasible({'adaptive': manifest(planned)})
+        restore(planned['review_plan'], difference(old, new), snapshot)
+        for chunk in planned['chunks']:
+            self.assertNotIn('eval("missing")', chunk['support'])
+
+    def test_dry_run_rejects_infeasible_manifest_and_preserves_diagnostics(self):
+        import adversarial_review
+        files = {'a.py': 'def f():\n    return 1\n'}
+        for gap, expected in [([], 0), (['required semantic closure exceeds request capacity'], 2)]:
+            report = {'manifest': {'chunks': [{'omitted_support': gap, 'input_tokens': 100, 'verification_input_units': 100}]}}
+            with tempfile.TemporaryDirectory() as directory:
+                output = Path(directory)/'plan.json'
+                with patch('sys.argv', ['review', '--dry-run', '--json-output', str(output)]), \
+                     patch('adversarial_review.subprocess.run', return_value=Mock(stdout='a'*40)), \
+                     patch('adversarial_review.extract_git_diff', return_value=(difference({}, files), ['a.py'])), \
+                     patch('source_graph.git_snapshots', return_value=sources({}, files)), \
+                     patch('adversarial_review.review_diff', return_value=report):
+                    self.assertEqual(adversarial_review.main(), expected)
+                self.assertEqual(json.loads(output.read_text())['manifest']['chunks'][0]['omitted_support'], gap)
+
+    def test_import_metadata_is_not_reflection_but_alias_loading_is(self):
+        for code, blocked in [
+            ('from importlib.metadata import version\ndef f():\n    return version("x")\n', False),
+            ('from importlib import import_module as load\ndef f(name):\n    return load(name)\n', True),
+            ('import importlib as loader\ndef f(name):\n    return loader.import_module(name)\n', True),
+        ]:
+            graph = Graph(sources({}, {'a.py': code}))
+            _, issues = graph.closure(graph.module('new', 'a.py'))
+            self.assertEqual(bool(issues), blocked)
+
+    def test_import_initialization_and_defaults_survive_without_unused_bodies(self):
+        files = {'a.py': 'from helper import used\ndef f():\n    return used()\n',
+                 'helper.py': 'def setup():\n    return 23\nSTATE = setup()\ndef used(x=setup()):\n    return STATE\ndef unused():\n    return eval("missing")\nif __name__ == "__main__":\n    unused()\n'}
+        graph = Graph(sources({}, files))
+        root = next(n for n in graph.module('new', 'a.py') if 'f' in graph.nodes[n].names)
+        closure, issues = graph.closure([root])
+        text = '\n'.join(graph.nodes[n].text for n in closure)
+        self.assertFalse(issues)
+        self.assertIn('return 23', text)
+        self.assertIn('STATE = setup()', text)
+        self.assertIn('return STATE', text)
+        self.assertNotIn('eval("missing")', text)
+
+    def test_class_methods_have_independent_roots_and_keep_self_dependencies(self):
+        files = {'a.py': 'class C:\n    def helper(self):\n        return 42\n    def called(self):\n        return self.helper()\n    def unused(self):\n        return eval("missing")\n'}
+        graph = Graph(sources({}, files))
+        root = next(n for n in graph.module('new', 'a.py') if 'C.called' in graph.nodes[n].names)
+        closure, issues = graph.closure([root])
+        text = '\n'.join(graph.nodes[n].text for n in closure)
+        self.assertFalse(issues)
+        self.assertIn('class C:', text)
+        self.assertIn('return 42', text)
+        self.assertNotIn('eval("missing")', text)
+
     def test_runtime_uncertainty_survives_planning_and_restore(self):
         examples = {
             'a.py': 'from pathlib import Path\nroot = Path(__file__).resolve()\ndef f(paths):\n    return any(p.startswith("site/") for p in paths)\n',
@@ -95,7 +154,7 @@ class SourceGraphTests(unittest.TestCase):
                  'b.py': 'from a import first\ndef second():\n    return first()\n'}
         graph = Graph(sources(files, files))
         closure, issues = graph.closure(graph.module('new', 'a.py'))
-        self.assertEqual(len(closure), 4)
+        self.assertEqual(len([n for n in closure if not graph.nodes[n].initialization_only]), 4)
         self.assertFalse(issues)
         for path, source in [('a.py','def f(x):\n    return getattr(x, name)()\n'), ('a.rs','fn f() { arbitrary!(); }')]:
             graph = Graph(sources({}, {path:source}))
@@ -139,8 +198,8 @@ class SourceGraphTests(unittest.TestCase):
 
     def test_same_dependencies_fit_after_splitting_primary_evidence(self):
         for dynamic in (False, True):
-            source = 'def f(callback):\n'+''.join(f'    value_{i} = "'+('x'*24)+'"\n' for i in range(300))
-            source += '    return callback()\n' if dynamic else '    return value_299\n'
+            source = 'def f(callback):\n'+''.join(f'    value_{i} = "'+('x'*24)+'"\n' for i in range(500))
+            source += '    return callback()\n' if dynamic else '    return value_499\n'
             new = {'a.py': source}
             diff, snapshot = difference({}, new), sources({}, new)
             for strategy in ('baseline', 'adaptive'):
@@ -163,7 +222,7 @@ class SourceGraphTests(unittest.TestCase):
 
     def test_indivisible_source_and_subdivision_limits_preserve_coverage(self):
         for rows, limit, reason in [(1500, 512, 'required semantic closure exceeds request capacity'),
-                                    (300, 1, 'planning subdivision limit exceeded')]:
+                                    (600, 1, 'planning subdivision limit exceeded')]:
             source = 'def f():\n'+''.join(f'    value_{i} = "'+('x'*24)+'"\n' for i in range(rows))
             new = {'a.py': source}
             diff, snapshot = difference({}, new), sources({}, new)
@@ -182,7 +241,7 @@ class SourceGraphTests(unittest.TestCase):
         graph = Graph(sources({}, files))
         root = next(n for n in graph.module('new','a.py') if 'f' in graph.nodes[n].names)
         closure, issues = graph.closure([root])
-        self.assertEqual(closure, [root])
+        self.assertEqual([n for n in closure if not graph.nodes[n].initialization_only], [root])
         self.assertFalse(issues)
 
     def test_deleted_and_renamed_source_uses_old_revision(self):
@@ -269,7 +328,7 @@ class SourceGraphTests(unittest.TestCase):
         graph = Graph(sources({}, files))
         closure, issues = graph.closure(graph.module('new', 'pkg/a.py'))
         self.assertFalse(issues)
-        names = set().union(*(graph.nodes[n].names for n in closure))
+        names = set().union(*(graph.nodes[n].names for n in closure if not graph.nodes[n].initialization_only and graph.nodes[n].text.startswith('def ')))
         self.assertEqual(names, {'submit', 'allowed', 'other'})
         caller = next(n for n in graph.module('new', 'pkg/a.py') if 'submit' in graph.nodes[n].names)
         reached, issues = graph.closure([caller])
