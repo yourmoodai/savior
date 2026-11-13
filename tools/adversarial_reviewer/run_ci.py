@@ -69,6 +69,7 @@ try:
     check(execution_quote['projected_nanodollars'], ledger.policy_budget())
     strategy = execution_strategy(execution_quote, manifests, qualification)
     os.environ['REVIEW_PLAN_DIGEST'] = execution_quote['binding']['plans'][strategy]
+    os.environ['REVIEW_PLAN_RESERVATION'] = str(execution_quote['projected_nanodollars'])
     Path('review-result/strategy.json').write_text(json.dumps({
         'qualified_preference': qualification['strategy'], 'selected': strategy,
         'assessment_limit': ASSESSMENT_LIMIT}))
