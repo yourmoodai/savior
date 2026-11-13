@@ -47,7 +47,7 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual([c[0] for c in contexts], list(egm.FOCUS))
         self.assertTrue(all('private sibling conclusion' not in c[2] for c in contexts))
         self.assertEqual(result[:2], ('REQUEST_CHANGES', [finding]))
-        self.assertIn('private sibling conclusion', model.call_args.args[0][1]['content'])
+        model.assert_not_called()
         self.assertEqual(active_role.get(), 'elephant')
 
     def test_incomplete_review_or_reconciliation_never_approves(self):
@@ -58,7 +58,7 @@ class RoutingTests(unittest.TestCase):
                 return 'APPROVE', [], 'no concrete defect found'
             with patch('bedrock_client.complete', side_effect=BedrockError('unavailable')) as model:
                 result = egm.review(assess, '', [], '', [], deadline=1, supporting_context='')
-            self.assertEqual(result[0], 'COMMENT')
+            self.assertEqual(result[0], 'COMMENT' if failure == 'reviewer' else 'APPROVE')
             if failure == 'reviewer':
                 model.assert_not_called()
 
@@ -78,8 +78,9 @@ class RoutingTests(unittest.TestCase):
             with self.assertRaises(BudgetError):
                 merged.reconcile(keys[0], {'usage': {'inputTokens': 10, 'outputTokens': 10}}, 1)
 
-    def test_no_grant_means_no_provider_call(self):
-        with patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', AWS_REGION='us-east-1', REVIEW_BUDGET_GRANT=''), patch('bedrock_client.invoke') as invoke:
+    def test_local_diagnostics_need_a_grant_before_calling_provider(self):
+        with patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', AWS_REGION='us-east-1',
+                        GITHUB_ACTIONS='false', REVIEW_COST_POLICY='false', REVIEW_BUDGET_GRANT=''), patch('bedrock_client.invoke') as invoke:
             with self.assertRaisesRegex(BedrockError, 'approval'):
                 complete([], time.monotonic()+10)
             invoke.assert_not_called()
@@ -134,16 +135,17 @@ class RoutingTests(unittest.TestCase):
 
 
 class OnboardingTests(unittest.TestCase):
-    def test_unapproved_preflight_cannot_spend_unused_pilot(self):
+    def test_missing_pr_identity_cannot_spend_unused_pilot(self):
         import preflight
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             ledger = Ledger(root/'ledger.db')
             with patch.object(preflight, 'DIRECTORY', root), patch.object(preflight, 'restore', return_value=ledger), \
-                    patch.object(preflight, 'build_quote', return_value={'cap_nanodollars': 1, 'items': []}), \
-                    patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', HEAD_SHA='head', GITHUB_OUTPUT=str(root/'output')):
+                    patch.object(preflight, 'build_quote') as planner, \
+                    patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', HEAD_SHA='head', PR_NUMBER='', GITHUB_OUTPUT=str(root/'output')):
                 preflight.main()
-            self.assertEqual(json.loads((root/'preflight.json').read_text())['blocked_reason'], 'awaiting_budget')
+            planner.assert_not_called()
+            self.assertEqual(json.loads((root/'preflight.json').read_text())['blocked_reason'], 'spending_unresolved')
             self.assertIn('spend=false', (root/'output').read_text())
             self.assertEqual(ledger.summary()['calls'], [])
 

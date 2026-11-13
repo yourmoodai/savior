@@ -27,6 +27,7 @@ class ResponseFormatTests(unittest.TestCase):
         self.ledger = Ledger(Path(directory.name)/'ledger.db')
         self.ledger.authorize({'id': 'test', 'cap_nanodollars': 1_000_000_000})
         env = patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', AWS_REGION='us-east-1',
+                         GITHUB_ACTIONS='false', REVIEW_COST_POLICY='false',
                          REVIEW_BUDGET_GRANT='test', REVIEW_BUDGET_LEDGER=str(self.ledger.path),
                          REVIEW_CACHE_DISABLED='true')
         env.start()

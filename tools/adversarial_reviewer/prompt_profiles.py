@@ -25,5 +25,5 @@ languages. If uncertain, narrow the claim to the demonstrated case.
 For clean changes use one sentence of at most 25 words. Keep findings concise. Every sentence must support the disposition
 or explain a specific uncertainty.'''
     return system + '\n\n' + precision, verification + '\n\n' + precision + '''
-Check the explanation as well as the verdict. Remove unsupported claims, even when
-the underlying finding is valid.'''
+Check the explanation as well as the verdict. Reject unsupported claims as written,
+even when the underlying finding is valid. Never edit candidate text.'''

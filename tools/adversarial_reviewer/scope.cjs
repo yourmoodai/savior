@@ -15,17 +15,20 @@ module.exports = async function scope({github,context,core,enabled,bootstrap=''}
   core.setOutput('pr',pr.number); core.setOutput('head',pr.head.sha); core.setOutput('base',pr.base.sha);
   let reason = pr.state !== 'open' || pr.base.ref !== context.payload.repository.default_branch ? 'pr_not_ready' : pr.draft ? 'draft' : null;
   try {
-    if (!reason && await require('./large_admin.cjs').approve({github,context,core,pr})) return;
+    if (!reason && context.eventName === 'issue_comment') {
+      await approvals.from_comment({github,context,core,pr});
+      return;
+    }
     if (!reason && !await author_gate({github,context,pr,bootstrap})) reason = 'author_unauthorized';
     if (!reason && enabled !== 'true') reason = 'disabled';
-    if (!reason && context.eventName === 'issue_comment') await approvals.from_comment({github,context,pr,bootstrap});
   } catch (error) {
     reason = Object.hasOwn(require('./status.cjs').reasons,error.message) ? error.message : 'infrastructure_failed';
   }
   if (reason) {
     core.notice(reason);
     // Untrusted comments cannot replace the current review result.
-    if (context.eventName === 'issue_comment' && ['approval_unauthorized','invalid_approval_event'].includes(reason)) {
+    if (context.eventName === 'issue_comment') {
+      core.setFailed(reason);
       await core.summary.addRaw(require('./status.cjs').render(reason)).write();
       return;
     }

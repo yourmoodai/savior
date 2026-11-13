@@ -26,10 +26,14 @@ def conversation(messages):
             'messages': [{'role': m['role'], 'content': [{'text': m['content']}]} for m in messages if m['role'] != 'system']}
 
 
-def count_tokens(messages, deadline=None):
+def estimate_input_units(messages, deadline=None):
     """Estimate packing size without claiming an exact model token count."""
     # DeepSeek V3.2 has no CountTokens API. Spending reserves full context separately.
     return 1024 + sum(128 + len(m['content'].encode('utf-8')) for m in messages)
+
+
+# Compatibility for stored research protocols; these units are not measured tokens.
+count_tokens = estimate_input_units
 
 
 def invoke(operation, payload, deadline):
@@ -77,8 +81,17 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
         raise BedrockError('invalid model routing') from None
     if os.environ.get('AWS_REGION') != model['region']:
         raise BedrockError('bedrock region is not configured for this reviewer')
-    if not os.environ.get('REVIEW_BUDGET_GRANT'):
+    policy = os.environ.get('REVIEW_COST_POLICY') == 'true'
+    if os.environ.get('GITHUB_ACTIONS') == 'true' and not policy:
+        raise BedrockError('repository cost policy required')
+    if not policy and not os.environ.get('REVIEW_BUDGET_GRANT'):
         raise BedrockError('explicit spending approval required')
+    if policy:
+        from model_catalog import current_pricing
+        try:
+            current_pricing(model)
+        except ValueError:
+            raise BedrockError('unsupported_pricing') from None
     profile, temperature, before_call = settings.get()
     payload = {'modelId': model['model_id'], **conversation(messages),
                'inferenceConfig': {'maxTokens': (4096 if expanded else {'overview': 256, 'verification': 1536}.get(purpose, 1024)), 'temperature': temperature}}
@@ -123,7 +136,8 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
         measure('call', input_tokens=envelope['usage']['inputTokens'], output_tokens=envelope['usage']['outputTokens'])
     except BudgetError as error:
         (Path(path).parent / 'budget-blocked.json').write_text(json.dumps({
-            'reason': 'budget_exhausted' if isinstance(error, BudgetExhausted) else 'spending_unresolved'}))
+            'reason': 'budget_exhausted' if isinstance(error, BudgetExhausted) else 'spending_unresolved',
+            'required_nanodollars': model_cost(model, model['context_tokens'], payload['inferenceConfig']['maxTokens'])}))
         raise BedrockError(str(error)) from None
     try:
         if envelope['usage']['inputTokens'] > 48000:

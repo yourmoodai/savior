@@ -1,42 +1,40 @@
 const reasons = {
+  planning_failed:'Review blocked: no complete evidence plan fits. Inspect planning-failure.json and context gaps in the manifest. Qualification and spending cannot repair missing context.',
   draft:'Review not performed: this PR is a draft. Mark it ready for review to start the eligibility checks.',
   author_unauthorized:'Review not performed: the PR author is neither a repository admin nor a named CODEOWNER with write access.',
-  disabled:'Review not performed: the Bedrock reviewer is disabled. A spending approval cannot enable it.',
-  spending_unresolved:'Review blocked: earlier spending is missing or unreconciled. Restore the ledger evidence before approving any new spending.',
-  awaiting_budget:'Review is awaiting spending approval. No new inference has started.',
-  budget_exhausted:'Review stopped at its spending limit. Coverage is incomplete; the quote below covers a new attempt using reusable results.',
-  qualification_failed:'Review not performed: live model qualification failed. Extra spending does not waive qualification.',
+  disabled:'Review not performed: the Bedrock reviewer is disabled.',
+  spending_unresolved:'Review blocked: earlier spending is missing or unattributed. Reconcile the ledger before new inference. A waiver cannot repair spending evidence.',
+  cost_limit:'Automated review blocked by cost.',
+  budget_exhausted:'Review stopped at its spending limit. Coverage is incomplete.',
+  qualification_failed:'Review not performed: live model qualification failed.',
   infrastructure_failed:'Review unavailable: an infrastructure prerequisite failed. Inspect the linked workflow; this is not a code finding.',
-  quote_stale:'Approval rejected: the commit, configuration, or plan changed. Use a current quote; request a fresh review run if none is shown.',
-  quote_unavailable:'Approval rejected: the quote artifact is missing or expired. Request a fresh review run.',
-  untrusted_quote:'Approval rejected: the quote did not come from the trusted review workflow.',
-  invalid_approval_event:'Approval rejected: only a newly created human PR comment can authorize spending.',
-  unsupported_pricing:'Review blocked: the configured model or region has no verified pricing in this reviewer.',
-  quote_expired_or_invalid:'Approval rejected: the quote is expired or invalid. Request a fresh review run.',
-  approval_below_estimate:'Approval rejected: its cap is below the quoted reservation. Use the quoted amount or request a new estimate.',
-  approval_edited:'Approval rejected: comments must be newly created and unedited.',
-  approval_deleted:'Approval rejected: the comment was deleted before execution.',
-  approval_unauthorized:'Approval rejected: only repository admins or named CODEOWNERS with write access can authorize spending.',
-  approval_used:'Approval rejected: this comment already funded another run. A retry cannot create a new allowance.',
-  invalid_approval_command:'Approval rejected: use the exact command shown with the quote.',
-  invalid_approval_amount:'Approval rejected: use a positive USD amount with at most two decimal places.',
+  quote_stale:'Waiver rejected: the revision or cost evidence changed. Request a fresh review run.',
+  quote_unavailable:'Waiver rejected: no current cost-block artifact is available. Request a fresh review run.',
+  untrusted_quote:'Waiver rejected: cost evidence did not come from the trusted review workflow.',
+  invalid_approval_event:'Waiver rejected: only a newly created human PR comment can waive review.',
+  unsupported_pricing:'Review blocked: model pricing is missing, invalid, or older than 90 days.',
+  quote_expired_or_invalid:'Waiver rejected: cost evidence is expired or invalid. Request a fresh review run.',
+  approval_edited:'Waiver rejected: comments must be newly created and unedited.',
+  approval_deleted:'Waiver rejected: the comment was deleted before execution.',
+  approval_unauthorized:'Waiver rejected: only repository admins can waive automated review.',
+  invalid_approval_command:'Waiver rejected: use /savior review skip <full-head-sha>. Comments cannot increase spending limits.',
+  changes_requested:'Waiver rejected: an outstanding request for changes must be resolved or dismissed by an authorized reviewer.',
   pr_not_ready:'Review not performed: the PR must be open, ready for review, and target the default branch.',
 };
-const usd = n => '$'+(n/1e9).toFixed(2);
+const usd = (n, round=Math.floor) => '$'+(round(n/1e7)/100).toFixed(2);
 function render(reason, quote, budget, report) {
   const lines = [reasons[reason] || reasons.infrastructure_failed];
-  if (budget) lines.push(`Committed inference so far: ${usd(Math.round(budget.committed_usd*1e9))}.`);
-  if (Number.isInteger(report?.total_chunks)) lines.push(`Coverage: ${report.completed_chunks || 0}/${report.total_chunks} chunks. Full partial results remain in the report artifact.`);
-  if (quote) {
-    lines.push('',`Estimate: **${usd(quote.estimated_nanodollars)}**; proposed maximum new spend: **${usd(quote.cap_nanodollars)}**.`,
-      `${quote.binding.model}, ${quote.binding.region}; ${quote.chunks} chunks, ${quote.cached_assessments} reusable assessments.`,
-      `Pilot remaining: ${usd(Math.max(0,10000000000-quote.pilot_committed_nanodollars))}. Rates checked ${quote.binding.pricing.checked}.`,
-      ...quote.items.map(i=>`${i.phase}: ${usd(i.estimated_nanodollars)} estimated / ${usd(i.reserved_nanodollars)} reserved (${i.calls} calls).`),
-      '', 'Estimates use conservative token counts. The cap covers new inference for this revision, including qualification, verification, retries and summaries. Further subdivision may need another approval. Taxes and unrelated AWS charges are excluded.',
-      `Expires: ${new Date(quote.expires_at*1000).toISOString()}.`,
-      '', 'An admin or named CODEOWNER with write access can post:',
-      '```',`/savior review approve ${quote.id} max-usd=${(quote.cap_nanodollars/1e9).toFixed(2)}`,'```');
+  if (reason === 'cost_limit' && quote?.policy) {
+    lines.push(`Next-call reservation: ${usd(quote.next_call_reserved_nanodollars,Math.ceil)}`,
+      `Whole-plan worst-case projection (informational): ${usd(quote.projected_nanodollars,Math.ceil)}`,
+      `PR allowance remaining: ${usd(quote.policy.pr_remaining_nanodollars)} of $2.00`,
+      `Daily allowance remaining: ${usd(quote.policy.daily_remaining_nanodollars)} of $5.00`,
+      'Daily reset: midnight UTC. The PR allowance does not reset.',
+      '', 'A repository admin can waive automated review for this revision using:',
+      '```', `/savior review skip ${quote.binding.head}`, '```',
+      'The waiver submits an approval without asserting a code-review pass. Other reviews and required checks still apply.');
   }
+  if (Number.isInteger(report?.total_chunks)) lines.push(`Coverage: ${report.completed_chunks || 0}/${report.total_chunks} chunks. Partial results remain in the report artifact.`);
   return lines.join('\n');
 }
-module.exports = {render,reasons};
+module.exports = {render,reasons,usd};

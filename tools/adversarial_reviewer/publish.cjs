@@ -4,8 +4,7 @@ function verdict(report) {
   if (typeof report.body !== 'string' || !report.body.trim()) throw Error('review body is empty or missing');
   if (report.body.length > 2300) throw Error(`review body exceeds publication limit: ${report.body.length} characters`);
   if (/co-authored-by|generated-by|assisted-by|reviewed with|🤖/i.test(report.body)) throw Error('review body contains prohibited attribution');
-  const words = typeof report.overview === 'string' ? report.overview.trim().split(/\s+/).length : 0;
-  const clean = words >= 50 && words <= 100 && report.qualified === true && report.complete === true && report.synthesis_complete === true && report.disposition === 'APPROVE' && Array.isArray(report.findings) && report.findings.length === 0 && Array.isArray(report.review_failures) && report.review_failures.length === 0;
+  const clean = report.reporting_mode === 'deterministic' && report.reporting_complete === true && report.qualified === true && report.complete === true && !report.context_gaps?.length && report.disposition === 'APPROVE' && Array.isArray(report.findings) && report.findings.length === 0 && Array.isArray(report.review_failures) && report.review_failures.length === 0;
   if (!report.body.includes('**Verdict: '+(clean ? 'Approved' : 'Request changes')+'**')) throw Error('review body disagrees with computed verdict');
   return clean;
 }
@@ -39,8 +38,18 @@ module.exports = async function publish({github, context, core, head, pr, phase,
   if (existing) {
     if (existing.body !== body) await github.rest.issues.updateComment({...context.repo, comment_id:existing.id, body});
   } else await github.rest.issues.createComment({...context.repo, issue_number:Number(pr), body});
+  if (report?.blocked_reason === 'cost_limit') {
+    const notification = `<!-- savior-cost-notification:${head} -->`;
+    if (!comments.some(c=>c.user?.login === 'github-actions[bot]' && c.user?.type === 'Bot' && c.body?.startsWith(notification))) {
+      const pull = (await github.rest.pulls.get(args)).data;
+      if (pull.base.sha !== report.quote.binding.base || !await current()) return;
+      const owners = await require('./codeowners.cjs').owners({github,context,pr:pull});
+      if (owners.length && await current()) await github.rest.issues.createComment({...context.repo,issue_number:Number(pr),
+        body:`${notification}\n${owners.join(' ')}: automated review is blocked because the next-call reservation exceeds the remaining allowance. A repository admin can waive review for this revision with \`/savior review skip ${head}\`. See the review status for the reservation and allowances.`});
+    }
+  }
   if (phase === 'complete' && !report.blocked_reason) {
-    const validated = report.qualified === true && report.complete === true && report.synthesis_complete === true && report.review_failures?.length === 0;
+    const validated = report.reporting_mode === 'deterministic' && report.reporting_complete === true && report.qualified === true && report.complete === true && !report.context_gaps?.length && report.review_failures?.length === 0;
     const event = clean ? 'APPROVE' : validated && report.findings?.length > 0 ? 'REQUEST_CHANGES' : null;
     if (event) {
       const reviews = await github.paginate(github.rest.pulls.listReviews,{...args,per_page:100});

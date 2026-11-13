@@ -13,11 +13,18 @@ class BedrockClientTests(unittest.TestCase):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         env = patch.dict(os.environ, BEDROCK_REVIEW_ENABLED='true', AWS_REGION='us-east-1',
+                         GITHUB_ACTIONS='false', REVIEW_COST_POLICY='false',
                          REVIEW_BUDGET_GRANT='test', GITHUB_TOKEN='private canary', REVIEW_BUDGET_LEDGER=temp.name+'/ledger.db')
         from budget import Ledger
         Ledger(temp.name+'/ledger.db').authorize({'id':'test', 'cap_nanodollars':10_000_000_000})
         env.start()
         self.addCleanup(env.stop)
+
+    def test_ci_cannot_use_legacy_grants_without_repository_policy(self):
+        with patch.dict(os.environ, GITHUB_ACTIONS='true'), patch('bedrock_client.invoke') as provider:
+            with self.assertRaisesRegex(client.BedrockError, 'repository cost policy required'):
+                client.complete([],time.monotonic()+10)
+            provider.assert_not_called()
 
     def invoke(self, text='{}', stop='end_turn', code=0):
         output = json.dumps({'usage': {'inputTokens':20, 'outputTokens':20}, 'stopReason': stop, 'output': {'message': {'content': [{'text': text}]}}})

@@ -11,51 +11,60 @@ Install the signing dependency with
 `python3 -m pip install -r tools/adversarial_reviewer/requirements.txt`.
 The application detector and personal-review judges remain offline.
 
-## Review status and spending approval
+## Review cost and admin waivers
 
 The bot's PR comment explains why a review has not run: a draft PR, an ineligible
 author, a disabled reviewer, insufficient budget, missing spending evidence,
 failed qualification, or an infrastructure failure. A funding block is not a
 code finding and does not submit a formal request for changes.
 
-Before inference, the workflow builds a quote locally. It lists qualification,
-assessment, verification, output and transport retries, and summaries, including cached work.
-The estimate uses conservative token counts; the proposed maximum reserves full
-model context capacity. Actual charges are reconciled after each call. Further
-subdivision can exhaust that maximum before coverage is complete. Taxes and
-unrelated AWS charges are excluded.
+CI permits at most **$2 per PR lifetime** and **$5 per repository per UTC day**.
+The PR identity is the repository and PR number: revisions, reruns, qualification,
+retries, verification, and summaries share that allowance. Midnight UTC resets
+the daily allowance only. Comments cannot increase either limit.
 
-Every paid run needs approval. A repository admin or an individual named
-in the trusted base revision's `CODEOWNERS` with write access can post the exact
-command from the bot comment:
+Before inference, the workflow projects the remaining cost using configured
+prices, full model context bounds, output limits, and all planned retries.
+Reusable results reduce the remaining work. This whole-plan worst-case projection
+is informational, not expected or actual spend. The next call's reservation must
+fit both remaining allowances; equality is allowed. Prices older than 90 days, missing
+prices, and unresolved spending evidence block paid calls. Each invocation
+atomically reserves its own maximum and settles actual usage. Extra subdivision
+must still fit the same caps. Taxes and unrelated AWS charges are excluded.
+
+A cost block shows the next-call reservation, the informational whole-plan
+projection, and the two remaining balances. Usage-priced cost and outstanding
+reservations are reported separately; pricing usage does not reconcile an invoice.
+It notifies matching owners from the trusted base's `CODEOWNERS` once per blocked
+revision. Only a repository **admin**, including an admin who authored the PR,
+can waive automated review with a newly created, unedited human comment:
 
 ```text
-/savior review approve <quote-id> max-usd=<quoted-amount>
+/savior review skip <full-head-sha>
 ```
 
-The positive USD amount accepts at most two decimal places and must cover the
-quoted reservation. This creates a separate allowance for that review; it does
-not replenish the shared pilot. Quotes expire after 24 hours and bind the PR,
-head and base commits, reviewer configuration, model, region, pricing, and
-evidence plans. The workflow checks those bindings and the commenter's current
-permissions again before obtaining AWS credentials.
+The waiver requires a recorded cost block from a trusted workflow for the exact
+current head and base, with evidence no older than 24 hours. It rechecks admin
+permissions, comment integrity, PR readiness, and outstanding requests for
+changes before submitting one GitHub `APPROVE` review. That review records the
+admin, authorizing comment, revision, reservation, and balances, and explicitly
+states that no automated code-review pass is asserted. CODEOWNER status alone
+does not grant waiver authority. The old `approve … max-usd=…` command is rejected.
 
-Only newly created, unedited human comments can authorize spending. Deleted
-comments, stale quotes, and comments replayed into another workflow run cannot
-fund inference. Retries of the same logical workflow run restore the original
-allowance and can use only its remaining balance, while the quote remains valid.
-Changes to reviewed evidence require a new quote; cached results can reduce the
-remaining cost. Uncertain calls retain their full reservations. An exhausted
-allowance preserves partial coverage and produces another quote when possible.
-Approval cannot waive draft status, author eligibility, model qualification,
-complete coverage, independent CI checks, or unresolved spending history.
+A waiver makes no model calls and changes no budget. It cannot resolve missing
+spending evidence, qualification failures, outstanding requests for changes, or
+other required checks. Keep stale-approval dismissal enabled in branch protection:
+a changed head needs fresh evidence and a new command. PR size grants no approval.
+The daily reset neither retries a review nor approves a PR automatically.
 
 The comment handler becomes available after this workflow is merged into the
 default branch, as required by GitHub's
 [`issue_comment` event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment).
-After merging, request a review through `workflow_dispatch` for a ready PR to
-obtain its current quote. Posting the approval command authorizes paid inference;
-offline tests do not verify the deployed OIDC or Bedrock path.
+Deploy through the existing trusted-base review process; this waiver cannot
+authorize its own unmerged implementation. After merging, dispatch a review for
+a ready PR to obtain current cost evidence. In-budget reviews may proceed to
+inference; over-budget reviews stop before AWS credentials are obtained. Offline
+tests do not verify the deployed OIDC, Bedrock, or GitHub approval path.
 
 ## Spending ledger and configuration
 
@@ -78,14 +87,14 @@ remain charged until settlement. The flag does not cancel an in-flight invocatio
 
 Every enabled run requires passing qualification for the exact routing and
 reviewer configuration; successful qualification is reusable for 24 hours. Every
-paid run requires approval, including qualification. The ledger reserves each
+paid call, including qualification, must fit both policy limits. The ledger reserves each
 selected model's full context and maximum output at its catalog prices before
 invocation. Actual usage releases unused reservations; missing usage and
 interrupted calls retain the maximum. Prices cover modeled inference only, not
 taxes or unrelated AWS charges. The historical pilot balance remains evidence,
-not authority for new unapproved inference.
+not an additional allowance.
 
-CI serializes approved spending across PRs. The original `haiku45-pilot-20261015`
+CI serializes review and waiver workflows across PRs. The original `haiku45-pilot-20261015`
 artifact namespace is retained so changing models cannot reset spending history.
 The ledger also retains $0.03 reserved for the earlier account-access probes. It uploads a reservation before inference and
 reconciles it with a durable ledger afterward. Resumed runs restore that ledger;
@@ -93,9 +102,28 @@ an unresolved, deleted, or expired reservation prevents further spending. Keep
 these artifacts for the reviewer's lifetime. The ledger contains token metrics and
 prompt hashes, not prompt text. Use CI as the pilot's sole spending authority;
 local inference must not use an independent copy of the pilot or an approved allowance.
-Comment allowances, their immutable run identities, and each call's funding source
-travel with the ledger. A new approval cannot repair missing ledger evidence;
-restore that evidence before attempting further spending.
+Historical grants remain in the ledger for audit and local diagnostic ceilings;
+CI ignores them as spending authority. New calls record repository, PR number,
+reservation UTC date, and settlement UTC date. Unsettled calls count against
+every subsequent daily allowance; a call crossing midnight counts against both
+days. Restoring an older snapshot cannot remove a charge or change its owner.
+
+[`history.json`](history.json) attributes the existing pilot calls using retained
+workflow job intervals and their logged `PR_NUMBER`. Exact row fingerprints bind
+that evidence to unchanged charges. The cancelled-run recovery and pending call
+retain their reservations. Historical account/external probes use PR `0`, meaning
+repository activity outside a PR; they still consume daily capacity. New calls
+require a positive PR number. The probe start date is a conservative earliest
+pilot bound, not a claim that all probes happened on that date.
+
+A restored ledger containing other unattributed calls blocks inference and cost
+waivers until reconciled against retained workflow and provider evidence.
+Do not delete old rows, reset the database, or treat an expired artifact as zero.
+Retain durable backups before the 90-day artifact expiry; an expired required
+artifact deliberately blocks restoration. Reconciliation is a reviewed evidence
+change, never a comment-based budget override. A changed row, conflicting owner,
+or incomplete attribution group fails closed; applying the same evidence twice
+does not change costs.
 
 ## Offline planning and verification
 
@@ -197,8 +225,8 @@ formal GitHub approval. Independent verification, commit-message, and release ch
 must also pass before the PR is ready to merge. Validated findings submit `REQUEST_CHANGES`; infrastructure
 failures fail the check without submitting a defect review. Repeated publication
 updates the same comment and does not duplicate an unchanged formal verdict.
-The separate large-admin lightweight policy remains unchanged; it is not a
-model review. Branch protection is unchanged.
+An admin cost waiver is explicitly separate from that assessment. Branch
+protection and other required reviews remain unchanged.
 
 Non-executable PNG/JPEG/WebP files under `docs/assets` are excluded from code-review
 coverage and listed as unreviewed assets. Other binary changes remain unresolved
@@ -349,3 +377,56 @@ explain provider agreements; [API compatibility](https://docs.aws.amazon.com/bed
 and [Chat Completions endpoints](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html)
 own endpoint and signing details. [ADR 6](../../docs/adr/0006-qualify-review-model-routing.md)
 records the context-isolation and spending decisions.
+
+## Bounded design research
+
+`research.py` compares current review with deterministic reporting over the same
+three role assessments, and a fresh general reviewer covering all three roles.
+It reuses the production transport, response validation and finding verification.
+The command runs only trusted synthetic fixtures and never invokes qualification,
+reads assessment caches, publishes qualification evidence, or changes CI policy.
+
+The authorized experiment has one fixed identity, `review-designs-v1`, and a $4
+cumulative ceiling. Its journal lives under the repository's shared Git directory
+at `reviewer-research/review-designs-v1`; an adjacent anchor detects missing or
+rolled-back history. Every worktree resolves the same directory. Preserve both
+the directory and its anchor. Missing or conflicting history blocks spending;
+do not delete or reinitialize them to continue. The journal retains unresolved
+reservations and freezes each call's prices before transport. It is a local
+durability boundary, not protection against an operator replacing both records
+with an old backup.
+
+After explicit research spending authorization, freeze the 22 cases, their oracle
+outcomes, prompts, code fingerprints, runtime probes, routing, prices and execution
+order. The profile must match the frozen configuration and the repository's IAM
+trust account. The approved session corrected its profile to `awill`:
+
+```sh
+AWS_PROFILE=awill AWS_REGION=us-east-1 npm run reviewer:research -- prepare
+AWS_PROFILE=awill AWS_REGION=us-east-1 npm run reviewer:research -- run
+npm run reviewer:research -- report
+```
+
+`prepare --replay-diff path/to/change.diff` optionally adds an offline reservation
+comparison for an existing PR. This diff never enters an inference request. Run
+`prepare` exactly once; `run` resumes the same journal and skips already-started
+arms, leaving interrupted arms incomplete. A configuration change blocks further
+spending under the frozen protocol and keeps the original history. It cannot
+create a fresh allowance. Each invocation reserves full model context plus its
+bounded output; truncation retries, verification, Elephant reconciliation and
+overview synthesis all consume the same allowance. Equality at the ceiling is
+allowed. The first unaffordable reservation stops the pass and preserves results.
+
+`report.json` contains complete findings, coverage gaps, unresolved judgments,
+usage-priced charges, outstanding reservations, call counts, token usage, latency,
+abstentions, invalid responses and truncations. `report.md` provides matched-case
+comparisons and ranked follow-ups. Research assumes qualification solely to test
+reporting behavior; no production qualification or approval follows. Incomplete
+review remains incomplete, including when a model abstains.
+
+Run `npm run reviewer:research:test` for mocked budget, interruption, restart,
+transport, oracle and reporting checks. `npm run reviewer:research:debug -- report`
+uses `pdb`; `npm run reviewer:research:profile -- report` enables allocation
+tracking under the debugger. Python has no separate release build. Editor tasks
+expose these commands. The [research report](../../docs/research/reviewer-designs.md)
+owns outcomes, limitations and proposed production follow-ups.

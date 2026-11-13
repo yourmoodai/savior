@@ -120,6 +120,7 @@ class InvestigationTests(unittest.TestCase):
             ledger.authorize({'id': 'test', 'cap_nanodollars': 10_000_000_000})
             ledger.set_ceiling(amount*2)
             with patch.dict(os.environ, AWS_REGION='us-east-1', BEDROCK_REVIEW_ENABLED='true',
+                            GITHUB_ACTIONS='false', REVIEW_COST_POLICY='false',
                             REVIEW_BUDGET_GRANT='test', REVIEW_BUDGET_LEDGER=str(ledger.path)), \
                     patch('bedrock_client.selected', return_value=model), patch('bedrock_client.time.sleep'), \
                     patch('chat_transport.invoke_chat', side_effect=ChatError('http_error', retryable=True)) as invoke:

@@ -9,9 +9,9 @@ ROOT=Path(__file__).resolve().parents[2]
 @unittest.skipUnless(shutil.which('node'),'node required')
 class ReviewPolicyTests(unittest.TestCase):
     def publish(self, **changes):
-        report={'test_evidence':{'head':'head','runs':[{'workflow':'.github/workflows/'+f,'conclusion':'success'} for f in ['verify.yml','commit-messages.yml','qualification.yml']]},'commit_id':'head','qualified':True,'complete':True,'synthesis_complete':True,'overview':'word '*50,'review_failures':[],'disposition':'APPROVE','findings':[],'body':'**Verdict: Approved**'}
+        report={'test_evidence':{'head':'head','runs':[{'workflow':'.github/workflows/'+f,'conclusion':'success'} for f in ['verify.yml','commit-messages.yml','qualification.yml']]},'commit_id':'head','qualified':True,'complete':True,'reporting_complete':True,'reporting_mode':'deterministic','overview':'word '*50,'review_failures':[],'disposition':'APPROVE','findings':[],'body':'**Verdict: Approved**'}
         report.update(changes.pop('report',{}))
-        clean=50 <= len(report['overview'].split()) <= 100 and report['qualified'] and report['complete'] and report['synthesis_complete'] and not report['review_failures'] and report['disposition']=='APPROVE' and not report['findings']
+        clean=report.get('reporting_mode') == 'deterministic' and report['qualified'] and report['complete'] and report['reporting_complete'] and not report['review_failures'] and report['disposition']=='APPROVE' and not report['findings']
         report['body']=changes.pop('body','**Verdict: '+('Approved' if clean else 'Request changes')+'**')
         case={'report':report,'head':'head','comments':[],'phase':'complete',**changes}
         harness='''
@@ -36,7 +36,7 @@ publish({github,context,core,head:'head',pr:1,report:input.report,phase:input.ph
         self.assertEqual(result['failures'],[])
         self.assertEqual(result['calls'][1]['event'],'APPROVE')
     def test_findings_and_incomplete_reviews_fail_after_publication(self):
-        for patch in [{'findings':[{'title':'defect'}]},{'complete':False},{'qualified':False},{'synthesis_complete':False},{'overview':'short'},{'review_failures':['timeout']},{'disposition':'REQUEST_CHANGES'},{'disposition':'COMMENT'}]:
+        for patch in [{'findings':[{'title':'defect'}]},{'complete':False},{'qualified':False},{'reporting_complete':False},{'reporting_mode':'legacy'},{'review_failures':['timeout']},{'disposition':'REQUEST_CHANGES'},{'disposition':'COMMENT'}]:
             result=self.publish(report=patch)
             self.assertIn('**Verdict: Request changes**',result['calls'][0]['body'])
             self.assertEqual(len(result['failures']),1)

@@ -28,6 +28,14 @@
     "savior": "bridge/cli.mjs"
   },
   "scripts": {
+    "reviewer:cpu": "python3 tools/review_routing_research/run.py",
+    "reviewer:cpu:test": "python3 -m unittest discover -s tools/review_routing_research",
+    "reviewer:packing:qualify": "python3 tools/review_routing_research/qualify_packing.py",
+    "reviewer:packing:live": "python3 tools/review_routing_research/live_packing.py",
+    "reviewer:cpu:debug": "python3 -m pdb tools/review_routing_research/run.py",
+    "reviewer:cpu:profile": "python3 -X tracemalloc tools/review_routing_research/run.py benchmark --local-llm",
+    "reviewer:cpu:build:debug": "python3 tools/review_routing_research/run.py setup --debug",
+    "reviewer:cpu:build:release": "python3 tools/review_routing_research/run.py setup",
     "watch": "target/release/savior watch",
     "watch:debug": "cargo run --locked -p savior-cli -- watch",
     "watch:build:release": "cargo build --locked --release -p savior-cli",
@@ -133,9 +141,17 @@
     "site:build": "python3 scripts/site.py build",
     "site:check": "python3 scripts/site.py check",
     "site:test": "python3 scripts/site.py check && node scripts/test-site.mjs",
+    "reviewer:research": "python3 tools/adversarial_reviewer/research.py",
+    "reviewer:research:debug": "python3 -m pdb tools/adversarial_reviewer/research.py",
+    "reviewer:research:profile": "python3 -X tracemalloc tools/adversarial_reviewer/research.py",
+    "reviewer:research:test": "python3 -m unittest discover -s tools/adversarial_reviewer -p test_research.py",
     "reviewer:models": "python3 tools/adversarial_reviewer/models.py",
     "reviewer:models:debug": "python3 -m pdb tools/adversarial_reviewer/models.py",
-    "reviewer:models:profile": "python3 -X tracemalloc tools/adversarial_reviewer/models.py"
+    "reviewer:models:profile": "python3 -X tracemalloc tools/adversarial_reviewer/models.py",
+    "reviewer:experiment": "python3 tools/review_routing_research/experiment.py",
+    "reviewer:experiment:debug": "python3 -m pdb tools/review_routing_research/experiment.py",
+    "reviewer:experiment:profile": "python3 -X tracemalloc tools/review_routing_research/experiment.py",
+    "reviewer:experiment:test": "python3 -m unittest discover -s tools/review_routing_research"
   },
   "files": [
     "native/index.cjs",

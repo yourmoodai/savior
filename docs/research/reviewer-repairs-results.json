@@ -1,0 +1,2137 @@
+{
+  "experiment": "review-cost-calibration-v1",
+  "production_qualified": false,
+  "fingerprint": "02f30240fc7a9a0bb74ad0291ab4a0461843f44d83b464e254d432e07fada3aa",
+  "status": "one pass completed",
+  "budget": {
+    "experiment": "review-cost-calibration-v1",
+    "cap_nanodollars": 1000000000,
+    "charged_nanodollars": 6887990,
+    "outstanding_nanodollars": 0,
+    "remaining_nanodollars": 993112010
+  },
+  "whole_plan_reserved_nanodollars": 3378954240,
+  "whole_plan_estimated_nanodollars": 857410320,
+  "matched_calls": 55,
+  "matched_usage_priced_nanodollars": 6887990,
+  "matched_request_estimated_nanodollars": 50294240,
+  "matched_reserved_nanodollars": 826726400,
+  "matched_estimate_to_usage_ratio": 7.30172953212766,
+  "matched_reservation_to_usage_ratio": 120.02433220721865,
+  "invocations": 55,
+  "unknown_usage": 0,
+  "input_tokens": 60697,
+  "output_tokens": 6598,
+  "latency_seconds": 115.8243315909931,
+  "truncations": 0,
+  "invalid_responses": 0,
+  "abstentions": 0,
+  "incomplete_cases": 0,
+  "complete_case_flag_misses": 0,
+  "complete_benign_case_flags": 1,
+  "calls": [
+    {
+      "id": "267af53912fd48d9a463f4d715ca2ab0",
+      "context": {
+        "case": "consent_revocation_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6546,
+      "request_estimated_nanodollars": 867820,
+      "usage_priced_nanodollars": 129900,
+      "metrics": {
+        "latency_seconds": 2.6338166249915957,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1170,
+          "outputTokens": 120,
+          "totalTokens": 1290
+        }
+      }
+    },
+    {
+      "id": "091951ef59264b5fb2b09075a6f5a5ee",
+      "context": {
+        "case": "consent_revocation_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5339,
+      "request_estimated_nanodollars": 988130,
+      "usage_priced_nanodollars": 113940,
+      "metrics": {
+        "latency_seconds": 1.9469216669967864,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 942,
+          "outputTokens": 120,
+          "totalTokens": 1062
+        }
+      }
+    },
+    {
+      "id": "c745b467da4047208adf09842865fa10",
+      "context": {
+        "case": "consent_revocation_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6554,
+      "request_estimated_nanodollars": 868380,
+      "usage_priced_nanodollars": 131640,
+      "metrics": {
+        "latency_seconds": 1.883894208993297,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1172,
+          "outputTokens": 124,
+          "totalTokens": 1296
+        }
+      }
+    },
+    {
+      "id": "14dbe3a1d30741f28acb13ebf554c2d5",
+      "context": {
+        "case": "consent_revocation_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5368,
+      "request_estimated_nanodollars": 990160,
+      "usage_priced_nanodollars": 124170,
+      "metrics": {
+        "latency_seconds": 2.222514708992094,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 951,
+          "outputTokens": 144,
+          "totalTokens": 1095
+        }
+      }
+    },
+    {
+      "id": "ff845442071a4e2099d7c643930c67f7",
+      "context": {
+        "case": "consent_revocation_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6552,
+      "request_estimated_nanodollars": 868240,
+      "usage_priced_nanodollars": 132630,
+      "metrics": {
+        "latency_seconds": 3.515383958001621,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1169,
+          "outputTokens": 127,
+          "totalTokens": 1296
+        }
+      }
+    },
+    {
+      "id": "c12618e93add4c6b9d33174e92eb8e3c",
+      "context": {
+        "case": "consent_revocation_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5398,
+      "request_estimated_nanodollars": 992260,
+      "usage_priced_nanodollars": 114760,
+      "metrics": {
+        "latency_seconds": 1.8774630420084577,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 948,
+          "outputTokens": 121,
+          "totalTokens": 1069
+        }
+      }
+    },
+    {
+      "id": "aca466cbfe86418d9f7dab9f0b1f9517",
+      "context": {
+        "case": "consent_revocation_benign",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6562,
+      "request_estimated_nanodollars": 868940,
+      "usage_priced_nanodollars": 118980,
+      "metrics": {
+        "latency_seconds": 1.9305093330040108,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1174,
+          "outputTokens": 92,
+          "totalTokens": 1266
+        }
+      }
+    },
+    {
+      "id": "b1a3d95812a54cc082849498584ed1db",
+      "context": {
+        "case": "consent_revocation_benign",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6570,
+      "request_estimated_nanodollars": 869500,
+      "usage_priced_nanodollars": 129520,
+      "metrics": {
+        "latency_seconds": 1.8262796250055544,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1176,
+          "outputTokens": 118,
+          "totalTokens": 1294
+        }
+      }
+    },
+    {
+      "id": "9cf9cbeaf32e4d0a82ac94aea424eec8",
+      "context": {
+        "case": "consent_revocation_benign",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6568,
+      "request_estimated_nanodollars": 869360,
+      "usage_priced_nanodollars": 116510,
+      "metrics": {
+        "latency_seconds": 1.52130845899228,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1173,
+          "outputTokens": 86,
+          "totalTokens": 1259
+        }
+      }
+    },
+    {
+      "id": "951b4d5925cc4eb99cba773d3b4b4a24",
+      "context": {
+        "case": "protected_span_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6696,
+      "request_estimated_nanodollars": 878320,
+      "usage_priced_nanodollars": 161480,
+      "metrics": {
+        "latency_seconds": 2.6171165000123437,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1204,
+          "outputTokens": 193,
+          "totalTokens": 1397
+        }
+      }
+    },
+    {
+      "id": "ab0f2352d2bc461c904eff4a0f502022",
+      "context": {
+        "case": "protected_span_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5567,
+      "request_estimated_nanodollars": 1004090,
+      "usage_priced_nanodollars": 142770,
+      "metrics": {
+        "latency_seconds": 1.991275250009494,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1011,
+          "outputTokens": 180,
+          "totalTokens": 1191
+        }
+      }
+    },
+    {
+      "id": "c928242a568d43d08b00dfc1a013f0f6",
+      "context": {
+        "case": "protected_span_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6704,
+      "request_estimated_nanodollars": 878880,
+      "usage_priced_nanodollars": 158420,
+      "metrics": {
+        "latency_seconds": 2.3180379169934895,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1206,
+          "outputTokens": 185,
+          "totalTokens": 1391
+        }
+      }
+    },
+    {
+      "id": "c27602fce93c4faf843657b4edd014a4",
+      "context": {
+        "case": "protected_span_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5610,
+      "request_estimated_nanodollars": 1007100,
+      "usage_priced_nanodollars": 135240,
+      "metrics": {
+        "latency_seconds": 2.282607958011795,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1012,
+          "outputTokens": 161,
+          "totalTokens": 1173
+        }
+      }
+    },
+    {
+      "id": "14cdaa48aa1f4cd0b2447bedb0f503a9",
+      "context": {
+        "case": "protected_span_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6702,
+      "request_estimated_nanodollars": 878740,
+      "usage_priced_nanodollars": 141410,
+      "metrics": {
+        "latency_seconds": 1.677740042010555,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1203,
+          "outputTokens": 143,
+          "totalTokens": 1346
+        }
+      }
+    },
+    {
+      "id": "6bcb8addbf544e3b9656e14e36bf0c33",
+      "context": {
+        "case": "protected_span_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5537,
+      "request_estimated_nanodollars": 1001990,
+      "usage_priced_nanodollars": 135180,
+      "metrics": {
+        "latency_seconds": 2.3701190419960767,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 994,
+          "outputTokens": 164,
+          "totalTokens": 1158
+        }
+      }
+    },
+    {
+      "id": "def925275aaf4a17a4ca685d560e0de5",
+      "context": {
+        "case": "protected_span_benign",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6694,
+      "request_estimated_nanodollars": 878180,
+      "usage_priced_nanodollars": 109480,
+      "metrics": {
+        "latency_seconds": 1.3089031249983236,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1204,
+          "outputTokens": 63,
+          "totalTokens": 1267
+        }
+      }
+    },
+    {
+      "id": "ae451056d9164b129a6217dd8c4452f4",
+      "context": {
+        "case": "protected_span_benign",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6702,
+      "request_estimated_nanodollars": 878740,
+      "usage_priced_nanodollars": 109620,
+      "metrics": {
+        "latency_seconds": 1.2875767079822253,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1206,
+          "outputTokens": 63,
+          "totalTokens": 1269
+        }
+      }
+    },
+    {
+      "id": "915c522388414effb140c481e552ec48",
+      "context": {
+        "case": "protected_span_benign",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6700,
+      "request_estimated_nanodollars": 878600,
+      "usage_priced_nanodollars": 114610,
+      "metrics": {
+        "latency_seconds": 1.4336313750245608,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1203,
+          "outputTokens": 76,
+          "totalTokens": 1279
+        }
+      }
+    },
+    {
+      "id": "cab0d5fdcd4a4d9d90282551a2a558be",
+      "context": {
+        "case": "profile_isolation_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6559,
+      "request_estimated_nanodollars": 868730,
+      "usage_priced_nanodollars": 144870,
+      "metrics": {
+        "latency_seconds": 2.0388404999976046,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1161,
+          "outputTokens": 159,
+          "totalTokens": 1320
+        }
+      }
+    },
+    {
+      "id": "3f2968c11ce24348a9a8d5a16bc38145",
+      "context": {
+        "case": "profile_isolation_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5332,
+      "request_estimated_nanodollars": 987640,
+      "usage_priced_nanodollars": 111730,
+      "metrics": {
+        "latency_seconds": 1.6347302919893991,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 939,
+          "outputTokens": 115,
+          "totalTokens": 1054
+        }
+      }
+    },
+    {
+      "id": "b085db52f87a4313aa0eb61b8b39cb50",
+      "context": {
+        "case": "profile_isolation_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6567,
+      "request_estimated_nanodollars": 869290,
+      "usage_priced_nanodollars": 123810,
+      "metrics": {
+        "latency_seconds": 2.3879712499910966,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1163,
+          "outputTokens": 106,
+          "totalTokens": 1269
+        }
+      }
+    },
+    {
+      "id": "ef5af03051964439bc73fabd628a98b8",
+      "context": {
+        "case": "profile_isolation_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5333,
+      "request_estimated_nanodollars": 987710,
+      "usage_priced_nanodollars": 119360,
+      "metrics": {
+        "latency_seconds": 2.106832791992929,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 928,
+          "outputTokens": 136,
+          "totalTokens": 1064
+        }
+      }
+    },
+    {
+      "id": "3ad38b6283834305b2845201a2caeb1b",
+      "context": {
+        "case": "profile_isolation_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6565,
+      "request_estimated_nanodollars": 869150,
+      "usage_priced_nanodollars": 130800,
+      "metrics": {
+        "latency_seconds": 1.5844264999905135,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1160,
+          "outputTokens": 124,
+          "totalTokens": 1284
+        }
+      }
+    },
+    {
+      "id": "e159771529f949aa94408e91e4f79a26",
+      "context": {
+        "case": "profile_isolation_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5348,
+      "request_estimated_nanodollars": 988760,
+      "usage_priced_nanodollars": 114720,
+      "metrics": {
+        "latency_seconds": 1.5605885830009356,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 936,
+          "outputTokens": 123,
+          "totalTokens": 1059
+        }
+      }
+    },
+    {
+      "id": "ef79c8e884dd4535beb41454d60bbcff",
+      "context": {
+        "case": "profile_isolation_benign",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6546,
+      "request_estimated_nanodollars": 867820,
+      "usage_priced_nanodollars": 103060,
+      "metrics": {
+        "latency_seconds": 1.598124915995868,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1158,
+          "outputTokens": 55,
+          "totalTokens": 1213
+        }
+      }
+    },
+    {
+      "id": "e366751620474498aaa5629e17cbcb9e",
+      "context": {
+        "case": "profile_isolation_benign",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6554,
+      "request_estimated_nanodollars": 868380,
+      "usage_priced_nanodollars": 103600,
+      "metrics": {
+        "latency_seconds": 1.41045908399974,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1160,
+          "outputTokens": 56,
+          "totalTokens": 1216
+        }
+      }
+    },
+    {
+      "id": "f006a3e61f8842899faf98728c11d573",
+      "context": {
+        "case": "profile_isolation_benign",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6552,
+      "request_estimated_nanodollars": 868240,
+      "usage_priced_nanodollars": 101390,
+      "metrics": {
+        "latency_seconds": 1.3225549170165323,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1157,
+          "outputTokens": 51,
+          "totalTokens": 1208
+        }
+      }
+    },
+    {
+      "id": "b36947656bca4be1bdaa202261cb11bc",
+      "context": {
+        "case": "protocol_compatibility_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6630,
+      "request_estimated_nanodollars": 873700,
+      "usage_priced_nanodollars": 139750,
+      "metrics": {
+        "latency_seconds": 1.6164663750096224,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1185,
+          "outputTokens": 142,
+          "totalTokens": 1327
+        }
+      }
+    },
+    {
+      "id": "8818d16b60d14d9bb5423bba607844f5",
+      "context": {
+        "case": "protocol_compatibility_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5419,
+      "request_estimated_nanodollars": 993730,
+      "usage_priced_nanodollars": 119190,
+      "metrics": {
+        "latency_seconds": 1.8588016249996144,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 977,
+          "outputTokens": 127,
+          "totalTokens": 1104
+        }
+      }
+    },
+    {
+      "id": "0b340bc8d72a43148f0f65706c55b878",
+      "context": {
+        "case": "protocol_compatibility_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6638,
+      "request_estimated_nanodollars": 874260,
+      "usage_priced_nanodollars": 138290,
+      "metrics": {
+        "latency_seconds": 6.234711541997967,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1187,
+          "outputTokens": 138,
+          "totalTokens": 1325
+        }
+      }
+    },
+    {
+      "id": "77de4b8759fb4993b433faaf387843f3",
+      "context": {
+        "case": "protocol_compatibility_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5403,
+      "request_estimated_nanodollars": 992610,
+      "usage_priced_nanodollars": 123120,
+      "metrics": {
+        "latency_seconds": 1.6872339170076884,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 976,
+          "outputTokens": 137,
+          "totalTokens": 1113
+        }
+      }
+    },
+    {
+      "id": "79bdee3904fd49b19dd301f5fceb50ea",
+      "context": {
+        "case": "protocol_compatibility_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6636,
+      "request_estimated_nanodollars": 874120,
+      "usage_priced_nanodollars": 126880,
+      "metrics": {
+        "latency_seconds": 1.5301661250123288,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1184,
+          "outputTokens": 110,
+          "totalTokens": 1294
+        }
+      }
+    },
+    {
+      "id": "c0fc4f45772d485dbe51d6eb9367ef29",
+      "context": {
+        "case": "protocol_compatibility_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5381,
+      "request_estimated_nanodollars": 991070,
+      "usage_priced_nanodollars": 118450,
+      "metrics": {
+        "latency_seconds": 1.635991874994943,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 955,
+          "outputTokens": 129,
+          "totalTokens": 1084
+        }
+      }
+    },
+    {
+      "id": "f5dc791d3e964776b08dba923a2864b3",
+      "context": {
+        "case": "protocol_compatibility_benign",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6639,
+      "request_estimated_nanodollars": 874330,
+      "usage_priced_nanodollars": 119700,
+      "metrics": {
+        "latency_seconds": 1.3954669999948237,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1190,
+          "outputTokens": 91,
+          "totalTokens": 1281
+        }
+      }
+    },
+    {
+      "id": "02c90d572c3c4a1c9358209522961e37",
+      "context": {
+        "case": "protocol_compatibility_benign",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6647,
+      "request_estimated_nanodollars": 874890,
+      "usage_priced_nanodollars": 115040,
+      "metrics": {
+        "latency_seconds": 2.5036742920055985,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1192,
+          "outputTokens": 79,
+          "totalTokens": 1271
+        }
+      }
+    },
+    {
+      "id": "6ca6e958025e4349b5a77eef108b663a",
+      "context": {
+        "case": "protocol_compatibility_benign",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6645,
+      "request_estimated_nanodollars": 874750,
+      "usage_priced_nanodollars": 114830,
+      "metrics": {
+        "latency_seconds": 1.7458023329963908,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1189,
+          "outputTokens": 79,
+          "totalTokens": 1268
+        }
+      }
+    },
+    {
+      "id": "3d8a6de97b1d4c14ba871e6dba9c0df5",
+      "context": {
+        "case": "spending_boundary_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6611,
+      "request_estimated_nanodollars": 872370,
+      "usage_priced_nanodollars": 147240,
+      "metrics": {
+        "latency_seconds": 2.6648241670045536,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1172,
+          "outputTokens": 163,
+          "totalTokens": 1335
+        }
+      }
+    },
+    {
+      "id": "ec2f70513b5044038922b83b0d96f4da",
+      "context": {
+        "case": "spending_boundary_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5461,
+      "request_estimated_nanodollars": 996670,
+      "usage_priced_nanodollars": 128080,
+      "metrics": {
+        "latency_seconds": 2.3224365419882815,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 984,
+          "outputTokens": 148,
+          "totalTokens": 1132
+        }
+      }
+    },
+    {
+      "id": "1a47531280c84fd5bc0ed5e662d47617",
+      "context": {
+        "case": "spending_boundary_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6619,
+      "request_estimated_nanodollars": 872930,
+      "usage_priced_nanodollars": 148580,
+      "metrics": {
+        "latency_seconds": 2.0464857920014765,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1174,
+          "outputTokens": 166,
+          "totalTokens": 1340
+        }
+      }
+    },
+    {
+      "id": "539482cb4953490e8a773fb2a4a5a193",
+      "context": {
+        "case": "spending_boundary_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5466,
+      "request_estimated_nanodollars": 997020,
+      "usage_priced_nanodollars": 116670,
+      "metrics": {
+        "latency_seconds": 2.815944166999543,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 981,
+          "outputTokens": 120,
+          "totalTokens": 1101
+        }
+      }
+    },
+    {
+      "id": "1311723fb4134b56ae2607b016998f4c",
+      "context": {
+        "case": "spending_boundary_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6617,
+      "request_estimated_nanodollars": 872790,
+      "usage_priced_nanodollars": 142770,
+      "metrics": {
+        "latency_seconds": 3.233821166009875,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1171,
+          "outputTokens": 152,
+          "totalTokens": 1323
+        }
+      }
+    },
+    {
+      "id": "8662b61e224a46ab8a68ec3075aed323",
+      "context": {
+        "case": "spending_boundary_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5423,
+      "request_estimated_nanodollars": 994010,
+      "usage_priced_nanodollars": 131670,
+      "metrics": {
+        "latency_seconds": 1.7043978750007227,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 961,
+          "outputTokens": 161,
+          "totalTokens": 1122
+        }
+      }
+    },
+    {
+      "id": "a99405e497c440a09b583bc796ab57d0",
+      "context": {
+        "case": "spending_boundary_benign",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6625,
+      "request_estimated_nanodollars": 873350,
+      "usage_priced_nanodollars": 104180,
+      "metrics": {
+        "latency_seconds": 1.6197116249823011,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1174,
+          "outputTokens": 55,
+          "totalTokens": 1229
+        }
+      }
+    },
+    {
+      "id": "24a51dca6ca14152a2841f990b9ca4cb",
+      "context": {
+        "case": "spending_boundary_benign",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6633,
+      "request_estimated_nanodollars": 873910,
+      "usage_priced_nanodollars": 109520,
+      "metrics": {
+        "latency_seconds": 1.5340707089926582,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1176,
+          "outputTokens": 68,
+          "totalTokens": 1244
+        }
+      }
+    },
+    {
+      "id": "2c4686473ff54e24b10d9d23567e8d3d",
+      "context": {
+        "case": "spending_boundary_benign",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6631,
+      "request_estimated_nanodollars": 873770,
+      "usage_priced_nanodollars": 102510,
+      "metrics": {
+        "latency_seconds": 1.4115739589906298,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1173,
+          "outputTokens": 51,
+          "totalTokens": 1224
+        }
+      }
+    },
+    {
+      "id": "14aa5fd7ad7d4240ae3c381677ffd92c",
+      "context": {
+        "case": "interrupted_accounting_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6598,
+      "request_estimated_nanodollars": 871460,
+      "usage_priced_nanodollars": 139360,
+      "metrics": {
+        "latency_seconds": 2.937603124999441,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1168,
+          "outputTokens": 144,
+          "totalTokens": 1312
+        }
+      }
+    },
+    {
+      "id": "dad5fd1cf75c49f9876dcbfe5686fd53",
+      "context": {
+        "case": "interrupted_accounting_defective",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5396,
+      "request_estimated_nanodollars": 992120,
+      "usage_priced_nanodollars": 115110,
+      "metrics": {
+        "latency_seconds": 3.496147708996432,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 953,
+          "outputTokens": 121,
+          "totalTokens": 1074
+        }
+      }
+    },
+    {
+      "id": "763272ab2216482592fa83c5c416dd57",
+      "context": {
+        "case": "interrupted_accounting_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6606,
+      "request_estimated_nanodollars": 872020,
+      "usage_priced_nanodollars": 137500,
+      "metrics": {
+        "latency_seconds": 2.5224687499867287,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1170,
+          "outputTokens": 139,
+          "totalTokens": 1309
+        }
+      }
+    },
+    {
+      "id": "8597add69ef44b368dc869a9f3f9df90",
+      "context": {
+        "case": "interrupted_accounting_defective",
+        "role": "security"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5356,
+      "request_estimated_nanodollars": 989320,
+      "usage_priced_nanodollars": 122500,
+      "metrics": {
+        "latency_seconds": 2.3249465830158442,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 950,
+          "outputTokens": 140,
+          "totalTokens": 1090
+        }
+      }
+    },
+    {
+      "id": "ede9b66fafe5442dba748b4504615005",
+      "context": {
+        "case": "interrupted_accounting_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6604,
+      "request_estimated_nanodollars": 871880,
+      "usage_priced_nanodollars": 139290,
+      "metrics": {
+        "latency_seconds": 3.035676125000464,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1167,
+          "outputTokens": 144,
+          "totalTokens": 1311
+        }
+      }
+    },
+    {
+      "id": "24419674defb425588b888377edda47f",
+      "context": {
+        "case": "interrupted_accounting_defective",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5374,
+      "request_estimated_nanodollars": 990580,
+      "usage_priced_nanodollars": 116340,
+      "metrics": {
+        "latency_seconds": 2.622467457986204,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 942,
+          "outputTokens": 126,
+          "totalTokens": 1068
+        }
+      }
+    },
+    {
+      "id": "f5e2da7cd53941b19b8538d4d7f23347",
+      "context": {
+        "case": "interrupted_accounting_benign",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6630,
+      "request_estimated_nanodollars": 873700,
+      "usage_priced_nanodollars": 134040,
+      "metrics": {
+        "latency_seconds": 1.7216784170013852,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1172,
+          "outputTokens": 130,
+          "totalTokens": 1302
+        }
+      }
+    },
+    {
+      "id": "eb873ca4a8824aca9c43efe77a98a098",
+      "context": {
+        "case": "interrupted_accounting_benign",
+        "role": "correctness"
+      },
+      "reserved_nanodollars": 15165440,
+      "request_input_units": 5385,
+      "request_estimated_nanodollars": 991350,
+      "usage_priced_nanodollars": 115230,
+      "metrics": {
+        "latency_seconds": 1.5525452090078034,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 949,
+          "outputTokens": 122,
+          "totalTokens": 1071
+        }
+      }
+    },
+    {
+      "id": "61074471b07d4aaa8933aeef297fe7b2",
+      "context": {
+        "case": "interrupted_accounting_benign",
+        "role": "security"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6638,
+      "request_estimated_nanodollars": 874260,
+      "usage_priced_nanodollars": 126180,
+      "metrics": {
+        "latency_seconds": 2.268095084000379,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1174,
+          "outputTokens": 110,
+          "totalTokens": 1284
+        }
+      }
+    },
+    {
+      "id": "e33cbc87c4954a90ae09f4ba01285bb7",
+      "context": {
+        "case": "interrupted_accounting_benign",
+        "role": "compatibility"
+      },
+      "reserved_nanodollars": 14960640,
+      "request_input_units": 6636,
+      "request_estimated_nanodollars": 874120,
+      "usage_priced_nanodollars": 122370,
+      "metrics": {
+        "latency_seconds": 1.491493667010218,
+        "stop_reason": "end_turn",
+        "usage": {
+          "inputTokens": 1171,
+          "outputTokens": 101,
+          "totalTokens": 1272
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "case": "consent_revocation_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": false,
+        "resolved": true
+      },
+      "findings": [
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input with current=False, saved=True results in appending revoked text to records. Correction: Restore the condition to 'if current and saved:' to ensure both consents are present.",
+          "evidence": "def retain(current, saved, text, records):",
+          "file": "research/case0/consent_revocation.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "Trace persistence requires both current and saved explicit consent."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input with current=False and saved=True results in appending text to records, which should be rejected. Correction: Restore the condition to 'if current and saved:' to ensure both consents are present.",
+          "evidence": "def retain(current, saved, text, records):",
+          "file": "research/case0/consent_revocation.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "Trace persistence requires both current and saved explicit consent."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input with current=False, saved=True results in appending text, whereas the old code correctly returned an empty list. Correction: Restore the condition to `if current and saved:` to ensure both consents are present before appending.",
+          "evidence": "def retain(current, saved, text, records):",
+          "file": "research/case0/consent_revocation.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "Trace persistence requires both current and saved explicit consent."
+        }
+      ],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input with current=False, saved=True results in appending revoked text to records. Correction: Restore the condition to 'if current and saved:' to ensure both consents are present.",
+              "evidence": "def retain(current, saved, text, records):",
+              "file": "research/case0/consent_revocation.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            }
+          ],
+          "summary": "a7fbbb208fd9c563123f3fd8c5e2e2b8bb108dffae0eee9889a246e5e68bdf9a: retain: The invariant requires both current and saved explicit consent. The new code (line 1) only checks 'if saved:', which allows appending text when current is False, violating the invariant."
+        },
+        "security": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input with current=False and saved=True results in appending text to records, which should be rejected. Correction: Restore the condition to 'if current and saved:' to ensure both consents are present.",
+              "evidence": "def retain(current, saved, text, records):",
+              "file": "research/case0/consent_revocation.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            }
+          ],
+          "summary": "b44663543ef2295b9fa5488c8bf04e8ed02b7e60b9a69559ceaae42d595a9a2d: retain: The invariant requires both current and saved explicit consent. The old code (if current and saved) correctly enforced this, appending only when both were true. The new code (if saved) violates the invariant by appending when current is False, allowing a trace to persist without the current explicit consent."
+        },
+        "compatibility": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input with current=False, saved=True results in appending text, whereas the old code correctly returned an empty list. Correction: Restore the condition to `if current and saved:` to ensure both consents are present before appending.",
+              "evidence": "def retain(current, saved, text, records):",
+              "file": "research/case0/consent_revocation.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            }
+          ],
+          "summary": "59bcd0cf9223278a422a9d536ca1fd2072a09a57998eb8cf81c94bd699ca5457: retain: OLD: current=False, saved=True -> condition false, list empty. NEW: current=False, saved=True -> condition true, text appended. The new code violates the invariant by appending without current consent."
+        }
+      },
+      "disposition": "REQUEST_CHANGES",
+      "body": "Disposition: REQUEST_CHANGES\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input with current=False, saved=True results in appending revoked text to records. Correction: Restore the condition to &\\#x27;if current and saved:&\\#x27; to ensure both consents are present.&quot;, &quot;evidence&quot;: &quot;def retain(current, saved, text, records):&quot;, &quot;file&quot;: &quot;research/case0/consent\\_revocation.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Trace persistence requires both current and saved explicit consent.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input with current=False and saved=True results in appending text to records, which should be rejected. Correction: Restore the condition to &\\#x27;if current and saved:&\\#x27; to ensure both consents are present.&quot;, &quot;evidence&quot;: &quot;def retain(current, saved, text, records):&quot;, &quot;file&quot;: &quot;research/case0/consent\\_revocation.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Trace persistence requires both current and saved explicit consent.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input with current=False, saved=True results in appending text, whereas the old code correctly returned an empty list. Correction: Restore the condition to \\`if current and saved:\\` to ensure both consents are present before appending.&quot;, &quot;evidence&quot;: &quot;def retain(current, saved, text, records):&quot;, &quot;file&quot;: &quot;research/case0/consent\\_revocation.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Trace persistence requires both current and saved explicit consent.&quot;}\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input with current=False, saved=True results in appending revoked text to records. Correction: Restore the condition to &\\#x27;if current and saved:&\\#x27; to ensure both consents are present.&quot;, &quot;evidence&quot;: &quot;def retain(current, saved, text, records):&quot;, &quot;file&quot;: &quot;research/case0/consent\\_revocation.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Trace persistence requires both current and saved explicit consent.&quot;}\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;a7fbbb208fd9c563123f3fd8c5e2e2b8bb108dffae0eee9889a246e5e68bdf9a: retain: The invariant requires both current and saved explicit consent. The new code (line 1) only checks &\\#x27;if saved:&\\#x27;, which allows appending text when current is False, violating the invariant.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input with current=False and saved=True results in appending text to records, which should be rejected. Correction: Restore the condition to &\\#x27;if current and saved:&\\#x27; to ensure both consents are present.&quot;, &quot;evidence&quot;: &quot;def retain(current, saved, text, records):&quot;, &quot;file&quot;: &quot;research/case0/consent\\_revocation.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Trace persistence requires both current and saved explicit consent.&quot;}\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;b44663543ef2295b9fa5488c8bf04e8ed02b7e60b9a69559ceaae42d595a9a2d: retain: The invariant requires both current and saved explicit consent. The old code (if current and saved) correctly enforced this, appending only when both were true. The new code (if saved) violates the invariant by appending when current is False, allowing a trace to persist without the current explicit consent.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input with current=False, saved=True results in appending text, whereas the old code correctly returned an empty list. Correction: Restore the condition to \\`if current and saved:\\` to ensure both consents are present before appending.&quot;, &quot;evidence&quot;: &quot;def retain(current, saved, text, records):&quot;, &quot;file&quot;: &quot;research/case0/consent\\_revocation.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Trace persistence requires both current and saved explicit consent.&quot;}\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;59bcd0cf9223278a422a9d536ca1fd2072a09a57998eb8cf81c94bd699ca5457: retain: OLD: current=False, saved=True -&gt; condition false, list empty. NEW: current=False, saved=True -&gt; condition true, text appended. The new code violates the invariant by appending without current consent.&quot;}",
+      "grade": {
+        "case_flag_detected": true,
+        "complete": true,
+        "finding_labels_resolved": false,
+        "accuracy_eligible": false,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 3
+      }
+    },
+    {
+      "case": "consent_revocation_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": true,
+        "resolved": true
+      },
+      "findings": [],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a boolean short-circuit `if current and saved` with `if all((current, saved))`. In Python, `all` returns `True` only if all elements are truthy. This is functionally equivalent to the original logic for boolean operands, as `current and saved` also requires both to be truthy. No defect is introduced."
+        },
+        "security": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a boolean short-circuit `if current and saved` with `if all((current, saved))`. In Python, `all` returns `True` only if all elements are truthy. This is semantically equivalent to the original expression for boolean operands, as `current and saved` also short-circuits and returns the last truthy value (which is truthy) or the first falsy value (which is falsy). The behavior is identical for the provided operands."
+        },
+        "compatibility": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a boolean short-circuit `if current and saved` with a truthy check `if all((current, saved))`. In Python, `all` returns `True` only if all elements are truthy. This is functionally equivalent for boolean operands, preserving the original behavior."
+        }
+      },
+      "disposition": "APPROVE",
+      "body": "Disposition: APPROVE\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;The change replaces a boolean short-circuit \\`if current and saved\\` with \\`if all((current, saved))\\`. In Python, \\`all\\` returns \\`True\\` only if all elements are truthy. This is functionally equivalent to the original logic for boolean operands, as \\`current and saved\\` also requires both to be truthy. No defect is introduced.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;The change replaces a boolean short-circuit \\`if current and saved\\` with \\`if all((current, saved))\\`. In Python, \\`all\\` returns \\`True\\` only if all elements are truthy. This is semantically equivalent to the original expression for boolean operands, as \\`current and saved\\` also short-circuits and returns the last truthy value (which is truthy) or the first falsy value (which is falsy). The behavior is identical for the provided operands.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;The change replaces a boolean short-circuit \\`if current and saved\\` with a truthy check \\`if all((current, saved))\\`. In Python, \\`all\\` returns \\`True\\` only if all elements are truthy. This is functionally equivalent for boolean operands, preserving the original behavior.&quot;}",
+      "grade": {
+        "case_flag_detected": false,
+        "complete": true,
+        "finding_labels_resolved": true,
+        "accuracy_eligible": true,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 0
+      }
+    },
+    {
+      "case": "protected_span_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": false,
+        "resolved": true
+      },
+      "findings": [
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: text='abc', start=0, end=3, protected=[(0,3)], marker='X'. The new code raises ValueError, but the old code would return 'X'. Correction: Restore the original condition `start < b and a < end` to allow exact boundary matches.",
+          "evidence": "def replace(text, start, end, protected, marker):",
+          "file": "research/case2/protected_span.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "Protected spans must never be edited; the function must reject overlaps including edge cases."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "With `start=0`, `end=5`, and a protected span `(4, 6)`, the old code raises an error, but the new code allows the replacement, modifying the protected span. Correction: Restore the original condition `start < b and a < end` to correctly detect intersection at the boundaries.",
+          "evidence": "def replace(text, start, end, protected, marker):",
+          "file": "research/case2/protected_span.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "Protected spans must not be modified if they intersect with the replacement interval."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Replacing text starting at index 0 and ending at index 5 with a marker, where a protected span exists from index 5 to 10. Correction: Restore the strict inequality check: if any(start < b and a < end for a, b in protected):",
+          "evidence": "def replace(text, start, end, protected, marker):",
+          "file": "research/case2/protected_span.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "Protected spans must never be modified by a replacement operation."
+        }
+      ],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: text='abc', start=0, end=3, protected=[(0,3)], marker='X'. The new code raises ValueError, but the old code would return 'X'. Correction: Restore the original condition `start < b and a < end` to allow exact boundary matches.",
+              "evidence": "def replace(text, start, end, protected, marker):",
+              "file": "research/case2/protected_span.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected spans must never be edited; the function must reject overlaps including edge cases."
+            }
+          ],
+          "summary": "4a3ca4b0c6bfdbe932ad584a33db4b2b4521745212ff6f388d4049e9f96cf648: retain: The new condition `start <= a and b <= end` incorrectly treats the protected span (0,3) as an overlap with the edit range (0,3), causing a false positive rejection. The old condition `start < b and a < end` correctly identifies this as a non-overlapping match, allowing the edit to proceed. The concrete input 'abc' with start=0, end=3, protected=[(0,3)] demonstrates the invariant violation."
+        },
+        "security": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "With `start=0`, `end=5`, and a protected span `(4, 6)`, the old code raises an error, but the new code allows the replacement, modifying the protected span. Correction: Restore the original condition `start < b and a < end` to correctly detect intersection at the boundaries.",
+              "evidence": "def replace(text, start, end, protected, marker):",
+              "file": "research/case2/protected_span.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected spans must not be modified if they intersect with the replacement interval."
+            }
+          ],
+          "summary": "2a3990e28d9da07283e1310a03663d45d47d729b0664f9106eb55fe60aaae12b: retain: OLD: start=0, end=5, protected=(4,6). Condition `0 < 6 and 4 < 5` is true, raising ValueError. NEW: Condition `0 <= 4 and 6 <= 5` is false, allowing replacement. The new code fails to detect intersection at the boundary (4,6) and (0,5)."
+        },
+        "compatibility": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Replacing text starting at index 0 and ending at index 5 with a marker, where a protected span exists from index 5 to 10. Correction: Restore the strict inequality check: if any(start < b and a < end for a, b in protected):",
+              "evidence": "def replace(text, start, end, protected, marker):",
+              "file": "research/case2/protected_span.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected spans must never be modified by a replacement operation."
+            }
+          ],
+          "summary": "69a1645d0ccad25eb40203425b5c2ffff016cc224455dc67f0cfe6f8f6530136: retain: OLD: Replacing [0,5) with marker fails to detect protected [5,10) because start < b (0 < 5) is false. NEW: Replacing [0,5) with marker fails to detect protected [5,10) because start <= a (0 <= 5) is true, raising ValueError. The NEW outcome violates the invariant while the OLD outcome does not."
+        }
+      },
+      "disposition": "REQUEST_CHANGES",
+      "body": "Disposition: REQUEST_CHANGES\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: text=&\\#x27;abc&\\#x27;, start=0, end=3, protected=\\[(0,3)\\], marker=&\\#x27;X&\\#x27;. The new code raises ValueError, but the old code would return &\\#x27;X&\\#x27;. Correction: Restore the original condition \\`start &lt; b and a &lt; end\\` to allow exact boundary matches.&quot;, &quot;evidence&quot;: &quot;def replace(text, start, end, protected, marker):&quot;, &quot;file&quot;: &quot;research/case2/protected\\_span.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Protected spans must never be edited; the function must reject overlaps including edge cases.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;With \\`start=0\\`, \\`end=5\\`, and a protected span \\`(4, 6)\\`, the old code raises an error, but the new code allows the replacement, modifying the protected span. Correction: Restore the original condition \\`start &lt; b and a &lt; end\\` to correctly detect intersection at the boundaries.&quot;, &quot;evidence&quot;: &quot;def replace(text, start, end, protected, marker):&quot;, &quot;file&quot;: &quot;research/case2/protected\\_span.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Protected spans must not be modified if they intersect with the replacement interval.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Replacing text starting at index 0 and ending at index 5 with a marker, where a protected span exists from index 5 to 10. Correction: Restore the strict inequality check: if any(start &lt; b and a &lt; end for a, b in protected):&quot;, &quot;evidence&quot;: &quot;def replace(text, start, end, protected, marker):&quot;, &quot;file&quot;: &quot;research/case2/protected\\_span.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Protected spans must never be modified by a replacement operation.&quot;}\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: text=&\\#x27;abc&\\#x27;, start=0, end=3, protected=\\[(0,3)\\], marker=&\\#x27;X&\\#x27;. The new code raises ValueError, but the old code would return &\\#x27;X&\\#x27;. Correction: Restore the original condition \\`start &lt; b and a &lt; end\\` to allow exact boundary matches.&quot;, &quot;evidence&quot;: &quot;def replace(text, start, end, protected, marker):&quot;, &quot;file&quot;: &quot;research/case2/protected\\_span.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Protected spans must never be edited; the function must reject overlaps including edge cases.&quot;}\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;4a3ca4b0c6bfdbe932ad584a33db4b2b4521745212ff6f388d4049e9f96cf648: retain: The new condition \\`start &lt;= a and b &lt;= end\\` incorrectly treats the protected span (0,3) as an overlap with the edit range (0,3), causing a false positive rejection. The old condition \\`start &lt; b and a &lt; end\\` correctly identifies this as a non-overlapping match, allowing the edit to proceed. The concrete input &\\#x27;abc&\\#x27; with start=0, end=3, protected=\\[(0,3)\\] demonstrates the invariant violation.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;With \\`start=0\\`, \\`end=5\\`, and a protected span \\`(4, 6)\\`, the old code raises an error, but the new code allows the replacement, modifying the protected span. Correction: Restore the original condition \\`start &lt; b and a &lt; end\\` to correctly detect intersection at the boundaries.&quot;, &quot;evidence&quot;: &quot;def replace(text, start, end, protected, marker):&quot;, &quot;file&quot;: &quot;research/case2/protected\\_span.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Protected spans must not be modified if they intersect with the replacement interval.&quot;}\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;2a3990e28d9da07283e1310a03663d45d47d729b0664f9106eb55fe60aaae12b: retain: OLD: start=0, end=5, protected=(4,6). Condition \\`0 &lt; 6 and 4 &lt; 5\\` is true, raising ValueError. NEW: Condition \\`0 &lt;= 4 and 6 &lt;= 5\\` is false, allowing replacement. The new code fails to detect intersection at the boundary (4,6) and (0,5).&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Replacing text starting at index 0 and ending at index 5 with a marker, where a protected span exists from index 5 to 10. Correction: Restore the strict inequality check: if any(start &lt; b and a &lt; end for a, b in protected):&quot;, &quot;evidence&quot;: &quot;def replace(text, start, end, protected, marker):&quot;, &quot;file&quot;: &quot;research/case2/protected\\_span.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Protected spans must never be modified by a replacement operation.&quot;}\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;69a1645d0ccad25eb40203425b5c2ffff016cc224455dc67f0cfe6f8f6530136: retain: OLD: Replacing \\[0,5) with marker fails to detect protected \\[5,10) because start &lt; b (0 &lt; 5) is false. NEW: Replacing \\[0,5) with marker fails to detect protected \\[5,10) because start &lt;= a (0 &lt;= 5) is true, raising ValueError. The NEW outcome violates the invariant while the OLD outcome does not.&quot;}",
+      "grade": {
+        "case_flag_detected": true,
+        "complete": true,
+        "finding_labels_resolved": false,
+        "accuracy_eligible": false,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 3
+      }
+    },
+    {
+      "case": "protected_span_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": true,
+        "resolved": true
+      },
+      "findings": [],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change swaps the order of operands in the comparison `a < end and start < b`. This is logically equivalent to the original `start < b and a < end` and does not alter the outcome of the condition."
+        },
+        "security": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change swaps the order of operands in the comparison `a < end and start < b`. This is logically equivalent to the original `start < b and a < end` and does not alter the behavior of the function."
+        },
+        "compatibility": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change swaps the order of operands in the comparison `a < end and start < b`. This is logically equivalent to the original `start < b and a < end` and does not alter the boolean outcome for any valid input, preserving the invariant that protected spans cannot be intersected."
+        }
+      },
+      "disposition": "APPROVE",
+      "body": "Disposition: APPROVE\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;The change swaps the order of operands in the comparison \\`a &lt; end and start &lt; b\\`. This is logically equivalent to the original \\`start &lt; b and a &lt; end\\` and does not alter the outcome of the condition.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;The change swaps the order of operands in the comparison \\`a &lt; end and start &lt; b\\`. This is logically equivalent to the original \\`start &lt; b and a &lt; end\\` and does not alter the behavior of the function.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;The change swaps the order of operands in the comparison \\`a &lt; end and start &lt; b\\`. This is logically equivalent to the original \\`start &lt; b and a &lt; end\\` and does not alter the boolean outcome for any valid input, preserving the invariant that protected spans cannot be intersected.&quot;}",
+      "grade": {
+        "case_flag_detected": false,
+        "complete": true,
+        "finding_labels_resolved": true,
+        "accuracy_eligible": true,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 0
+      }
+    },
+    {
+      "case": "profile_isolation_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": false,
+        "resolved": true
+      },
+      "findings": [
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: profiles={'default': {'trace': 'default'}}, selected='missing'. Old: KeyError. New: 'default'. Correction: Revert to `profiles[selected]['trace']` to raise KeyError for missing profiles.",
+          "evidence": "def read(profiles, selected):",
+          "file": "research/case4/profile_isolation.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "Missing profiles must fail closed."
+        }
+      ],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: profiles={'default': {'trace': 'default'}}, selected='missing'. Old: KeyError. New: 'default'. Correction: Revert to `profiles[selected]['trace']` to raise KeyError for missing profiles.",
+              "evidence": "def read(profiles, selected):",
+              "file": "research/case4/profile_isolation.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed."
+            }
+          ],
+          "summary": "53114c182bd71e60aacb87be566e47750c9d7d4d283ec09220c3c1692e672616: retain: The new code returns a default value for missing profiles, violating the invariant that missing profiles must fail closed. The old code raised a KeyError, which satisfies the invariant."
+        },
+        "security": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "eadb11bdec4577583b005e3c12dc6ebc85725632f1852efd8344933bb7f2de7a: reject: The new code returns the default trace for missing profiles, which satisfies the invariant 'Missing profiles must fail closed' by returning a safe default. The original code would raise a KeyError, which is a failure to close safely. The change corrects the behavior to match the invariant."
+        },
+        "compatibility": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "6d3a9e486e550462235b236a605cbd6d3a6773643187ec3bbc0bc776bd97b03a: reject: The new code returns the default trace for missing profiles, which satisfies the invariant 'Missing profiles must fail closed' by preventing a KeyError. The old code would raise a KeyError, which violates the invariant."
+        }
+      },
+      "disposition": "REQUEST_CHANGES",
+      "body": "Disposition: REQUEST_CHANGES\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: profiles={&\\#x27;default&\\#x27;: {&\\#x27;trace&\\#x27;: &\\#x27;default&\\#x27;}}, selected=&\\#x27;missing&\\#x27;. Old: KeyError. New: &\\#x27;default&\\#x27;. Correction: Revert to \\`profiles\\[selected\\]\\[&\\#x27;trace&\\#x27;\\]\\` to raise KeyError for missing profiles.&quot;, &quot;evidence&quot;: &quot;def read(profiles, selected):&quot;, &quot;file&quot;: &quot;research/case4/profile\\_isolation.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Missing profiles must fail closed.&quot;}\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: profiles={&\\#x27;default&\\#x27;: {&\\#x27;trace&\\#x27;: &\\#x27;default&\\#x27;}}, selected=&\\#x27;missing&\\#x27;. Old: KeyError. New: &\\#x27;default&\\#x27;. Correction: Revert to \\`profiles\\[selected\\]\\[&\\#x27;trace&\\#x27;\\]\\` to raise KeyError for missing profiles.&quot;, &quot;evidence&quot;: &quot;def read(profiles, selected):&quot;, &quot;file&quot;: &quot;research/case4/profile\\_isolation.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Missing profiles must fail closed.&quot;}\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;53114c182bd71e60aacb87be566e47750c9d7d4d283ec09220c3c1692e672616: retain: The new code returns a default value for missing profiles, violating the invariant that missing profiles must fail closed. The old code raised a KeyError, which satisfies the invariant.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;eadb11bdec4577583b005e3c12dc6ebc85725632f1852efd8344933bb7f2de7a: reject: The new code returns the default trace for missing profiles, which satisfies the invariant &\\#x27;Missing profiles must fail closed&\\#x27; by returning a safe default. The original code would raise a KeyError, which is a failure to close safely. The change corrects the behavior to match the invariant.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;6d3a9e486e550462235b236a605cbd6d3a6773643187ec3bbc0bc776bd97b03a: reject: The new code returns the default trace for missing profiles, which satisfies the invariant &\\#x27;Missing profiles must fail closed&\\#x27; by preventing a KeyError. The old code would raise a KeyError, which violates the invariant.&quot;}",
+      "grade": {
+        "case_flag_detected": true,
+        "complete": true,
+        "finding_labels_resolved": false,
+        "accuracy_eligible": false,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 1
+      }
+    },
+    {
+      "case": "profile_isolation_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": true,
+        "resolved": true
+      },
+      "findings": [],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a direct dictionary access with `__getitem__`, which is semantically equivalent for standard dictionaries and does not alter the behavior or failure modes. The function contract remains unchanged."
+        },
+        "security": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a direct dictionary access with `__getitem__` to explicitly invoke the method. This modification does not alter the logic or the result of retrieving the trace for a selected profile."
+        },
+        "compatibility": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a direct dictionary access with `__getitem__`, which is semantically equivalent for standard dictionaries and does not alter observable behavior or fail-closed requirements."
+        }
+      },
+      "disposition": "APPROVE",
+      "body": "Disposition: APPROVE\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;The change replaces a direct dictionary access with \\`\\_\\_getitem\\_\\_\\`, which is semantically equivalent for standard dictionaries and does not alter the behavior or failure modes. The function contract remains unchanged.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;The change replaces a direct dictionary access with \\`\\_\\_getitem\\_\\_\\` to explicitly invoke the method. This modification does not alter the logic or the result of retrieving the trace for a selected profile.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;The change replaces a direct dictionary access with \\`\\_\\_getitem\\_\\_\\`, which is semantically equivalent for standard dictionaries and does not alter observable behavior or fail-closed requirements.&quot;}",
+      "grade": {
+        "case_flag_detected": false,
+        "complete": true,
+        "finding_labels_resolved": true,
+        "accuracy_eligible": true,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 0
+      }
+    },
+    {
+      "case": "protocol_compatibility_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": false,
+        "resolved": true
+      },
+      "findings": [
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: {'version': 1, 'text': 'ok'}; Old: returns 'ok'; New: raises ValueError. Correction: Restore the check to 'if response[\"version\"] not in (1, 2):' to accept both versions.",
+          "evidence": "def accept(response):",
+          "file": "research/case6/protocol_compatibility.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "The host must accept version 1 and version 2 response envelopes."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: {'version': 1, 'text': 'ok'}; Old: returns 'ok'; New: raises ValueError. Correction: Restore the check to 'if response[\"version\"] not in (1, 2):'.",
+          "evidence": "def accept(response):",
+          "file": "research/case6/protocol_compatibility.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "The host must accept version 1 and version 2 response envelopes."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input response with version 1 is rejected instead of accepted. Correction: Restore the check to `if response['version'] not in (1, 2):`",
+          "evidence": "def accept(response):",
+          "file": "research/case6/protocol_compatibility.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "The host must accept version 1 and version 2 response envelopes."
+        }
+      ],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: {'version': 1, 'text': 'ok'}; Old: returns 'ok'; New: raises ValueError. Correction: Restore the check to 'if response[\"version\"] not in (1, 2):' to accept both versions.",
+              "evidence": "def accept(response):",
+              "file": "research/case6/protocol_compatibility.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes."
+            }
+          ],
+          "summary": "bf2de28ce723f207f96e04bae16b4f12c84d42a30e520655233b91ec9cf378b3: retain: The new code rejects version 1, violating the invariant that the host must accept both version 1 and 2. The old code accepted version 1, so the NEW outcome violates the invariant while the OLD outcome does not."
+        },
+        "security": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: {'version': 1, 'text': 'ok'}; Old: returns 'ok'; New: raises ValueError. Correction: Restore the check to 'if response[\"version\"] not in (1, 2):'.",
+              "evidence": "def accept(response):",
+              "file": "research/case6/protocol_compatibility.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes."
+            }
+          ],
+          "summary": "85388343179dcac535a0a8aaf708828c984d792bf88e81fc440ac1eff9d977eb: retain: The new code rejects version 1, violating the invariant that the host must accept version 1 and version 2. The old code accepted version 1, satisfying the invariant. The concrete input {'version': 1, 'text': 'ok'} demonstrates the failure."
+        },
+        "compatibility": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input response with version 1 is rejected instead of accepted. Correction: Restore the check to `if response['version'] not in (1, 2):`",
+              "evidence": "def accept(response):",
+              "file": "research/case6/protocol_compatibility.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes."
+            }
+          ],
+          "summary": "b8ab1ecd38091243c44dc667a220f3385c93ec7272f256a1ccd1a5aac7d56da4: retain: The NEW outcome rejects version 1, violating the invariant that the host must accept version 1. The OLD outcome would have accepted it. The concrete input `{'version': 1, 'text': 'ok'}` demonstrates the failure."
+        }
+      },
+      "disposition": "REQUEST_CHANGES",
+      "body": "Disposition: REQUEST_CHANGES\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: {&\\#x27;version&\\#x27;: 1, &\\#x27;text&\\#x27;: &\\#x27;ok&\\#x27;}; Old: returns &\\#x27;ok&\\#x27;; New: raises ValueError. Correction: Restore the check to &\\#x27;if response\\[\\\\&quot;version\\\\&quot;\\] not in (1, 2):&\\#x27; to accept both versions.&quot;, &quot;evidence&quot;: &quot;def accept(response):&quot;, &quot;file&quot;: &quot;research/case6/protocol\\_compatibility.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The host must accept version 1 and version 2 response envelopes.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: {&\\#x27;version&\\#x27;: 1, &\\#x27;text&\\#x27;: &\\#x27;ok&\\#x27;}; Old: returns &\\#x27;ok&\\#x27;; New: raises ValueError. Correction: Restore the check to &\\#x27;if response\\[\\\\&quot;version\\\\&quot;\\] not in (1, 2):&\\#x27;.&quot;, &quot;evidence&quot;: &quot;def accept(response):&quot;, &quot;file&quot;: &quot;research/case6/protocol\\_compatibility.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The host must accept version 1 and version 2 response envelopes.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input response with version 1 is rejected instead of accepted. Correction: Restore the check to \\`if response\\[&\\#x27;version&\\#x27;\\] not in (1, 2):\\`&quot;, &quot;evidence&quot;: &quot;def accept(response):&quot;, &quot;file&quot;: &quot;research/case6/protocol\\_compatibility.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The host must accept version 1 and version 2 response envelopes.&quot;}\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: {&\\#x27;version&\\#x27;: 1, &\\#x27;text&\\#x27;: &\\#x27;ok&\\#x27;}; Old: returns &\\#x27;ok&\\#x27;; New: raises ValueError. Correction: Restore the check to &\\#x27;if response\\[\\\\&quot;version\\\\&quot;\\] not in (1, 2):&\\#x27; to accept both versions.&quot;, &quot;evidence&quot;: &quot;def accept(response):&quot;, &quot;file&quot;: &quot;research/case6/protocol\\_compatibility.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The host must accept version 1 and version 2 response envelopes.&quot;}\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;bf2de28ce723f207f96e04bae16b4f12c84d42a30e520655233b91ec9cf378b3: retain: The new code rejects version 1, violating the invariant that the host must accept both version 1 and 2. The old code accepted version 1, so the NEW outcome violates the invariant while the OLD outcome does not.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: {&\\#x27;version&\\#x27;: 1, &\\#x27;text&\\#x27;: &\\#x27;ok&\\#x27;}; Old: returns &\\#x27;ok&\\#x27;; New: raises ValueError. Correction: Restore the check to &\\#x27;if response\\[\\\\&quot;version\\\\&quot;\\] not in (1, 2):&\\#x27;.&quot;, &quot;evidence&quot;: &quot;def accept(response):&quot;, &quot;file&quot;: &quot;research/case6/protocol\\_compatibility.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The host must accept version 1 and version 2 response envelopes.&quot;}\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;85388343179dcac535a0a8aaf708828c984d792bf88e81fc440ac1eff9d977eb: retain: The new code rejects version 1, violating the invariant that the host must accept version 1 and version 2. The old code accepted version 1, satisfying the invariant. The concrete input {&\\#x27;version&\\#x27;: 1, &\\#x27;text&\\#x27;: &\\#x27;ok&\\#x27;} demonstrates the failure.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input response with version 1 is rejected instead of accepted. Correction: Restore the check to \\`if response\\[&\\#x27;version&\\#x27;\\] not in (1, 2):\\`&quot;, &quot;evidence&quot;: &quot;def accept(response):&quot;, &quot;file&quot;: &quot;research/case6/protocol\\_compatibility.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The host must accept version 1 and version 2 response envelopes.&quot;}\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;b8ab1ecd38091243c44dc667a220f3385c93ec7272f256a1ccd1a5aac7d56da4: retain: The NEW outcome rejects version 1, violating the invariant that the host must accept version 1. The OLD outcome would have accepted it. The concrete input \\`{&\\#x27;version&\\#x27;: 1, &\\#x27;text&\\#x27;: &\\#x27;ok&\\#x27;}\\` demonstrates the failure.&quot;}",
+      "grade": {
+        "case_flag_detected": true,
+        "complete": true,
+        "finding_labels_resolved": false,
+        "accuracy_eligible": false,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 3
+      }
+    },
+    {
+      "case": "protocol_compatibility_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": true,
+        "resolved": true
+      },
+      "findings": [],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a tuple with a set literal. In Python, both `(1, 2)` and `{1, 2}` evaluate to the same set of values, so the membership check `response['version'] not in {1, 2}` produces identical results to the original tuple. The behavior is functionally equivalent and does not introduce a defect."
+        },
+        "security": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a tuple with a set literal. In Python, both `(1, 2)` and `{1, 2}` are valid iterables for the `in` operator and evaluate to the same boolean result. The logic for checking version membership remains identical, so the function behavior is preserved."
+        },
+        "compatibility": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change replaces a tuple with a set literal. In Python, both `(1, 2)` and `{1, 2}` are valid iterables for the `in` operator and evaluate to the same boolean result. The logic for checking version membership is identical, so the observable behavior is preserved."
+        }
+      },
+      "disposition": "APPROVE",
+      "body": "Disposition: APPROVE\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;The change replaces a tuple with a set literal. In Python, both \\`(1, 2)\\` and \\`{1, 2}\\` evaluate to the same set of values, so the membership check \\`response\\[&\\#x27;version&\\#x27;\\] not in {1, 2}\\` produces identical results to the original tuple. The behavior is functionally equivalent and does not introduce a defect.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;The change replaces a tuple with a set literal. In Python, both \\`(1, 2)\\` and \\`{1, 2}\\` are valid iterables for the \\`in\\` operator and evaluate to the same boolean result. The logic for checking version membership remains identical, so the function behavior is preserved.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;The change replaces a tuple with a set literal. In Python, both \\`(1, 2)\\` and \\`{1, 2}\\` are valid iterables for the \\`in\\` operator and evaluate to the same boolean result. The logic for checking version membership is identical, so the observable behavior is preserved.&quot;}",
+      "grade": {
+        "case_flag_detected": false,
+        "complete": true,
+        "finding_labels_resolved": true,
+        "accuracy_eligible": true,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 0
+      }
+    },
+    {
+      "case": "spending_boundary_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": false,
+        "resolved": true
+      },
+      "findings": [
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: charged=0, outstanding=100, requested=0, cap=100. Old: False (0+100+0 <= 100). New: True (0+0 <= 100). Correction: Restore the 'outstanding' term to the admission check: return charged + outstanding + requested <= cap.",
+          "evidence": "def admit(charged, outstanding, requested, cap):",
+          "file": "research/case8/spending_boundary.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "The sum of charged, outstanding, and requested amounts must not exceed the cap."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: charged=0, outstanding=100, requested=0, cap=100. Old: False (0+100+0 <= 100). New: True (0+0 <= 100). Correction: Restore the 'outstanding' term to the admission check: return charged + outstanding + requested <= cap.",
+          "evidence": "def admit(charged, outstanding, requested, cap):",
+          "file": "research/case8/spending_boundary.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "The admission function must ensure charged + outstanding + requested <= cap."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: charged=0, outstanding=100, requested=0, cap=50. Old: False (admit), New: True (admit). Correction: Restore the 'outstanding' term: return charged + outstanding + requested <= cap.",
+          "evidence": "def admit(charged, outstanding, requested, cap):",
+          "file": "research/case8/spending_boundary.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "Admission must fail if outstanding + charged + requested exceeds the cap."
+        }
+      ],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: charged=0, outstanding=100, requested=0, cap=100. Old: False (0+100+0 <= 100). New: True (0+0 <= 100). Correction: Restore the 'outstanding' term to the admission check: return charged + outstanding + requested <= cap.",
+              "evidence": "def admit(charged, outstanding, requested, cap):",
+              "file": "research/case8/spending_boundary.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The sum of charged, outstanding, and requested amounts must not exceed the cap."
+            }
+          ],
+          "summary": "b60e459e2732bf76d69abf5e961b4c3345e66eb0c6ec3446ac44da4b298c0085: retain: The concrete input (charged=0, outstanding=100, requested=0, cap=100) satisfies preconditions. The OLD outcome (False) correctly indicates the sum exceeds the cap, while the NEW outcome (True) incorrectly admits the request, violating the invariant that the sum must not exceed the cap."
+        },
+        "security": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: charged=0, outstanding=100, requested=0, cap=100. Old: False (0+100+0 <= 100). New: True (0+0 <= 100). Correction: Restore the 'outstanding' term to the admission check: return charged + outstanding + requested <= cap.",
+              "evidence": "def admit(charged, outstanding, requested, cap):",
+              "file": "research/case8/spending_boundary.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admission function must ensure charged + outstanding + requested <= cap."
+            }
+          ],
+          "summary": "ad6e5c0e6088f5870da39599782e6246f81dea99eb9af2998323a56497173773: retain: The new code omits 'outstanding' from the admission check, allowing admission when charged + requested <= cap but charged + outstanding + requested > cap, violating the stated invariant."
+        },
+        "compatibility": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: charged=0, outstanding=100, requested=0, cap=50. Old: False (admit), New: True (admit). Correction: Restore the 'outstanding' term: return charged + outstanding + requested <= cap.",
+              "evidence": "def admit(charged, outstanding, requested, cap):",
+              "file": "research/case8/spending_boundary.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Admission must fail if outstanding + charged + requested exceeds the cap."
+            }
+          ],
+          "summary": "1bd496ed8de14eecb188b2010d5efe887599b620b5ebad9038dfef4ca67f5025: retain: The invariant requires that charged + outstanding + requested never exceed the cap. The new code omits 'outstanding', allowing admission when outstanding + charged + requested > cap. The concrete input (charged=0, outstanding=100, requested=0, cap=50) demonstrates this violation: the old outcome (False) correctly rejected the admission, while the new outcome (True) incorrectly admitted the request."
+        }
+      },
+      "disposition": "REQUEST_CHANGES",
+      "body": "Disposition: REQUEST_CHANGES\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: charged=0, outstanding=100, requested=0, cap=100. Old: False (0+100+0 &lt;= 100). New: True (0+0 &lt;= 100). Correction: Restore the &\\#x27;outstanding&\\#x27; term to the admission check: return charged + outstanding + requested &lt;= cap.&quot;, &quot;evidence&quot;: &quot;def admit(charged, outstanding, requested, cap):&quot;, &quot;file&quot;: &quot;research/case8/spending\\_boundary.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The sum of charged, outstanding, and requested amounts must not exceed the cap.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: charged=0, outstanding=100, requested=0, cap=100. Old: False (0+100+0 &lt;= 100). New: True (0+0 &lt;= 100). Correction: Restore the &\\#x27;outstanding&\\#x27; term to the admission check: return charged + outstanding + requested &lt;= cap.&quot;, &quot;evidence&quot;: &quot;def admit(charged, outstanding, requested, cap):&quot;, &quot;file&quot;: &quot;research/case8/spending\\_boundary.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The admission function must ensure charged + outstanding + requested &lt;= cap.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: charged=0, outstanding=100, requested=0, cap=50. Old: False (admit), New: True (admit). Correction: Restore the &\\#x27;outstanding&\\#x27; term: return charged + outstanding + requested &lt;= cap.&quot;, &quot;evidence&quot;: &quot;def admit(charged, outstanding, requested, cap):&quot;, &quot;file&quot;: &quot;research/case8/spending\\_boundary.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Admission must fail if outstanding + charged + requested exceeds the cap.&quot;}\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: charged=0, outstanding=100, requested=0, cap=100. Old: False (0+100+0 &lt;= 100). New: True (0+0 &lt;= 100). Correction: Restore the &\\#x27;outstanding&\\#x27; term to the admission check: return charged + outstanding + requested &lt;= cap.&quot;, &quot;evidence&quot;: &quot;def admit(charged, outstanding, requested, cap):&quot;, &quot;file&quot;: &quot;research/case8/spending\\_boundary.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The sum of charged, outstanding, and requested amounts must not exceed the cap.&quot;}\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;b60e459e2732bf76d69abf5e961b4c3345e66eb0c6ec3446ac44da4b298c0085: retain: The concrete input (charged=0, outstanding=100, requested=0, cap=100) satisfies preconditions. The OLD outcome (False) correctly indicates the sum exceeds the cap, while the NEW outcome (True) incorrectly admits the request, violating the invariant that the sum must not exceed the cap.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: charged=0, outstanding=100, requested=0, cap=100. Old: False (0+100+0 &lt;= 100). New: True (0+0 &lt;= 100). Correction: Restore the &\\#x27;outstanding&\\#x27; term to the admission check: return charged + outstanding + requested &lt;= cap.&quot;, &quot;evidence&quot;: &quot;def admit(charged, outstanding, requested, cap):&quot;, &quot;file&quot;: &quot;research/case8/spending\\_boundary.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The admission function must ensure charged + outstanding + requested &lt;= cap.&quot;}\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;ad6e5c0e6088f5870da39599782e6246f81dea99eb9af2998323a56497173773: retain: The new code omits &\\#x27;outstanding&\\#x27; from the admission check, allowing admission when charged + requested &lt;= cap but charged + outstanding + requested &gt; cap, violating the stated invariant.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: charged=0, outstanding=100, requested=0, cap=50. Old: False (admit), New: True (admit). Correction: Restore the &\\#x27;outstanding&\\#x27; term: return charged + outstanding + requested &lt;= cap.&quot;, &quot;evidence&quot;: &quot;def admit(charged, outstanding, requested, cap):&quot;, &quot;file&quot;: &quot;research/case8/spending\\_boundary.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;Admission must fail if outstanding + charged + requested exceeds the cap.&quot;}\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;1bd496ed8de14eecb188b2010d5efe887599b620b5ebad9038dfef4ca67f5025: retain: The invariant requires that charged + outstanding + requested never exceed the cap. The new code omits &\\#x27;outstanding&\\#x27;, allowing admission when outstanding + charged + requested &gt; cap. The concrete input (charged=0, outstanding=100, requested=0, cap=50) demonstrates this violation: the old outcome (False) correctly rejected the admission, while the new outcome (True) incorrectly admitted the request.&quot;}",
+      "grade": {
+        "case_flag_detected": true,
+        "complete": true,
+        "finding_labels_resolved": false,
+        "accuracy_eligible": false,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 3
+      }
+    },
+    {
+      "case": "spending_boundary_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": true,
+        "resolved": true
+      },
+      "findings": [],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The function arguments are reordered in the return statement, but addition is commutative, so the boolean result is identical for all inputs. The change is a cosmetic reordering of terms."
+        },
+        "security": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change reorders the operands in the addition expression. Addition is commutative, so the sum of the three values remains identical. The comparison operator and the cap value are unchanged, preserving the logical condition that the total must not exceed the cap."
+        },
+        "compatibility": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The function arguments are reordered, but the arithmetic expression remains identical. The order of addition does not affect the sum, so the boolean result is preserved for all inputs."
+        }
+      },
+      "disposition": "APPROVE",
+      "body": "Disposition: APPROVE\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;The function arguments are reordered in the return statement, but addition is commutative, so the boolean result is identical for all inputs. The change is a cosmetic reordering of terms.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;The change reorders the operands in the addition expression. Addition is commutative, so the sum of the three values remains identical. The comparison operator and the cap value are unchanged, preserving the logical condition that the total must not exceed the cap.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;The function arguments are reordered, but the arithmetic expression remains identical. The order of addition does not affect the sum, so the boolean result is preserved for all inputs.&quot;}",
+      "grade": {
+        "case_flag_detected": false,
+        "complete": true,
+        "finding_labels_resolved": true,
+        "accuracy_eligible": true,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 0
+      }
+    },
+    {
+      "case": "interrupted_accounting_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": false,
+        "resolved": true
+      },
+      "findings": [
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: reserved=10, charged=None. Old: returns 10. New: returns 0. Correction: Restore the conditional check: `return reserved if charged is None else charged`.",
+          "evidence": "def committed(reserved, charged):",
+          "file": "research/case10/interrupted_accounting.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "When `charged` is `None`, the function should return `reserved` to preserve the reservation."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: reserved=10, charged=0. Old: returns 10. New: returns 0. Correction: Use `return reserved if charged is None else charged`.",
+          "evidence": "def committed(reserved, charged):",
+          "file": "research/case10/interrupted_accounting.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "A falsy `charged` value should be treated as `None` and return `reserved`."
+        },
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input (reserved=10, charged=0) returns 0 instead of 10. Correction: Restore the conditional check: return reserved if charged is None else charged.",
+          "evidence": "def committed(reserved, charged):",
+          "file": "research/case10/interrupted_accounting.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "committed should return reserved when charged is None, and charged otherwise."
+        }
+      ],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=10, charged=None. Old: returns 10. New: returns 0. Correction: Restore the conditional check: `return reserved if charged is None else charged`.",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case10/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When `charged` is `None`, the function should return `reserved` to preserve the reservation."
+            }
+          ],
+          "summary": "664338aee701ccede34ebbd8e63206b3758c647f7b4871ea73bda789faa547cb: retain: The new implementation `return charged or 0` returns 0 when `charged` is None, violating the invariant that the reservation should be preserved. The old behavior correctly returned `reserved`."
+        },
+        "security": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=10, charged=0. Old: returns 10. New: returns 0. Correction: Use `return reserved if charged is None else charged`.",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case10/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "A falsy `charged` value should be treated as `None` and return `reserved`."
+            }
+          ],
+          "summary": "0f6572bcf4f36325ea7ebb01020ea6cd29dc131cdcf041c1bda6ae705814960e: retain: The new implementation `return charged or 0` treats falsy values like 0 as 0, violating the invariant that falsy `charged` should be treated as `None` to return `reserved`. The old behavior returned `reserved` for `charged=0`, which satisfied the invariant."
+        },
+        "compatibility": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input (reserved=10, charged=0) returns 0 instead of 10. Correction: Restore the conditional check: return reserved if charged is None else charged.",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case10/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "committed should return reserved when charged is None, and charged otherwise."
+            }
+          ],
+          "summary": "5437bb97346958a472767bf946542a43e37212b8f3f9a22221d248d71d78ba2a: retain: The new implementation returns charged or 0, which evaluates to 0 for charged=0. This violates the invariant that reserved=10 should be returned when charged is None, as 0 is returned instead."
+        }
+      },
+      "disposition": "REQUEST_CHANGES",
+      "body": "Disposition: REQUEST_CHANGES\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: reserved=10, charged=None. Old: returns 10. New: returns 0. Correction: Restore the conditional check: \\`return reserved if charged is None else charged\\`.&quot;, &quot;evidence&quot;: &quot;def committed(reserved, charged):&quot;, &quot;file&quot;: &quot;research/case10/interrupted\\_accounting.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;When \\`charged\\` is \\`None\\`, the function should return \\`reserved\\` to preserve the reservation.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: reserved=10, charged=0. Old: returns 10. New: returns 0. Correction: Use \\`return reserved if charged is None else charged\\`.&quot;, &quot;evidence&quot;: &quot;def committed(reserved, charged):&quot;, &quot;file&quot;: &quot;research/case10/interrupted\\_accounting.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;A falsy \\`charged\\` value should be treated as \\`None\\` and return \\`reserved\\`.&quot;}\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input (reserved=10, charged=0) returns 0 instead of 10. Correction: Restore the conditional check: return reserved if charged is None else charged.&quot;, &quot;evidence&quot;: &quot;def committed(reserved, charged):&quot;, &quot;file&quot;: &quot;research/case10/interrupted\\_accounting.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;committed should return reserved when charged is None, and charged otherwise.&quot;}\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: reserved=10, charged=None. Old: returns 10. New: returns 0. Correction: Restore the conditional check: \\`return reserved if charged is None else charged\\`.&quot;, &quot;evidence&quot;: &quot;def committed(reserved, charged):&quot;, &quot;file&quot;: &quot;research/case10/interrupted\\_accounting.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;When \\`charged\\` is \\`None\\`, the function should return \\`reserved\\` to preserve the reservation.&quot;}\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;664338aee701ccede34ebbd8e63206b3758c647f7b4871ea73bda789faa547cb: retain: The new implementation \\`return charged or 0\\` returns 0 when \\`charged\\` is None, violating the invariant that the reservation should be preserved. The old behavior correctly returned \\`reserved\\`.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: reserved=10, charged=0. Old: returns 10. New: returns 0. Correction: Use \\`return reserved if charged is None else charged\\`.&quot;, &quot;evidence&quot;: &quot;def committed(reserved, charged):&quot;, &quot;file&quot;: &quot;research/case10/interrupted\\_accounting.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;A falsy \\`charged\\` value should be treated as \\`None\\` and return \\`reserved\\`.&quot;}\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;0f6572bcf4f36325ea7ebb01020ea6cd29dc131cdcf041c1bda6ae705814960e: retain: The new implementation \\`return charged or 0\\` treats falsy values like 0 as 0, violating the invariant that falsy \\`charged\\` should be treated as \\`None\\` to return \\`reserved\\`. The old behavior returned \\`reserved\\` for \\`charged=0\\`, which satisfied the invariant.&quot;}\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input (reserved=10, charged=0) returns 0 instead of 10. Correction: Restore the conditional check: return reserved if charged is None else charged.&quot;, &quot;evidence&quot;: &quot;def committed(reserved, charged):&quot;, &quot;file&quot;: &quot;research/case10/interrupted\\_accounting.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;committed should return reserved when charged is None, and charged otherwise.&quot;}\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;5437bb97346958a472767bf946542a43e37212b8f3f9a22221d248d71d78ba2a: retain: The new implementation returns charged or 0, which evaluates to 0 for charged=0. This violates the invariant that reserved=10 should be returned when charged is None, as 0 is returned instead.&quot;}",
+      "grade": {
+        "case_flag_detected": true,
+        "complete": true,
+        "finding_labels_resolved": false,
+        "accuracy_eligible": false,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 3
+      }
+    },
+    {
+      "case": "interrupted_accounting_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "old_passed": true,
+        "new_passed": true,
+        "resolved": true
+      },
+      "findings": [
+        {
+          "category": "model_critique",
+          "code": "MODEL001",
+          "details": "Input: reserved=10, charged=None. Old: 10. New: None. Correction: Restore the original conditional: return reserved if charged is None else charged.",
+          "evidence": "def committed(reserved, charged):",
+          "file": "research/case11/interrupted_accounting.py:1",
+          "severity": "major",
+          "source_side": "new",
+          "title": "The function must return `reserved` when `charged` is `None`."
+        }
+      ],
+      "unresolved": [],
+      "coverage": {
+        "required_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ],
+        "completed_roles": [
+          "correctness",
+          "security",
+          "compatibility"
+        ]
+      },
+      "complete": true,
+      "assessments": {
+        "correctness": {
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=10, charged=None. Old: 10. New: None. Correction: Restore the original conditional: return reserved if charged is None else charged.",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case11/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The function must return `reserved` when `charged` is `None`."
+            }
+          ],
+          "summary": "a5808dc938349541934b42128814381f0bed491a3291b57cd3500a6f2b411863: retain: The new code returns `None` when `charged` is `None`, violating the invariant that the function must return `reserved` in that case. The old code correctly returned `reserved`."
+        },
+        "security": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change swaps the conditional logic for returning a value. The new code returns `charged` if it is not `None`, otherwise it returns `reserved`. This is a direct logical inversion of the original implementation, which returned `reserved` if `charged` was `None` and `charged` otherwise. The change is a code modification, not a defect, as it preserves the contract of returning one of the two inputs based on the state of the other."
+        },
+        "compatibility": {
+          "disposition": "APPROVE",
+          "findings": [],
+          "summary": "The change swaps the conditional logic in the `committed` function. The new logic returns `charged` if it is not `None`, otherwise it returns `reserved`. This is a direct inversion of the original logic, which returned `reserved` if `charged` was `None` and `charged` otherwise. The change is a code modification, not a defect, as it alters the intended behavior of the function."
+        }
+      },
+      "disposition": "REQUEST_CHANGES",
+      "body": "Disposition: REQUEST_CHANGES\n\nCoverage: {&quot;completed\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\], &quot;required\\_roles&quot;: \\[&quot;correctness&quot;, &quot;security&quot;, &quot;compatibility&quot;\\]}\n\nFindings:\n- {&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: reserved=10, charged=None. Old: 10. New: None. Correction: Restore the original conditional: return reserved if charged is None else charged.&quot;, &quot;evidence&quot;: &quot;def committed(reserved, charged):&quot;, &quot;file&quot;: &quot;research/case11/interrupted\\_accounting.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The function must return \\`reserved\\` when \\`charged\\` is \\`None\\`.&quot;}\n\nUnresolved judgments:\n\nAssessment outcomes:\n- {&quot;disposition&quot;: &quot;REQUEST\\_CHANGES&quot;, &quot;findings&quot;: \\[{&quot;category&quot;: &quot;model\\_critique&quot;, &quot;code&quot;: &quot;MODEL001&quot;, &quot;details&quot;: &quot;Input: reserved=10, charged=None. Old: 10. New: None. Correction: Restore the original conditional: return reserved if charged is None else charged.&quot;, &quot;evidence&quot;: &quot;def committed(reserved, charged):&quot;, &quot;file&quot;: &quot;research/case11/interrupted\\_accounting.py:1&quot;, &quot;severity&quot;: &quot;major&quot;, &quot;source\\_side&quot;: &quot;new&quot;, &quot;title&quot;: &quot;The function must return \\`reserved\\` when \\`charged\\` is \\`None\\`.&quot;}\\], &quot;role&quot;: &quot;correctness&quot;, &quot;summary&quot;: &quot;a5808dc938349541934b42128814381f0bed491a3291b57cd3500a6f2b411863: retain: The new code returns \\`None\\` when \\`charged\\` is \\`None\\`, violating the invariant that the function must return \\`reserved\\` in that case. The old code correctly returned \\`reserved\\`.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;security&quot;, &quot;summary&quot;: &quot;The change swaps the conditional logic for returning a value. The new code returns \\`charged\\` if it is not \\`None\\`, otherwise it returns \\`reserved\\`. This is a direct logical inversion of the original implementation, which returned \\`reserved\\` if \\`charged\\` was \\`None\\` and \\`charged\\` otherwise. The change is a code modification, not a defect, as it preserves the contract of returning one of the two inputs based on the state of the other.&quot;}\n- {&quot;disposition&quot;: &quot;APPROVE&quot;, &quot;findings&quot;: \\[\\], &quot;role&quot;: &quot;compatibility&quot;, &quot;summary&quot;: &quot;The change swaps the conditional logic in the \\`committed\\` function. The new logic returns \\`charged\\` if it is not \\`None\\`, otherwise it returns \\`reserved\\`. This is a direct inversion of the original logic, which returned \\`reserved\\` if \\`charged\\` was \\`None\\` and \\`charged\\` otherwise. The change is a code modification, not a defect, as it alters the intended behavior of the function.&quot;}",
+      "grade": {
+        "case_flag_detected": true,
+        "complete": true,
+        "finding_labels_resolved": false,
+        "accuracy_eligible": false,
+        "correct_findings": 0,
+        "missed_defect": false,
+        "false_positive": false,
+        "unresolved_findings": 1
+      }
+    }
+  ],
+  "interpretation": "Request estimates price UTF-8 byte allowances and bounded output, not predicted tokens. Compare matched calls only. Usage-priced cost is not invoice reconciliation. Findings remain unadjudicated."
+}

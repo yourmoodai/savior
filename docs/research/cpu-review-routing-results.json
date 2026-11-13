@@ -1,0 +1,171 @@
+{
+  "children_peak_rss_bytes": 2761129984,
+  "dataset_fingerprint": "bfb83654e32ede6c64160a85bf41be88664920eb98194f9279cc0f02167dfb95",
+  "host": {
+    "machine": "arm64",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O"
+  },
+  "limitations": [
+    "classifier trained only on simulated reviews",
+    "no matched cheap/strong-model evidence",
+    "finding semantics unresolved for observed defective cases",
+    "no production promotion"
+  ],
+  "local_startup_seconds": 0.4297174579987768,
+  "measured_savings": null,
+  "measurement_note": "Local macOS CPU run with allocation profiling; GitHub runner measurements pending. Full evidence remains in .cache/cpu-routing-report.json and .cache/packing.json.",
+  "model_config": {
+    "context": 8192,
+    "file": "Qwen3-0.6B-Q8_0.gguf",
+    "llama_revision": "5676dfbe01e7ebe0387913680eee0ed39bf4a363",
+    "model": "Qwen/Qwen3-0.6B-GGUF",
+    "output": 256,
+    "revision": "23749fefcc72300e3a2ad315e1317431b06b590a",
+    "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031",
+    "threads": 4,
+    "timeout_seconds": 60
+  },
+  "packing": {
+    "binding_fingerprint": "fa93d4db28653a51484a19971da51b93e41dfddc704605a05e1aa6f23295b4e7",
+    "context": "empty test-status context; review-only reservations, not the CI quote",
+    "diff_fingerprint": "5dd5c4adfc0a366a18f7e9c49a80a5a65ef70bbd66b9ccf75b724caf950c3bd5",
+    "plans": {
+      "adaptive": {
+        "chunks": 53,
+        "coverage_complete": true,
+        "primary_evidence_ids": 3627,
+        "reservation_nanodollars": 92218137600,
+        "support_bytes": 50959
+      },
+      "baseline": {
+        "chunks": 15,
+        "coverage_complete": true,
+        "primary_evidence_ids": 3627,
+        "reservation_nanodollars": 26249456640,
+        "support_bytes": 16600
+      },
+      "semantic_bytes": {
+        "chunks": 7,
+        "coverage_complete": true,
+        "primary_evidence_ids": 3627,
+        "reservation_nanodollars": 12361313280,
+        "support_bytes": 1797
+      }
+    },
+    "selected": "semantic_bytes"
+  },
+  "paid_calls": 0,
+  "process_peak_rss_bytes": 44253184,
+  "python_peak_allocated_bytes": 12780203,
+  "routers": {
+    "classifier": {
+      "metrics_by_source": {
+        "observed_deepseek_single_role": {
+          "abstentions": 0,
+          "cases": 22,
+          "failure_reasons": {},
+          "failures": 0,
+          "labeled": 12,
+          "median_ms": 0.07595799979753792,
+          "missed_escalations": 0,
+          "p95_ms": 0.09566699736751616,
+          "raw_abstentions": 0,
+          "raw_missed_escalations": 0,
+          "unnecessary_escalations": 12,
+          "unresolved": 10
+        },
+        "simulated_review": {
+          "abstentions": 0,
+          "cases": 48,
+          "failure_reasons": {},
+          "failures": 0,
+          "labeled": 48,
+          "median_ms": 0.06791698979213834,
+          "missed_escalations": 0,
+          "p95_ms": 0.08333299774676561,
+          "raw_abstentions": 0,
+          "raw_missed_escalations": 0,
+          "unnecessary_escalations": 6,
+          "unresolved": 0
+        }
+      },
+      "raw_decisions": {
+        "escalate": 70
+      }
+    },
+    "local_llm": {
+      "metrics_by_source": {
+        "observed_deepseek_single_role": {
+          "abstentions": 11,
+          "cases": 22,
+          "failure_reasons": {},
+          "failures": 0,
+          "labeled": 12,
+          "median_ms": 386.36170799145475,
+          "missed_escalations": 0,
+          "p95_ms": 543.0805840005632,
+          "raw_abstentions": 22,
+          "raw_missed_escalations": 0,
+          "unnecessary_escalations": 5,
+          "unresolved": 10
+        },
+        "simulated_review": {
+          "abstentions": 2,
+          "cases": 48,
+          "failure_reasons": {},
+          "failures": 0,
+          "labeled": 48,
+          "median_ms": 282.8186250117142,
+          "missed_escalations": 0,
+          "p95_ms": 688.4339170064777,
+          "raw_abstentions": 48,
+          "raw_missed_escalations": 0,
+          "unnecessary_escalations": 5,
+          "unresolved": 0
+        }
+      },
+      "raw_decisions": {
+        "abstain": 70
+      }
+    },
+    "rules": {
+      "metrics_by_source": {
+        "observed_deepseek_single_role": {
+          "abstentions": 0,
+          "cases": 22,
+          "failure_reasons": {},
+          "failures": 0,
+          "labeled": 12,
+          "median_ms": 0.040749990148469806,
+          "missed_escalations": 0,
+          "p95_ms": 0.0519170134793967,
+          "raw_abstentions": 0,
+          "raw_missed_escalations": 0,
+          "unnecessary_escalations": 5,
+          "unresolved": 10
+        },
+        "simulated_review": {
+          "abstentions": 0,
+          "cases": 48,
+          "failure_reasons": {},
+          "failures": 0,
+          "labeled": 48,
+          "median_ms": 0.034374999813735485,
+          "missed_escalations": 1,
+          "p95_ms": 0.04208300379104912,
+          "raw_abstentions": 0,
+          "raw_missed_escalations": 1,
+          "unnecessary_escalations": 5,
+          "unresolved": 0
+        }
+      },
+      "raw_decisions": {
+        "escalate": 57,
+        "retain_cheap_review": 13
+      }
+    }
+  },
+  "schema": 1,
+  "source_fingerprint": "c6c88efc07767858ba517e6c57faa5bceb9d8c0512486406748d563c9ae9260a",
+  "started_utc": "2026-11-12T23:50:47.636129+00:00"
+}

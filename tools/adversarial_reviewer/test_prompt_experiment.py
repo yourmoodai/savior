@@ -15,6 +15,11 @@ from prompt_profiles import select, prompts, settings
 
 
 class PromptExperimentTests(unittest.TestCase):
+    def setUp(self):
+        env = patch.dict(os.environ, GITHUB_ACTIONS='false', REVIEW_COST_POLICY='false')
+        env.start()
+        self.addCleanup(env.stop)
+
     def test_prompt_selection_restores_production_and_preserves_contracts(self):
         with select('current'):
             self.assertEqual(prompts(SYSTEM_PROMPT,VERIFICATION_PROMPT),(SYSTEM_PROMPT,VERIFICATION_PROMPT))
@@ -23,7 +28,7 @@ class PromptExperimentTests(unittest.TestCase):
             self.assertIn('For Savior,'+SYSTEM_PROMPT.split('For Savior,')[1].split('\n\nThe diff')[0],system)
             self.assertTrue(system.startswith(SYSTEM_PROMPT))
             self.assertTrue(verification.startswith(VERIFICATION_PROMPT))
-            self.assertIn('Remove unsupported claims',verification)
+            self.assertIn('Reject unsupported claims',verification)
         self.assertEqual(settings.get(),('candidate',0,None))
 
     def test_truncated_envelope_is_captured_before_rejection(self):
