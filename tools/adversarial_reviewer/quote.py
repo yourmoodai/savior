@@ -85,6 +85,8 @@ def execution_strategy(quote, manifests, qualification):
         raise ValueError('quoted plan or qualification changed')
     if not qualification.get('comparison', {}).get(selected, {}).get('passed'):
         raise ValueError('quoted strategy is not qualified')
+    if sum(i['reserved_nanodollars'] for i in estimate(manifests[selected])) > quote['projected_nanodollars']:
+        raise ValueError('cached assessments changed; fresh quote required')
     return selected
 
 

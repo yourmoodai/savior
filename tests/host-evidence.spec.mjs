@@ -112,12 +112,14 @@ test('repeated or out-of-order readiness cannot qualify a run', () => {
   assert.throws(()=>event(stream,'filter_ready'),/schema_mismatch/);
 });
 
-test('child timeout gives a terminal harness time to clean up', async () => {
+test('child timeout follows platform termination semantics', async () => {
   const result=await child(process.execPath,['-e',
     'process.on("SIGTERM",()=>{console.log("cleanup");process.exit(0)});setInterval(()=>{},1000)'],
     {timeout:500,killGraceMs:1000});
   assert.equal(result.error,'child_timeout');
-  assert.match(result.stdout,/cleanup/);
+  // Windows terminates the process instead of delivering a catchable SIGTERM.
+  if (process.platform === 'win32') assert.equal(result.stdout, '');
+  else assert.match(result.stdout,/cleanup/);
 });
 
 test('real child exit, timeout, and malformed output retain safe checkpoints', async () => {

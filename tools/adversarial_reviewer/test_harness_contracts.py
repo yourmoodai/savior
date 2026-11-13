@@ -39,6 +39,32 @@ class HarnessContracts(unittest.TestCase):
             source.write_text('value = 2\n')
             self.assertNotEqual(source_identity(source), original)
 
+    def test_cache_loss_cannot_exceed_the_bound_quote(self):
+        plans = {'baseline': {'chunks': [{'input_tokens': 100, 'cached_assessment': True}]}}
+        qualification = {'qualified': True, 'strategy': 'baseline',
+                         'comparison': {'baseline': {'passed': True}}}
+        with patch.dict(os.environ, AWS_REGION='us-east-1', GITHUB_REPOSITORY='org/repo',
+                        PR_NUMBER='1', BASE_SHA='base', HEAD_SHA='head'):
+            quote = create(plans, {'pilot_committed_nanodollars': 0}, qualification)
+        self.assertEqual(execution_strategy(quote, plans, qualification), 'baseline')
+        plans['baseline']['chunks'][0]['cached_assessment'] = False
+        with self.assertRaisesRegex(ValueError, 'cached assessments changed'):
+            execution_strategy(quote, plans, qualification)
+
+    def test_cache_loss_at_execution_stops_before_assessment(self):
+        from adversarial_review import review_diff
+        from quote import plan_digest
+        diff = 'diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x = 1\n+x = 2\n'
+        with patch('adversarial_review.cached_assessment', return_value=('key', [], ('APPROVE', [], 'complete'))):
+            frozen = review_diff(diff, ['a.py'], strategy='baseline', dry_run=True)
+        with patch.dict(os.environ, REVIEW_PLAN_DIGEST=plan_digest(frozen['manifest']), REVIEW_PLAN_RESERVATION='0'), \
+                patch('adversarial_review.cached_assessment', return_value=('key', [], None)), \
+                patch('adversarial_review.run_model_reviewer') as assess:
+            report = review_diff(diff, ['a.py'], strategy='baseline')
+        assess.assert_not_called()
+        self.assertFalse(report['complete'])
+        self.assertIn('cached assessments changed', report['summary'])
+
     def test_verification_batches_preserve_findings_and_incompleteness(self):
         candidates = [{'location': 1}, {'location': 2}]
         def size(messages):
