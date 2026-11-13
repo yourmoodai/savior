@@ -1,6 +1,6 @@
 base_url = "https://savior.yourmood.ai"
-title = "Savior — choose the wording you submit"
-description = "Local, open source replacement of detected offensive phrases in supported Claude Code prompts. Choose your wording, inspect edits, and understand the limits."
+title = "Savior — local prompt replacement for Claude Code"
+description = "Depersonalize supported Claude Code prompts with local, open source phrase replacement. Choose a replacement, inspect the changes, and keep control of your wording."
 compile_sass = false
 build_search_index = false
 minify_html = false

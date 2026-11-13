@@ -1,0 +1,12 @@
+github-invertocat.svg
+Copyright GitHub, Inc. All rights reserved.
+Unmodified GitHub_Invertocat_Black_Clearspace.svg from:
+https://brand.github.com/GitHub_Logos.zip
+Retrieved 2026-11-13.
+Usage guidelines: https://brand.github.com/foundations/logo
+Used solely to link to the Savior GitHub repository, subordinate to Savior's
+identity. GitHub's marks are not covered by Savior's AGPL license.
+
+social-preview.png
+Original Savior typographic artwork using the site's headline and palette.
+Contains no third-party brand artwork.
