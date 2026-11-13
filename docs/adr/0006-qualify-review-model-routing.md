@@ -4,6 +4,9 @@ Date: 2026-11-11
 
 ## Status
 
+[ADR 8](0008-render-qualified-review-results.md) proposes superseding the prose
+reconciliation and synthesis dependency. Its remaining decisions stay in force.
+
 Accepted for the development reviewer. Live activation remains gated by account
 access, repository cost limits, and qualification. This does not change offline
 application inference or release qualification in ADR 2.

@@ -44,5 +44,7 @@ use mocked transport and exercise binding changes, verification capacity,
 rewritten allegations, and persistent accounting without paid inference.
 
 Runtime model quality remains unverified until a separately authorized frozen
-trial completes. The existing production prose dependency remains until the
-deterministic-reporting follow-up is reviewed and merged.
+trial completes. This reporting follow-up removes paid reconciliation and overview
+calls as proposed in [ADR 8](adr/0008-render-qualified-review-results.md). The full
+artifact preserves role judgments, findings and gaps; the publisher derives
+automated approval from complete, qualified structured results.

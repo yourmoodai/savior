@@ -72,3 +72,19 @@ class HarnessContracts(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DeterministicReconciliation(unittest.TestCase):
+    def test_duplicates_distinct_findings_and_abstention_survive(self):
+        from egm import review
+        first = {'file': 'a:1', 'details': 'privacy boundary violation'}
+        second = {'file': 'a:1', 'details': 'protocol boundary violation'}
+        responses = [('REQUEST_CHANGES', [first], 'privacy defect'),
+                     ('REQUEST_CHANGES', [first, second], 'two independent defects'),
+                     ('COMMENT', [], 'review incomplete: unavailable dependency')]
+        with patch('bedrock_client.complete', side_effect=AssertionError('no prose inference')), \
+                patch('adversarial_review._run_model_reviewer', side_effect=responses) as assess:
+            result = review(assess, '', [], '', [], deadline=time.monotonic()+5, supporting_context='')
+        self.assertEqual(result[:2], ('COMMENT', [first, second]))
+        self.assertIn('unavailable dependency', result[2])
+        self.assertIn('two independent defects', result[2])
