@@ -15,7 +15,7 @@ import adversarial_review as reviewer
 import bedrock_client
 import egm
 import model_catalog
-import reporting
+import research_prose_baseline as reporting
 from diagnostics import capture
 from prompt_profiles import select as select_prompts
 from research_cases import cases
@@ -185,7 +185,10 @@ def research_transport(ledger, frozen, check=verify_frozen):
 
 
 def current(case):
-    disposition, findings, summary = reviewer.run_model_reviewer(case['diff'], case['files'], case['context'])
+    anchors = [a for a in reviewer.locations(case['diff']).values() if a['evidence'].strip()]
+    disposition, findings, summary = reporting.review(
+        reviewer._run_model_reviewer, case['diff'], case['files'], case['context'], anchors,
+        deadline=time.monotonic()+reviewer.ASSESSMENT_SECONDS, supporting_context='')
     complete = disposition != 'COMMENT' and not summary.startswith('review incomplete:')
     result = {'disposition': disposition, 'findings': findings, 'summary': summary,
               'complete': complete, 'files': len(case['files']), 'total_chunks': 1,
@@ -200,7 +203,7 @@ def current(case):
         result['overview_error'] = str(error)
     result['complete'] = complete and result['synthesis_complete']
     result['production_disposition'] = 'APPROVE' if result['complete'] and disposition == 'APPROVE' and not findings else 'REQUEST_CHANGES'
-    # Production finalize requires both successful prose stages for approval.
+    # The historical baseline required both successful prose stages for approval.
     # Research distinguishes that failure from an observed defect.
     if not result['complete']:
         result['disposition'] = 'COMMENT' if not findings else 'REQUEST_CHANGES'

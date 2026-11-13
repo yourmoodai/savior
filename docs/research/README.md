@@ -68,10 +68,13 @@ does not demonstrate useful selection.
 
 ## Follow-up order
 
-First review the harness foundation and deterministic-reporting production PR.
+First review the consolidated harness fix, including deterministic reporting.
 Then compare dependency-preserving packing, followed by qualified cheaper models.
 Only then reconsider CPU routing using paired outcomes and held-out families.
 Report matched costs, reservations, latency, misses, false positives, invalid
 findings and abstentions separately. New regressions block recommendation; a small
 passing sample cannot establish equivalence. None of these experiments promotes
 a model, changes production limits, waives review, or merges a PR.
+
+The historical prose arm is isolated in `research_prose_baseline.py` for mocked
+regression replay. Production review does not import it.
