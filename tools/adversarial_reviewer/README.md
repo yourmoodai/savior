@@ -142,7 +142,44 @@ change, never a comment-based budget override. A changed row, conflicting owner,
 or incomplete attribution group fails closed; applying the same evidence twice
 does not change costs.
 
+## Approval before builds
+
+`pr-validation.yml` runs the trusted source review before admitting PR builds.
+A complete assessment and its formal approval must match the head, base, workflow
+run, and attempt. Cost waivers do not unlock this pipeline. The gate checks the
+merge commit's parents before passing its immutable SHA to validation workflows.
+
+Failed review skips build work and fails the aggregate PR statuses. Applicable
+verification, qualification, site, and commit checks must pass before
+`pr readiness` succeeds. Website-only changes skip native qualification; unrelated
+changes skip site builds. A changed base or dismissed approval invalidates readiness.
+Source review does not claim that downstream runtime tests have passed.
+
+After merging these workflows, verify both rejected and approved test PRs, then
+add `pr readiness` as a required status check without changing review requirements
+or administrator enforcement. See [ADR 12](../../docs/adr/0012-approve-before-building.md).
+
 ## Offline planning and verification
+
+Before pushing, admit the exact base and head without provider calls:
+
+```sh
+python3 tools/adversarial_reviewer/admission.py --base origin/main --head HEAD \
+  --output .cache/reviewer-admission
+```
+
+This writes both packing strategies, requires at least one complete feasible
+strategy, and restores its frozen plan. Failure exits nonzero and keeps the
+diagnostics. The single-strategy `--dry-run` command also exits nonzero for
+infeasible evidence; writing a manifest is not a successful admission.
+
+Plan schema 3 distinguishes Python import-time initialization from function
+bodies and gives class methods separate source roots. Unchanged diff context
+remains visible without becoming an unrelated dependency root. Identical source
+text is rendered once with every applicable coordinate; runtime limitations use
+a source table. UTF-8 JSON preserves verification findings without ASCII expansion,
+and the capacity bound includes worst-case escaped controls. These are precision
+and representation changes, not permission to omit required evidence or raise limits.
 
 For a local packing dry run (no AWS calls or inference charges):
 
@@ -271,7 +308,7 @@ remain blocking. See [ADR 11](../../docs/adr/0011-disclose-runtime-review-uncert
 
 Native verification and release jobs share dependency caches by runner image and
 architecture; Core ML uses a separate namespace. Compiler, Cargo inputs, and Rust
-flags remain part of the cache key. Builds and tests always execute. Job summaries
+flags remain part of the cache key. Approved, impacted builds and tests execute. Job summaries
 record cache hits, restore/build duration, and existing cache bytes for comparison;
 cache size is sampled before the current job saves its cache.
 

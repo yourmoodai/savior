@@ -1,43 +1,64 @@
 name: release qualification
 on:
   push:
-    branches: [main, develop]
-  pull_request:
+    branches: [main]
   workflow_dispatch:
+  workflow_call:
     inputs:
+      test_sha:
+        required: true
+        type: string
       pr_number:
-        description: Generated release pull request number
-        required: false
+        required: true
         type: string
       head_sha:
-        description: Exact generated pull request head
-        required: false
+        required: true
+        type: string
+      base_sha:
+        required: true
         type: string
 concurrency:
-  group: qualification-${{ github.event.pull_request.number || github.ref }}
+  group: qualification-${{ inputs.pr_number || github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
   actions: read
   pull-requests: read
+env:
+  VALIDATION_PR: ${{ inputs.pr_number }}
+  VALIDATION_HEAD: ${{ inputs.head_sha }}
+  VALIDATION_BASE: ${{ inputs.base_sha }}
+  VALIDATION_TEST: ${{ inputs.test_sha }}
 jobs:
   gate:
+    if: inputs.test_sha != '' || github.ref == 'refs/heads/main'
+    outputs:
+      native_required: ${{ steps.impact.outputs.native_required }}
     timeout-minutes: 15
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
+          fetch-depth: 0
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12.10'
       - name: validate pull request context
+        id: context
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/release/pr_context.py
+      - name: determine build impact
+        id: impact
+        env:
+          BASE_SHA: ${{ steps.context.outputs.base }}
+          HEAD_SHA: ${{ steps.context.outputs.head }}
+        run: python3 scripts/release/ci_impact.py
       - run: python3 scripts/release/version_gate.py
   build:
+    if: needs.gate.outputs.native_required == 'true'
     timeout-minutes: 90
     needs: gate
     strategy:
@@ -55,12 +76,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
       - uses: ./.github/actions/release-build
         with:
           target: ${{ matrix.target }}
           runner_label: ${{ matrix.os }}
-          run_training: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.pr_number == '' }}
+          run_training: ${{ github.event_name == 'workflow_dispatch' && inputs.test_sha == '' }}
   package:
     timeout-minutes: 15
     needs: build
@@ -69,11 +90,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.22.2
-          cache: npm
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: .cache/parts
@@ -104,17 +124,23 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.test_sha || github.sha }}
       - uses: ./.github/actions/release-installed
   compatibility:
     needs: package
     uses: ./.github/workflows/compatibility.yml
+    with:
+      test_sha: ${{ inputs.test_sha || github.sha }}
   qualification:
     if: always()
     needs: [gate, build, package, installed, compatibility]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.test_sha || github.sha }}
       - env:
           RESULTS: ${{ toJSON(needs) }}
-        run: python3 -c 'import json,os; assert all(j["result"]=="success" for j in json.loads(os.environ["RESULTS"]).values())'
+        run: python3 scripts/release/ci_impact.py qualification

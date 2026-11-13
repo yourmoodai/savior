@@ -284,7 +284,7 @@ def review_messages(diff, files, doc_context, anchors, candidate=None, supportin
     )
     if candidate is not None:
         content += (
-            f"\nCandidate findings to verify: {json.dumps(candidates(candidate, anchors))}\n"
+            f"\nCandidate findings to verify: {json.dumps(candidates(candidate, anchors), ensure_ascii=False)}\n"
         )
     system = (system_prompt if candidate is None else verification_prompt) + '\n' + runtime_facts()
     system += "\nReturn JSON matching this schema: " + json.dumps(RESPONSE_SCHEMA if candidate is None else verification_schema)
@@ -635,7 +635,8 @@ def main() -> int:
         if args.json_output:
             args.json_output.parent.mkdir(parents=True, exist_ok=True)
             args.json_output.write_text(json.dumps(report, indent=2)+'\n')
-        return 0 if report.get('manifest') else 2
+        from review_plan import feasible
+        return 0 if feasible(report.get('manifest', {})) and not report.get('omitted_binary_changes') else 2
     finalize(report, qualified=not args.mock, synthesize=not args.mock)
     disposition, md_summary = report['disposition'], report['body']
 

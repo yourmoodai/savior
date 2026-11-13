@@ -1,18 +1,17 @@
 name: adversarial code review
 on:
-  push:
-    branches: [develop]
-  pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
-    branches: [main]
   issue_comment:
     types: [created]
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: Pull request number
-        required: true
-        type: string
+  workflow_call:
+    outputs:
+      head:
+        value: ${{ jobs.scope.outputs.head }}
+      base:
+        value: ${{ jobs.scope.outputs.base }}
+      pr:
+        value: ${{ jobs.scope.outputs.pr }}
+      approved:
+        value: ${{ jobs.review.outputs.approved }}
 permissions:
   contents: read
 concurrency:
@@ -45,7 +44,7 @@ jobs:
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: scope
         env:
-          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
           BOOTSTRAP_CODEOWNERS: ${{ vars.ADVERSARIAL_BOOTSTRAP_CODEOWNERS }}
           REVIEW_ENABLED: ${{ vars.BEDROCK_REVIEW_ENABLED }}
         with:
@@ -55,6 +54,8 @@ jobs:
               bootstrap:process.env.BOOTSTRAP_CODEOWNERS,
             });
   review:
+    outputs:
+      approved: ${{ steps.verdict.outputs.published }}
     timeout-minutes: 120
     name: adversarial verdict
     needs: scope

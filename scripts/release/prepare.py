@@ -130,9 +130,8 @@ def prepare(root, candidate, repository, api=gh):
     if json.loads(base64.b64decode(package["content"]))["version"] != candidate:
         raise ValueError("existing release pull request version mismatch")
     # Pin the requested head so a branch update cannot silently change the checks.
-    for workflow in ("verify.yml", "commit-messages.yml", "qualification.yml"):
-        api("api", "--method", "POST", f"repos/{repository}/actions/workflows/{workflow}/dispatches",
-            payload={"ref": branch, "inputs": {"pr_number": str(pr["number"]), "head_sha": pr["head"]["sha"]}})
+    api("api", "--method", "POST", f"repos/{repository}/actions/workflows/pr-validation.yml/dispatches",
+        payload={"ref": "main", "inputs": {"pr_number": str(pr["number"])}})
     print(pr["html_url"])
     return pr
 
