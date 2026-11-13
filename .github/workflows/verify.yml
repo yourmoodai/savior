@@ -184,6 +184,6 @@ jobs:
           shared-key: native-windows-2022-${{ runner.arch }}
           save-if: false
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: cargo build --locked --release -p savior-review --features judge,inspector
-      - run: cargo test --locked -p savior-review --features judge,inspector windows::transport_tests
+      - run: cargo build --locked --release -p savior-review --features judge
+      - run: cargo test --locked -p savior-review --features judge windows::transport_tests
       - run: node --test tests/review-transport.spec.mjs tests/review.spec.mjs

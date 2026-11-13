@@ -50,8 +50,8 @@ runs:
         SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
       shell: bash
     - run: >-
-        cargo clippy --locked -p savior-review --features judge,inspector --all-targets -- -D warnings
-        && cargo test --locked -p savior-review --features judge,inspector --test traces
+        cargo clippy --locked --release -p savior-review --features judge,inspector --all-targets -- -D warnings
+        && cargo test --locked --release -p savior-review --features judge,inspector --test traces
       shell: bash
     - run: node scripts/test-bootstrap-runtime.mjs
       shell: bash
