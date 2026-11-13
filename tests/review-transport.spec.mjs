@@ -67,6 +67,19 @@ test('review transport accepts one complete protocol response',async()=>{
     assert.deepEqual(await exchange_at(endpoint,{command:'status'},500),{ready:true});
   });
 });
+test('a framed reply completes without waiting for the peer to disconnect',async()=>{
+  await with_server(socket=>socket.once('data',()=>{
+    socket.write('{"version":1,"status":"ok","value":');
+    setTimeout(()=>socket.write('42}\n'),10);
+  }),async endpoint=>{
+    assert.equal(await exchange_at(endpoint,{command:'status'},500),42);
+  });
+});
+test('multiple replies in one frame are rejected',async()=>{
+  await with_server(socket=>socket.once('data',()=>socket.write('{"version":1,"status":"ok"}\n{}\n')),async endpoint=>{
+    await assert.rejects(exchange_at(endpoint,{command:'status'},500),/review_request_failed/);
+  });
+});
 test('oversized response errors remain explicit and the next request succeeds',async()=>{
   let requests=0;
   await with_server(socket=>socket.once('data',()=>socket.end(JSON.stringify(++requests===1

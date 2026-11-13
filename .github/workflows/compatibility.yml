@@ -11,6 +11,8 @@ on:
 permissions:
   contents: read
   actions: read
+env:
+  VALIDATION_TEST: ${{ inputs.test_sha }}
 jobs:
   inventory:
     runs-on: ubuntu-24.04
