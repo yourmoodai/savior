@@ -9,12 +9,14 @@ import re
 import subprocess
 import tomllib
 
-from version_gate import parse_version, release_version
+from version_gate import development_version, parse_version, release_version
 
 
-def version_changes(root, candidate):
+def version_changes(root, candidate, *, initial_development=False):
     current = release_version(root)
-    if parse_version(candidate) <= parse_version(current):
+    initial = (initial_development and development_version(candidate)
+               and candidate == current + '-dev.1')
+    if parse_version(candidate) <= parse_version(current) and not initial:
         raise ValueError("release version must increase")
     if len(f"chore: prepare release {candidate}") > 50:
         raise ValueError("release version exceeds commit subject limit")
@@ -57,11 +59,11 @@ def gh(*args, payload=None):
 
 
 def prepare(root, candidate, repository, api=gh):
-    changes = version_changes(root, candidate)
     branch = f"release/v{candidate}"
     tag = f"v{candidate}"
     tags = api("api", f"repos/{repository}/tags", "--paginate", "--slurp")
     releases = api("api", f"repos/{repository}/releases", "--paginate", "--slurp")
+    changes = version_changes(root, candidate, initial_development=not any(tags) and not any(releases))
     if any(t["name"] == tag for page in tags for t in page):
         raise ValueError("release tag already exists")
     if any(r["tag_name"] == tag for page in releases for r in page):

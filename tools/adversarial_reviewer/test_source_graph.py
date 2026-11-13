@@ -183,8 +183,8 @@ class SourceGraphTests(unittest.TestCase):
         examples = [
             {'a.ts': "import {f} from './helper';\n", 'helper.ts': 'export function f() {}', 'helper.js': 'export function f() {}'},
             {'a.py': 'from helper import absent\n', 'helper.py': 'def present(): pass\n'},
-            {'a.rs': 'use crate::helper::{f, g};\n', 'helper.rs': 'fn f() {}\nfn g() {}'},
-            {'a.py': 'from helper import (\n    f,\n    g,\n)\n', 'helper.py': 'def f(): pass\ndef g(): pass\n'}]
+            {'a.rs': 'use crate::helper::*;\n', 'helper.rs': 'fn f() {}\nfn g() {}'},
+            {'a.py': 'from helper import *\n', 'helper.py': 'def f(): pass\ndef g(): pass\n'}]
         for files in examples:
             graph = Graph(sources({}, files))
             self.assertTrue(graph.closure(graph.module('new', next(iter(files))))[1])
@@ -197,6 +197,40 @@ class SourceGraphTests(unittest.TestCase):
         self.assertFalse(issues)
         self.assertIn('src/helper.rs', {graph.nodes[n].path for n in closure})
         self.assertEqual(graph.external_imports, {'std::path::Path'})
+
+    def test_multiline_python_imports_preserve_symbols_aliases_and_cycles(self):
+        files = {'pkg/a.py': 'from .helper import (\n    allowed as ok, # comment\n    other,\n)\ndef submit(x):\n    return ok(x) and other(x)\n',
+                 'pkg/helper.py': 'from .a import submit\ndef allowed(x):\n    return x > 0\ndef other(x):\n    return x < 10\ndef unused():\n    return 0\n'}
+        graph = Graph(sources({}, files))
+        closure, issues = graph.closure(graph.module('new', 'pkg/a.py'))
+        self.assertFalse(issues)
+        names = set().union(*(graph.nodes[n].names for n in closure))
+        self.assertEqual(names, {'submit', 'allowed', 'other'})
+        caller = next(n for n in graph.module('new', 'pkg/a.py') if 'submit' in graph.nodes[n].names)
+        reached, issues = graph.closure([caller])
+        self.assertFalse(issues)
+        self.assertEqual(set(reached), set(closure))
+        del files['pkg/helper.py']
+        graph = Graph(sources({}, files))
+        self.assertTrue(graph.closure(graph.module('new', 'pkg/a.py'))[1])
+
+    def test_nested_rust_groups_aliases_and_module_self(self):
+        files = {'src/a.rs': 'use crate::helper::{self, allowed as ok, nested::{one, two as second}};\nfn submit() { ok(); one(); second(); }\n',
+                 'src/helper.rs': 'fn allowed() {}\n',
+                 'src/helper/nested.rs': 'fn one() {}\nfn two() {}\nfn unrelated() {}\n'}
+        graph = Graph(sources({}, files))
+        closure, issues = graph.closure(graph.module('new', 'src/a.rs'))
+        self.assertFalse(issues)
+        names = set().union(*(graph.nodes[n].names for n in closure))
+        self.assertEqual(names, {'submit', 'allowed', 'one', 'two'})
+
+    def test_rust_self_and_super_group_paths(self):
+        for statement in ['use self::helper::{allowed};', 'use super::nested::helper::{allowed as ok};']:
+            files = {'src/nested/a.rs': statement, 'src/nested/helper.rs': 'fn allowed() {}'}
+            graph = Graph(sources({}, files))
+            closure, issues = graph.closure(graph.module('new', 'src/nested/a.rs'))
+            self.assertFalse(issues)
+            self.assertIn('src/nested/helper.rs', {graph.nodes[n].path for n in closure})
 
     def test_imported_objects_are_not_assumed_to_be_modules(self):
         for code in ['from external import client\ndef f():\n    return client.method()\n',

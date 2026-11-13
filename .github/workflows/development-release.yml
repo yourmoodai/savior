@@ -1,0 +1,190 @@
+name: development release
+on:
+  push:
+    tags: ['v*-dev.*']
+concurrency:
+  group: development-release
+  cancel-in-progress: false
+permissions:
+  contents: read
+  actions: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.10'
+      - run: python3 scripts/release/development.py gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+  build:
+    needs: gate
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            target: darwin-arm64
+          - os: ubuntu-24.04
+            target: linux-x64
+          - os: windows-2022
+            target: win32-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: ./.github/actions/release-build
+        with:
+          target: ${{ matrix.target }}
+          runner_label: ${{ matrix.os }}
+  package:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      key_sha256: ${{ steps.identity.outputs.key_sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.22.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.10'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: '*-*'
+          path: .cache/parts
+      - run: python3 scripts/release/package.py assemble .cache/parts .cache/release/plugin --development
+        env:
+          SAVIOR_RELEASE_SIGNING_KEY: ''
+      - uses: ./.github/actions/model-cache
+      - id: identity
+        run: python3 scripts/release/development.py models
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: development-release
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            .cache/release/*.zip
+            .cache/release/*.json
+            .cache/release/*.sig
+            .cache/release/*.pem
+            .cache/release/SHA256SUMS
+            .cache/release/runtime-*
+            .cache/release/model-*
+  packaged:
+    needs: package
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    env:
+      DEVELOPMENT_KEY_SHA256: ${{ needs.package.outputs.key_sha256 }}
+      SAVIOR_CLAUDE_BINARY: ${{ github.workspace }}/tools/host/node_modules/@anthropic-ai/claude-code/bin/claude.exe
+      SAVIOR_MODEL_DIR: ${{ github.workspace }}/.cache/models/mudes-en-base
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.22.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.10'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: development-release
+          path: .cache/release
+      - run: python3 scripts/release/development.py verify
+      - run: python3 scripts/release/smoke.py .cache/release
+      - run: npm ci --prefix tools/host --no-audit --no-fund
+      - uses: ./.github/actions/model-cache
+      - run: python3 scripts/release/host_gate.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: development-packaged-${{ matrix.os }}
+          path: .cache/release/interception
+          if-no-files-found: warn
+  publish:
+    needs: [package, packaged]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DEVELOPMENT_KEY_SHA256: ${{ needs.package.outputs.key_sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.22.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.10'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: development-release
+          path: .cache/release
+      - run: python3 scripts/release/development.py publish
+  public-install:
+    needs: [package, publish]
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    env:
+      DEVELOPMENT_KEY_SHA256: ${{ needs.package.outputs.key_sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.22.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.10'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: development-release
+          path: .cache/release
+      - run: npm ci --prefix tools/host --no-audit --no-fund
+      - run: python3 scripts/release/public_install.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: development-public-install-${{ matrix.os }}
+          path: .cache/public-install
+          if-no-files-found: warn

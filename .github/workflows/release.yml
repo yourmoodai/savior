@@ -1,7 +1,7 @@
 name: release
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', '!v*-dev.*']
 concurrency:
   group: production-release
   cancel-in-progress: false

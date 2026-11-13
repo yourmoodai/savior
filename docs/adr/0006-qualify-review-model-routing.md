@@ -54,6 +54,14 @@ Goldfish, and different contexts do not establish independent model training.
 Fast candidates must pass the same applicable evidence checks. There is no
 implicit fallback or automatic latest-model selection.
 
+Finding verification selects immutable candidates by deterministic IDs derived
+from their original fields and source evidence. Its response contains one
+`retain`, `reject`, or `abstain` decision and rationale per unique candidate.
+Application code reconstructs retained findings from the originals. Unknown,
+duplicate or missing IDs invalidate verification; abstention preserves retained
+findings while leaving review incomplete. This interface refinement preserves
+the existing prohibition on rewritten allegations and invalidates affected caches.
+
 ### Spending and waivers
 
 The reviewer projects remaining inference cost before calling a model. A PR has

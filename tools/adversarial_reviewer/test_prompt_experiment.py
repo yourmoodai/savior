@@ -28,7 +28,7 @@ class PromptExperimentTests(unittest.TestCase):
             self.assertIn('For Savior,'+SYSTEM_PROMPT.split('For Savior,')[1].split('\n\nThe diff')[0],system)
             self.assertTrue(system.startswith(SYSTEM_PROMPT))
             self.assertTrue(verification.startswith(VERIFICATION_PROMPT))
-            self.assertIn('Remove unsupported claims',verification)
+            self.assertIn('Reject unsupported claims',verification)
         self.assertEqual(settings.get(),('candidate',0,None))
 
     def test_truncated_envelope_is_captured_before_rejection(self):

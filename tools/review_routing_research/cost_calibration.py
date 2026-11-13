@@ -19,6 +19,9 @@ from models import account, aws
 from quote import estimate
 from research_cases import cases
 from research_reporting import deterministic
+from review_plan import verification_bound
+from source_graph import analyzer_versions
+from verification import SCHEMA as verification_schema
 
 EXPERIMENT = 'review-cost-calibration-v1'
 CAP = 1_000_000_000  # nanodollars: $1 maximum for this manual trial
@@ -59,7 +62,8 @@ def freeze(name):
             raise Stopped('calibration transport supports converse candidates only')
         fixtures = [c for c in cases() if c['source'] == 'new']
         prompts = {c['id']: {r: request(c, r)[2] for r in FOCUS} for c in fixtures}
-        if any(estimate_input_units(p) > 36000 for roles in prompts.values() for p in roles.values()):
+        maximum_verification = max(verification_bound(p) for roles in prompts.values() for p in roles.values())
+        if maximum_verification > 48000:
             raise Stopped('calibration fixture exceeds verification headroom')
         items = estimate({'chunks': [{'input_tokens': max(estimate_input_units(p) for p in roles.values())}
                                      for roles in prompts.values()]})
@@ -67,6 +71,8 @@ def freeze(name):
                   'paid_authorized': False, 'candidate': name, 'profile': os.environ['AWS_PROFILE'],
                   'region': os.environ['AWS_REGION'], 'account': account(), 'routing': routing,
                   'execution_sources': sources(), 'cases': fixtures, 'assessment_prompts': prompts,
+                  'analyzers': analyzer_versions(), 'verification_schema': verification_schema,
+                  'maximum_verification_input_units': maximum_verification,
                   'whole_plan_reserved_nanodollars': sum(i['reserved_nanodollars'] for i in items),
                   'whole_plan_estimated_nanodollars': sum(i['estimated_nanodollars'] for i in items)}
     frozen['fingerprint'] = digest(frozen)
@@ -79,7 +85,8 @@ def verify(frozen):
             or frozen['experiment'] != EXPERIMENT or frozen['cap_nanodollars'] != CAP
             or frozen['profile'] != os.environ['AWS_PROFILE'] or frozen['region'] != os.environ['AWS_REGION']
             or frozen['account'] != account() or frozen['routing'] != manifest()
-            or frozen['execution_sources'] != sources()):
+            or frozen['execution_sources'] != sources() or frozen['analyzers'] != analyzer_versions()
+            or frozen['verification_schema'] != verification_schema):
         raise Stopped('frozen calibration changed; retain history and stop')
 
 
@@ -127,7 +134,9 @@ def report(ledger, frozen):
               'latency_seconds': sum((c['metrics'] or {}).get('latency_seconds', 0) for c in calls),
               'truncations': sum((c['metrics'] or {}).get('stop_reason') == 'max_tokens' for c in calls),
               'invalid_responses': sum(d.get('stage') == 'invalid_answer' or 'validation_error' in d for d in diagnostics),
-              'abstentions': sum(bool(d['response'].get('abstention')) for d in diagnostics if isinstance(d.get('response'), dict)),
+              'abstentions': sum(bool(d['response'].get('abstention')) or any(
+                  isinstance(v, dict) and v.get('verdict') == 'abstain' for v in d['response'].get('decisions', [])
+                  ) for d in diagnostics if isinstance(d.get('response'), dict) and isinstance(d['response'].get('decisions', []), list)),
               'incomplete_cases': sum(not r['complete'] for r in rows),
               'complete_case_flag_misses': sum(r['complete'] and r['oracle']['resolved'] and r['expected'] == 'REQUEST_CHANGES' and not r['findings'] for r in rows),
               'complete_benign_case_flags': sum(r['complete'] and r['oracle']['resolved'] and r['expected'] == 'APPROVE' and bool(r['findings']) for r in rows),

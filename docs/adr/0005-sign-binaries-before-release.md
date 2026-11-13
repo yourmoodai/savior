@@ -8,6 +8,9 @@ Accepted for implementation. Extends [ADR 2](0002-release-and-quality-evidence.m
 Production identities remain to be provisioned; implementation and synthetic
 tests do not establish credentialed OS acceptance.
 
+[ADR 7](0007-development-prereleases.md) supersedes the public-signing prerequisite
+only for isolated development prereleases; production requirements remain here.
+
 ## Context
 
 A manifest lists the artifacts expected in a release. Its signature lets setup

@@ -231,6 +231,11 @@ class TestAdversarialReviewer(unittest.TestCase):
             (cleared, "APPROVE"),
             ({**cleared, "abstention": "missing required context"}, "COMMENT"),
         ):
+            from verification import candidates
+            identity = candidates(proposed['findings'], [{'file': 'a.py', 'line': 2, 'evidence': 'return n / 0'}])[0]['finding_id']
+            confirmation = {'decisions': [{'finding_id': identity,
+                'verdict': {'REQUEST_CHANGES': 'retain', 'APPROVE': 'reject', 'COMMENT': 'abstain'}[expected],
+                'rationale': 'The supplied evidence supports this verification decision.'}]}
             with (
                 self.subTest(expected=expected),
                 patch(

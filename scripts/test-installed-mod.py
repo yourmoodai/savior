@@ -16,6 +16,7 @@ import re
 import sys
 import hashlib
 import signal
+from contextlib import nullcontext
 from release.host_fixture import CASES, prepare, arm, recover, worker_alive
 
 class Terminal:
@@ -170,7 +171,10 @@ def main():
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
     binary = os.environ.get("SAVIOR_CLAUDE_BINARY") or shutil.which("claude")
     model = os.environ.get("SAVIOR_MODEL_DIR")
-    if not binary or not model:
+    public_home = os.environ.get('SAVIOR_PUBLIC_INSTALL_HOME')
+    if public_home and CASES[scenario]['suite'] == 'instrumented_failure':
+        raise ValueError('public_install_requires_unmodified_package')
+    if not binary or (not model and not public_home):
         print(json.dumps({'error':'host_prerequisite_missing'}), flush=True)
         raise SystemExit("claude and SAVIOR_MODEL_DIR are required")
     with open(binary, 'rb') as executable:
@@ -181,19 +185,22 @@ def main():
         binary_hash = hashlib.sha256()
         for block in iter(lambda: executable.read(1024 * 1024), b''):  # 1 MiB
             binary_hash.update(block)
-    with tempfile.TemporaryDirectory(prefix="savior-host-") as directory:
+    with (nullcontext(public_home) if public_home else tempfile.TemporaryDirectory(prefix="savior-host-")) as directory:
         home = Path(directory).resolve()
         profile = home / ".claude"
-        profile.mkdir()
+        profile.mkdir(exist_ok=bool(public_home))
         workspace = home / "workspace"
-        workspace.mkdir()
+        workspace.mkdir(exist_ok=bool(public_home))
         plugin = prepare(root, home, scenario)
         config = {"hasCompletedOnboarding": True, "theme": "dark", "numStartups": 1, "projects": {str(workspace): {"hasTrustDialogAccepted": False, "hasCompletedProjectOnboarding": True}}, "customApiKeyResponses": {"approved": ["synthetic-local-key"], "rejected": []}}
         (home / ".claude.json").write_text(json.dumps(config))
         (profile / ".claude.json").write_text(json.dumps(config))
         server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Provider)
         threading.Thread(target=server.serve_forever, daemon=True).start()
-        env = {"PATH": os.environ["PATH"], "HOME": str(home), "CLAUDE_CONFIG_DIR": str(profile), "TERM": "xterm-256color", "ANTHROPIC_API_KEY": "synthetic-local-key", "ANTHROPIC_BASE_URL": f"http://127.0.0.1:{server.server_port}", "SAVIOR_MODEL_DIR": str(Path(model).resolve()), "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1", "DISABLE_AUTOUPDATER": "1", "DISABLE_TELEMETRY": "1", "DISABLE_ERROR_REPORTING": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1", "ENABLE_CLAUDEAI_MCP_SERVERS": "false", "OTEL_SDK_DISABLED": "true"}
+        env = {"PATH": os.environ["PATH"], "HOME": str(home), "CLAUDE_CONFIG_DIR": str(profile), "TERM": "xterm-256color", "ANTHROPIC_API_KEY": "synthetic-local-key", "ANTHROPIC_BASE_URL": f"http://127.0.0.1:{server.server_port}", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1", "DISABLE_AUTOUPDATER": "1", "DISABLE_TELEMETRY": "1", "DISABLE_ERROR_REPORTING": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1", "ENABLE_CLAUDEAI_MCP_SERVERS": "false", "OTEL_SDK_DISABLED": "true"}
+        if not public_home:
+            env['SAVIOR_MODEL_DIR'] = str(Path(model).resolve())
+        env['XDG_STATE_HOME'] = str(home/'state')
         # Candidate assets live in the gate's private cache until publication.
         env.update(host_cache_environment(plugin, home, str(plugin / 'cache') if os.environ.get('SAVIOR_HOST_CACHE') else None))
         env["SAVIOR_DETECTOR"] = os.environ.get("SAVIOR_DETECTOR", "bert")
@@ -210,7 +217,8 @@ def main():
             server.shutdown()
             print(json.dumps({'error':'host_version_unsupported'}), flush=True)
             raise SystemExit("installed UI fixture requires claude " + expected_version)
-        terminal = Terminal([binary, "--plugin-dir", str(plugin), "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--setting-sources", "", "--tools", "", "--model", "claude-sonnet-4-5", "--system-prompt", "Respond with synthetic response."], workspace, env)
+        plugin_args = [] if public_home else ['--plugin-dir',str(plugin)]
+        terminal = Terminal([binary, *plugin_args, "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--setting-sources", "user" if public_home else "", "--tools", "", "--model", "claude-sonnet-4-5", "--system-prompt", "Respond with synthetic response."], workspace, env)
         output = b""
         try:
             stage='ready'
@@ -253,7 +261,7 @@ def main():
                 elif stage=='command' and b'/savior' in visible:
                     terminal.write(b'\r')
                     host_event('pane')
-                    stage='pane';output=b'';deadline=time.monotonic()+30
+                    stage='pane';output=b'';deadline=time.monotonic()+(600 if public_home else 30)
                 elif stage=='pane' and ui_has_text(output, 'personal metrics'):
                     expected_status = 'local filter ready' if (plugin / 'runtime-manifest.json').exists() else 'developer runtime'
                     if scenario == 'startup_failure':

@@ -89,8 +89,11 @@ On Unix, downloads use `$XDG_CACHE_HOME/savior` (default `~/.cache/savior`), and
 traces use `$XDG_STATE_HOME/savior/profiles/<opaque-id>` (default
 `~/.local/state/savior/profiles/<opaque-id>`). Windows uses private directories
 under `%LOCALAPPDATA%/savior`. `CLAUDE_CONFIG_DIR` selects the profile; otherwise
-the default `.claude` location identifies it. Absolute paths are required;
-symlinked storage paths are rejected.
+the default `.claude` location identifies it. Empty or relative XDG values use
+the standard defaults; explicit model and profile overrides still require valid
+paths. Symlinked storage paths are rejected. The
+[user-directory reference](usage.md#user-directories) also describes runtime
+socket placement and existing profile-scoped metrics.
 
 Retention is seven days with a 256 MiB storage ceiling. Conservative reservations
 for database maintenance and snapshots can evict older records sooner. Expiry

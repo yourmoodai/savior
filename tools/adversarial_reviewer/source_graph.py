@@ -117,6 +117,47 @@ def parser(language):
     return Parser(Language(capsule))
 
 
+def python_imports(text):
+    root = parser('python').parse(text.encode()).root_node
+    for node in root.named_children:
+        module = node.child_by_field_name('module_name')
+        names = [n.child_by_field_name('name') if n.type == 'aliased_import' else n
+                 for n in node.children_by_field_name('name')]
+        if node.type == 'import_from_statement':
+            yield module.text.decode(), {n.text.decode() for n in names} or {'*'}
+        elif node.type == 'import_statement':
+            for name in names:
+                yield name.text.decode(), set()
+
+
+def rust_imports(text):
+    def expand(node, prefix=()):
+        if node.type == 'scoped_use_list':
+            path = node.child_by_field_name('path')
+            base = prefix+tuple(path.text.decode().split('::')) if path else prefix
+            yield from expand(node.child_by_field_name('list'), base)
+        elif node.type == 'use_list':
+            for child in node.named_children:
+                if child.type not in ('line_comment', 'block_comment'):
+                    yield from expand(child, prefix)
+        elif node.type == 'use_as_clause':
+            yield from expand(node.child_by_field_name('path'), prefix)
+        elif node.type == 'use_wildcard':
+            yield None, False
+        else:
+            parts = tuple(node.text.decode().split('::'))
+            if parts == ('self',) and prefix:
+                yield prefix, True
+            else:
+                yield prefix+parts, False
+    root = parser('rust').parse(text.encode()).root_node
+    for node in root.named_children:
+        if node.type == 'use_declaration':
+            yield from expand(node.child_by_field_name('argument'))
+        elif node.type == 'mod_item':
+            yield (node.child_by_field_name('name').text.decode(),), True
+
+
 @dataclass
 class Evidence:
     id: str
@@ -194,6 +235,8 @@ class Graph:
             text = data[node.start_byte:node.end_byte].decode()
             name_node = node.child_by_field_name('name')
             names = {name_node.text.decode()} if name_node else set()
+            if node.type in ('import_statement', 'import_from_statement'):
+                names = set()
             if node.type in ('decorated_definition', 'export_statement'):
                 names.update(n.child_by_field_name('name').text.decode() for n in node.named_children
                              if n.child_by_field_name('name') is not None)
@@ -251,32 +294,29 @@ class Graph:
         suffix = PurePosixPath(path).suffix
         requests, missing = [], []
         if suffix == '.py':
-            for match in re.finditer(r'(?m)^\s*(?:from\s+([.\w]+)\s+import\s+([^\n]+)|import\s+([^\n]+))', text):
-                modules = [match[1]] if match[1] else [s.split(' as ')[0].strip() for s in match[3].split(',')]
-                symbols = {s.strip().split(' as ')[0] for s in match[2].strip('()').split(',')} if match[2] else set()
-                for module in modules:
-                    relative = len(module)-len(module.lstrip('.'))
-                    base = posixpath.dirname(path)
-                    for _ in range(max(0, relative-1)):
-                        base = posixpath.dirname(base)
-                    name = module.lstrip('.').replace('.', '/')
-                    if not name:
-                        requests.extend((posixpath.join(base, s), '', True, set()) for s in symbols)
-                    else:
-                        requests.append((posixpath.join(base, name), '' if relative else name, bool(relative), symbols))
-                if '(' in match[0] and ')' not in match[0]:
-                    missing.append('unresolved multiline import: '+path)
+            for module, symbols in python_imports(text):
+                if '*' in symbols:
+                    missing.append('unresolved glob import: '+path)
+                relative = len(module)-len(module.lstrip('.'))
+                base = posixpath.dirname(path)
+                for _ in range(max(0, relative-1)):
+                    base = posixpath.dirname(base)
+                name = module.lstrip('.').replace('.', '/')
+                if not name:
+                    requests.extend((posixpath.join(base, s), '', True, set()) for s in symbols if s != '*')
+                else:
+                    requests.append((posixpath.join(base, name), '' if relative else name, bool(relative), symbols))
         elif suffix == '.rs':
-            for kind, module in re.findall(r'\b(use|mod)\s+([^;]+);', text):
-                if any(char in module for char in '{}*'):
-                    missing.append('unresolved grouped or glob import: '+path)
+            for imported, is_module in rust_imports(text):
+                if imported is None:
+                    missing.append('unresolved glob import: '+path)
                     continue
-                module = module.split(' as ')[0].strip()
-                parts = module.split('::')
+                module = '::'.join(imported)
+                parts = list(imported)
                 if parts[0] in ('std', 'core', 'alloc'):
                     self.external_imports.add(module)
                     continue
-                required = kind == 'mod' or parts[0] in ('crate', 'self', 'super')
+                required = is_module or parts[0] in ('crate', 'self', 'super')
                 if parts[0] == 'crate':
                     base = path.rsplit('/src/', 1)[0]+'/src' if '/src/' in path else 'src' if path.startswith('src/') else ''
                     parts = parts[1:]
@@ -285,7 +325,8 @@ class Graph:
                     if parts[0] == 'self': parts = parts[1:]
                     while parts and parts[0] == 'super':
                         base, parts = posixpath.dirname(base), parts[1:]
-                requests.append((posixpath.join(base, *parts), '', required, {parts[-1]} if len(parts)>1 else set()))
+                requests.append((posixpath.join(base, *parts), '', required,
+                                 {parts[-1]} if len(parts)>1 and not is_module else set()))
         else:
             for module in re.findall(r'''(?:from\s*|require\s*\(\s*|import\s*\(\s*|import\s*)['"]([^'"]+)['"]''', text):
                 selected = re.search(r'\{([^}]+)\}', text)

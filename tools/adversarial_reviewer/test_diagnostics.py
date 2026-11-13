@@ -26,7 +26,7 @@ class DiagnosticTests(unittest.TestCase):
                 'synthetic diff', ['submit.py'], '', anchors, candidate=[finding])
         self.assertEqual(disposition, 'COMMENT')
         self.assertEqual(findings, [])
-        self.assertIn('subdivision required', summary)
+        self.assertIn('invalid verification decisions', summary)
 
     def test_overfull_findings_request_subdivision_and_preserve_shape(self):
         diff, filename = fixture(5, CASES[5])

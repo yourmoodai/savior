@@ -35,6 +35,9 @@ into requests. Read only regular Git blobs at the merge base and reviewed head.
 Pinned Tree-sitter grammars describe Python, Rust, JavaScript and TypeScript
 declarations. JSON arrays use record boundaries and Markdown uses sections;
 other formats retain exact textual diff coverage without semantic analysis.
+Python multiline imports and Rust grouped imports are extracted from parser
+nodes, preserving original symbols and local aliases. Glob imports remain
+unresolved rather than claiming a complete binding set.
 
 For recognized imports and symbol references, compute the transitive evidence
 set with a terminating worklist. Include unchanged local helpers, imports and

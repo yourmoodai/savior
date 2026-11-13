@@ -61,6 +61,10 @@ module.exports = async function publish({github, context, core, head, pr, phase,
       }
     }
   }
-  if (!['waiting','blocked'].includes(phase) && !clean) core.setFailed('adversarial review did not establish a clean result');
+  if (!['waiting','blocked'].includes(phase) && !clean) {
+    const blocked_reason = phase === 'failed' ? reason || 'infrastructure_failed' : report?.blocked_reason;
+    core.setFailed(blocked_reason ? require('./status.cjs').failure(blocked_reason, report)
+      : 'adversarial review did not establish a clean result');
+  }
 };
 module.exports.verdict = verdict;
