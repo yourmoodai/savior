@@ -1,0 +1,2217 @@
+{
+  "additional_single_role_misses": [],
+  "analysis_note": "Offline summary validation now decodes JSON fences like the production transport; current invalid response count corrected from 1 to 3. Findings, labels, requests and spending are unchanged.",
+  "analysis_reporting_sha256": "b89e9f6b3552fb44cfa0f4a21bfd369d15cf4de69e981922c2a12dd72de3179d",
+  "artifact_note": "Full prompts, raw responses, per-role assessments, presentation bodies and call accounting remain in the shared Git directory under reviewer-research/review-designs-v1.",
+  "budget": {
+    "cap_nanodollars": 4000000000,
+    "charged_nanodollars": 163350050,
+    "experiment": "review-designs-v1",
+    "outstanding_nanodollars": 0,
+    "remaining_nanodollars": 3836649950
+  },
+  "cases": [
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When current=False, saved=True, text='sensitive', records=[]: old returns [] (no retention), new returns ['sensitive'] (retains without current consent). Correction: Restore the condition 'if current and saved:' to require both consents.",
+              "evidence": "def retain(current, saved, text, records):",
+              "file": "research/case0/consent_revocation.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "current=False, saved=True, text='sensitive data', records=[] \u2192 old returns [] (no retention), new returns ['sensitive data'] (retention without current consent). Correction: Restore the condition 'if current and saved:' to require both consents.",
+              "evidence": "        records.append(text)",
+              "file": "research/case0/consent_revocation.py:3",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When current=False, saved=True, text='sensitive', records=[]: old returns [] (no recording), new returns ['sensitive'] (records despite revoked current consent). Correction: Restore the condition 'if current and saved:' to require both consents.",
+              "evidence": "    if saved:",
+              "file": "research/case0/consent_revocation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Text should only be recorded when both current and saved consent exist to ensure revocation takes immediate effect."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "The combined reviews report a single major issue in consent revocation logic where a code change removed the requirement for both current and saved consent, allowing data retention when current consent is revoked but saved consent exists. All reviewers demonstrate this flaw with concrete scenarios showing the new code incorrectly persists sensitive data while the old code correctly withholds it. The reviews unanimously identify this as a security and correctness violation where revoked consent fails to take immediate effect, though they characterize the precise nature slightly differently. The coverage appears complete for this one file with no excluded assets reported.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "The independent code reviews unanimously identify a violation of the stated invariant requiring both current and saved explicit consent for trace persistence. The change from 'if current and saved:' to 'if saved:' removes the current consent check, allowing data retention when current consent is revoked but saved consent exists. This introduces a security and correctness flaw where revoked consent does not take immediate effect. All reviewers demonstrate this with concrete scenarios where the old code correctly withholds retention while the new code incorrectly persists data. The unresolved disagreement is not about the flaw's existence but about its precise characterization across different review perspectives.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: current=False, saved=True, text='sample', records=[]. Old outcome: records remains [] because condition 'current and saved' evaluates to False. New outcome: records becomes ['sample'] because condition 'saved' evaluates to True, persisting data without current consent. Correction: Restore the condition 'if current and saved:' to require both current and saved consent for data retention.",
+              "evidence": "    if saved:",
+              "file": "research/case0/consent_revocation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When current=False, saved=True, text='sensitive', records=[]: old returns [] (no retention), new returns ['sensitive'] (retains without current consent). Correction: Restore the condition 'if current and saved:' to require both consents.",
+              "evidence": "def retain(current, saved, text, records):",
+              "file": "research/case0/consent_revocation.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "current=False, saved=True, text='sensitive data', records=[] \u2192 old returns [] (no retention), new returns ['sensitive data'] (retention without current consent). Correction: Restore the condition 'if current and saved:' to require both consents.",
+              "evidence": "        records.append(text)",
+              "file": "research/case0/consent_revocation.py:3",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When current=False, saved=True, text='sensitive', records=[]: old returns [] (no recording), new returns ['sensitive'] (records despite revoked current consent). Correction: Restore the condition 'if current and saved:' to require both consents.",
+              "evidence": "    if saved:",
+              "file": "research/case0/consent_revocation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Text should only be recorded when both current and saved consent exist to ensure revocation takes immediate effect."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "consent_revocation_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": false,
+          "completed_chunks": 1,
+          "disposition": "COMMENT",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview_error": "invalid overview length or structure",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the change from `if current and saved:` to `if all((current, saved)):` is logically equivalent, producing identical truth-table results for all inputs. The reviewers note the same behavior is maintained for boolean values and edge cases like None, 0, or empty sequences. No defects or compatibility issues are introduced by this syntactic variation.",
+          "synthesis_complete": false,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "consent_revocation_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "text='abcdef', start=3, end=4, protected=[(2,5)], marker='X'. Old: start(3) < b(5) and a(2) < end(4) \u2192 True, raises ValueError. New: start(3) <= a(2) and b(5) <= end(4) \u2192 False, no error, returns 'abXef', editing inside protected span (2,5). Correction: Restore overlap check: if any(start < b and a < end for a, b in protected):",
+              "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+              "file": "research/case2/protected_span.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected intervals must never be edited; any overlap between replacement interval and protected interval should raise ValueError."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "The review reports a single major finding regarding a code change that weakens protection of specified intervals. The original overlap detection logic was replaced with a containment check, allowing edits that partially overlap protected spans instead of raising errors. This violates the requirement that protected content must never be altered. While some reviews incorrectly claimed the new condition was stricter, the analysis concludes the change permits modification of protected content through partial overlaps, representing a regression in safety guarantees.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "The reviews present conflicting interpretations of the code change's impact. The correctness review argues that replacing overlap detection with containment weakens protection, allowing edits to partially overlap protected intervals, which violates the requirement that protected content must never be altered. The security and compatibility reviews incorrectly claim the new condition is stricter, preventing editing that overlaps protected spans. This unresolved disagreement stems from differing assumptions about the safety guarantee: the original specification mandates that any overlap should raise an error, while the new logic only triggers when a protected interval is fully contained within the edit range, permitting partial overlaps that modify protected content.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "text='abcde', start=1, end=4, protected=[(2,3)], marker='X'. Old: start(1) < b(3) and a(2) < end(4) \u2192 True, raises ValueError. New: start(1) <= a(2) and b(3) <= end(4) \u2192 False, allows replacement 'aXde' which edits protected span 'c' (positions 2-3). Correction: Restore original condition or use 'any(start < b and a < end for a, b in protected)' to detect any overlap.",
+              "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+              "file": "research/case2/protected_span.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected intervals must never be edited, including when they partially overlap the replacement region."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "text='abcdef', start=3, end=4, protected=[(2,5)], marker='X'. Old: start(3) < b(5) and a(2) < end(4) \u2192 True, raises ValueError. New: start(3) <= a(2) and b(5) <= end(4) \u2192 False, no error, returns 'abXef', editing inside protected span (2,5). Correction: Restore overlap check: if any(start < b and a < end for a, b in protected):",
+              "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+              "file": "research/case2/protected_span.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected intervals must never be edited; any overlap between replacement interval and protected interval should raise ValueError."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "protected_span_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "The review examined a single file change involving a reordering of commutative logical conditions in an overlap check. All reviewers determined the reordering from 'a < end and start < b' to 'start < b and a < end' produces logically identical behavior. The analysis concluded the modification introduces no functional impact, preserves existing error handling for overlapping intervals, and maintains correctness, security, and compatibility. No defects were identified in the reviewed code.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the change is purely a reordering of commutative logical conditions, resulting in identical behavior. The overlap check 'a < end and start < b' is logically equivalent to 'start < b and a < end', so no functional impact occurs. The function continues to raise ValueError exactly when the replacement interval overlaps any protected interval, preserving correctness, security, and compatibility. No defects are introduced.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "protected_span_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "profiles = {'default': {'trace': 'sensitive_data'}}, selected = 'attacker'. Old: KeyError('attacker') raises exception and fails closed. New: returns 'sensitive_data' from default profile, leaking data. Correction: Restore direct indexing: return profiles[selected]['trace'] or add explicit check: if selected not in profiles: raise KeyError(selected)",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; accessing a non-existent profile should raise an error, not fall back to a default."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If profiles = {'default': {'trace': 'sensitive_data'}} and selected = 'nonexistent', old code raises KeyError (failing closed), new code returns 'sensitive_data' (leaking default trace). Correction: Restrict access to only explicitly requested profiles; use profiles[selected] without fallback or raise a specific authorization error.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; accessing a trace for a non-existent profile should raise an error rather than fall back to a default profile."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If selected='malicious' is not in profiles but profiles has a 'default' entry, old code raises KeyError and fails closed; new code returns profiles['default']['trace'], exposing the default trace. Correction: Check if selected is in profiles; if not, raise KeyError or a dedicated exception to fail closed.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; accessing traces from an unintended profile violates isolation."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "The review identified a consistent security regression in profile isolation logic where missing profile requests now fall back to a default profile instead of raising an error. This violates fail-closed principles by potentially exposing sensitive default data when unauthorized profiles are requested. All findings concur that the change introduces a data leakage risk and recommend restoring strict key validation or explicit error handling to maintain isolation.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the change violates the 'fail closed' requirement by introducing a fallback to a default profile when a requested profile is missing. The original code raised a KeyError, preventing unauthorized access, while the new code returns data from the default profile, potentially leaking sensitive information. This constitutes a security regression that undermines profile isolation. The findings are consistent in identifying the defect and recommending restoration of strict key access or explicit error handling.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When selected='attacker' is not in profiles but profiles has a 'default' key, old code raises KeyError('attacker') (failing closed), new code returns profiles['default']['trace'] (exposing default profile data). Correction: Use profiles[selected] directly or, if a default is intended, ensure it is explicitly requested and access-controlled.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed (raise an error or return safe default, not expose other profile data)."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "profiles = {'default': {'trace': 'sensitive_data'}}, selected = 'attacker'. Old: KeyError('attacker') raises exception and fails closed. New: returns 'sensitive_data' from default profile, leaking data. Correction: Restore direct indexing: return profiles[selected]['trace'] or add explicit check: if selected not in profiles: raise KeyError(selected)",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; accessing a non-existent profile should raise an error, not fall back to a default."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If profiles = {'default': {'trace': 'sensitive_data'}} and selected = 'nonexistent', old code raises KeyError (failing closed), new code returns 'sensitive_data' (leaking default trace). Correction: Restrict access to only explicitly requested profiles; use profiles[selected] without fallback or raise a specific authorization error.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; accessing a trace for a non-existent profile should raise an error rather than fall back to a default profile."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If selected='malicious' is not in profiles but profiles has a 'default' entry, old code raises KeyError and fails closed; new code returns profiles['default']['trace'], exposing the default trace. Correction: Check if selected is in profiles; if not, raise KeyError or a dedicated exception to fail closed.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; accessing traces from an unintended profile violates isolation."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "profile_isolation_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "Reviewers unanimously agree that replacing direct dictionary indexing with the __getitem__ method call maintains identical behavior for both valid and invalid inputs, preserving the required fail-closed security property. They confirm KeyError for missing keys and TypeError for non-dictionary objects are raised identically in both implementations, ensuring no functional regression. However, reviewers show unresolved disagreement about which exception type is most relevant for the fail-closed requirement, with correctness focusing on TypeError and security and compatibility emphasizing KeyError, though all concur the behavioral equivalence is maintained.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the change from direct dictionary indexing to the `__getitem__` method call preserves identical behavior for both valid and invalid inputs, maintaining the required fail-closed security property. The reviewers independently conclude that `KeyError` for missing keys and `TypeError` for non-dictionary objects are raised identically in both implementations, ensuring no functional regression. However, the correctness reviewer notes `TypeError` preservation while security and compatibility reviewers emphasize `KeyError` preservation, indicating unresolved disagreement about which exception type is most relevant for the fail-closed requirement, though all agree the behavior is equivalent.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "profile_isolation_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: {'version': 1, 'text': 'test'}. Old output: returns 'test'. New output: raises ValueError('version'). Correction: Restore the condition to check if response['version'] not in (1, 2).",
+              "evidence": "        raise ValueError(\"version\")",
+              "file": "research/case6/protocol_compatibility.py:3",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'valid'}. Old code: returns 'valid'. New code: raises ValueError('version'). Correction: Restore the original condition: if response['version'] not in (1, 2): raise ValueError('version').",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes; all other versions must be rejected."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'valid'}. Old output: returns 'valid'. New output: raises ValueError('version'). Correction: Restore the condition to check if response['version'] not in (1, 2).",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept both version 1 and version 2 response envelopes; all other versions must be rejected."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "Three independent reviews identified a single major issue in protocol compatibility code where a change incorrectly restricted accepted response versions from both version 1 and version 2 to only version 2, causing version 1 inputs that were previously accepted to now raise ValueError exceptions. All reviewers provided consistent evidence showing the regression and recommended restoring the original condition to check for version inclusion in (1, 2). The unanimous findings across reviews indicate this behavioral change violates specified requirements, though the analysis represents untrusted review data rather than verified execution proof.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "All three independent reviews identify the same major issue: the code change incorrectly restricts accepted versions from (1, 2) to only version 2, violating the requirement that both versions must be accepted. Each reviewer provides a concrete example showing version 1 input is rejected in the new code but was accepted previously. The reviews unanimously conclude the original condition should be restored, though this agreement reflects consistent analysis rather than proof of execution.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'valid'}. Old code: returns 'valid' (accepts). New code: raises ValueError('version') (rejects). Correction: Restore check for both versions: if response['version'] not in (1, 2): raise ValueError('version').",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes; all other versions must be rejected."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: {'version': 1, 'text': 'test'}. Old output: returns 'test'. New output: raises ValueError('version'). Correction: Restore the condition to check if response['version'] not in (1, 2).",
+              "evidence": "        raise ValueError(\"version\")",
+              "file": "research/case6/protocol_compatibility.py:3",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'valid'}. Old code: returns 'valid'. New code: raises ValueError('version'). Correction: Restore the original condition: if response['version'] not in (1, 2): raise ValueError('version').",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes; all other versions must be rejected."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'valid'}. Old output: returns 'valid'. New output: raises ValueError('version'). Correction: Restore the condition to check if response['version'] not in (1, 2).",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept both version 1 and version 2 response envelopes; all other versions must be rejected."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "protocol_compatibility_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "Reviewers examined a single file modification replacing a tuple with a set for membership testing and found no functional differences. The change maintains identical version acceptance logic for integer inputs, preserving the required behavior of accepting versions 1 and 2 while rejecting others with ValueError. All reviewers agreed the modification introduces no defects regarding correctness, security, or compatibility, with no unresolved disagreements reported.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the change from tuple to set for membership testing is functionally equivalent, maintaining identical version acceptance logic. The modification does not introduce defects, as both data structures yield the same boolean results for integer inputs and preserve the required behavior of accepting versions 1 and 2 while rejecting others with ValueError. No unresolved disagreements exist regarding correctness, security, or compatibility impacts.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "protocol_compatibility_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=50, outstanding=30, requested=30, cap=100. Old: 50+30+30=110 > 100 \u2192 returns False (correctly rejects). New: 50+30=80 \u2264 100 \u2192 returns True (incorrectly admits, exceeding cap by 10). Correction: Restore the original calculation: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=50, outstanding=30, requested=30, cap=100. Old: 50+30+30=110 > 100 \u2192 returns False (correctly rejects). New: 50+30=80 \u2264 100 \u2192 returns True (incorrectly admits), exceeding cap when outstanding reservations are included. Correction: Restore the original calculation: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=5, outstanding=3, requested=2, cap=9. Old: 5+3+2=10 > 9 \u2192 returns False (rejects). New: 5+2=7 \u2264 9 \u2192 returns True (admits), but total would be 10 exceeding cap. Correction: Restore 'outstanding' in the calculation: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "Three independent reviews of the same code file report a major functional regression. The change removed the 'outstanding' parameter from a spending cap calculation, violating the specified rule that the sum of charges, outstanding reservations, and a new request must not exceed the cap. Each review presents a different test case where the old code correctly rejects a request that would exceed the cap, but the new code incorrectly admits it, demonstrating the same error. All reviewers unanimously conclude the original calculation must be restored.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "All three independent reviews identify the same major issue: the code change incorrectly removes the 'outstanding' parameter from the admission calculation, violating the specified invariant that total spending (charges + outstanding reservations + requested amount) must not exceed the cap. Each reviewer provides different test cases demonstrating the regression: the old code correctly rejects requests that would exceed the cap when considering outstanding reservations, while the new code incorrectly admits them. The reviews consistently conclude that the original calculation should be restored. The unanimous agreement across correctness, security, and compatibility perspectives indicates a clear functional regression that breaches the stated boundary condition.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=100, outstanding=50, requested=60, cap=200. Old: 100+50+60=210>200 \u2192 False (rejects). New: 100+60=160\u2264200 \u2192 True (admits), but total 210 exceeds cap. Correction: Restore the original calculation: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=50, outstanding=30, requested=30, cap=100. Old: 50+30+30=110 > 100 \u2192 returns False (correctly rejects). New: 50+30=80 \u2264 100 \u2192 returns True (incorrectly admits, exceeding cap by 10). Correction: Restore the original calculation: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=50, outstanding=30, requested=30, cap=100. Old: 50+30+30=110 > 100 \u2192 returns False (correctly rejects). New: 50+30=80 \u2264 100 \u2192 returns True (incorrectly admits), exceeding cap when outstanding reservations are included. Correction: Restore the original calculation: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=5, outstanding=3, requested=2, cap=9. Old: 5+3+2=10 > 9 \u2192 returns False (rejects). New: 5+2=7 \u2264 9 \u2192 returns True (admits), but total would be 10 exceeding cap. Correction: Restore 'outstanding' in the calculation: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "spending_boundary_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "The review examined one file and found no functional changes. The modification reordered operands in a commutative addition operation, which all reviewers agreed was purely cosmetic. The mathematical equivalence of the expressions was confirmed, leaving the inequality condition and program behavior unchanged. No impacts on correctness, security, or compatibility were identified, and there were no unresolved disagreements among reviewers.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the code change is purely cosmetic, reordering operands in a commutative addition operation without altering functionality. The inequality condition remains identical for all inputs, ensuring no impact on correctness, security, or compatibility. No unresolved disagreements exist, as each review independently confirms the mathematical equivalence of the expressions.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "spending_boundary_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old output: 100 (reserved). New output: 0 (charged or 0 evaluates to 0). Correction: Restore the conditional: return reserved if charged is None else charged.",
+              "evidence": "    return charged or 0",
+              "file": "research/case10/interrupted_accounting.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None (interrupted call), the function must return the reserved amount to retain the reservation."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old output: 100 (preserves reservation). New output: 0 (loses reservation). Correction: Restore the conditional: return reserved if charged is None else charged",
+              "evidence": "    return charged or 0",
+              "file": "research/case10/interrupted_accounting.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None (interrupted call), the function should return the reserved amount to retain the reservation."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "The review identified a single critical behavioral regression where the updated code incorrectly returns zero instead of preserving the reserved amount when the charged parameter is None, breaking the required handling for interrupted calls. All findings consistently report this defect across correctness and compatibility assessments, recommending restoration of the original conditional logic to properly distinguish None from other values. The analysis covered one file completely with no excluded assets.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "The reviews identify a critical flaw in the updated code where the logical OR operation fails to preserve the reservation when charged is None, violating the specified invariant for interrupted calls. While the security review notes that the change also incorrectly handles other falsy non-None values, the primary issue confirmed by correctness and compatibility reviews is the loss of reservation for None inputs. The findings unanimously agree on the defect and recommend restoring the original conditional to properly distinguish None from other values.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old returns 100 (retains reservation). New returns 0 (loses reservation). Correction: Restore the original logic: return reserved if charged is None else charged.",
+              "evidence": "    return charged or 0",
+              "file": "research/case10/interrupted_accounting.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None (interrupted call), the function should return the reserved amount to retain the entire reservation."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old output: 100 (reserved). New output: 0 (charged or 0 evaluates to 0). Correction: Restore the conditional: return reserved if charged is None else charged.",
+              "evidence": "    return charged or 0",
+              "file": "research/case10/interrupted_accounting.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None (interrupted call), the function must return the reserved amount to retain the reservation."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old output: 100 (preserves reservation). New output: 0 (loses reservation). Correction: Restore the conditional: return reserved if charged is None else charged",
+              "evidence": "    return charged or 0",
+              "file": "research/case10/interrupted_accounting.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None (interrupted call), the function should return the reserved amount to retain the reservation."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "interrupted_accounting_defective",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "The review examined one file and found the code change swaps ternary operator order while maintaining identical behavior, returning 'charged' when not None and 'reserved' otherwise. All reviewers agreed this constitutes a refactoring with no functional impact, introducing no defects and preserving logic compatibility. The assessment was based on complete coverage of the provided code.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the code change is semantically identical, swapping ternary order without altering behavior. The original and updated versions both return 'charged' when not None, otherwise 'reserved'. No defects are introduced, and the logic remains compatible. The unanimous conclusion is that this is a refactoring with no functional impact.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "interrupted_accounting_benign",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "The review examined a code modification replacing a simple Node.js test logging 42 with a test defining a custom require function that also returns and logs 42. All reviewers agreed both versions execute successfully and produce identical output, finding no introduced defects. The security reviewer highlighted the new version tests Node's CommonJS module handling, while others focused on functional equivalence. Coverage was complete for one file, with no excluded assets or binary changes reported. The analysis noted an unresolved question about whether testing module system behavior represents a meaningful change beyond output equivalence.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "The code change replaces a simple Node.js test that logs 42 with one that defines a custom require function returning 42 and logs its result. All three reviewers independently concluded there is no defect introduced, as both versions produce the same output (42) and execute successfully with check=True. However, the security reviewer noted the new version tests Node's CommonJS module handling, while the correctness and compatibility reviewers focused on the identical functional outcome. The unresolved point is whether testing module system behavior constitutes a meaningful change beyond mere output equivalence.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_0",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' results in a duplicate declaration error (exit code 1), causing subprocess.run to raise CalledProcessError. Correction: Revert to the original command or use a valid JavaScript expression that does not duplicate variable declarations.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The test harness should execute a valid Node.js command that exits successfully when check=True."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When the test runs, the new command 'const require = () => 42; const require = () => 43; console.log(require())' contains duplicate const declaration of 'require', causing a syntax error that makes subprocess.run fail with CalledProcessError due to check=True. Correction: Use unique variable names or different declaration types (let/var) if redefinition is needed, or remove the duplicate declaration.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The subprocess.run command must execute valid JavaScript code; duplicate const declarations are syntax errors in strict mode JavaScript."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' causes a duplicate declaration syntax error, making subprocess.run raise CalledProcessError due to check=True, while the old command executes successfully and prints 42. Correction: Remove the duplicate const declaration or use different variable names to avoid the syntax error.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Test harness commands should execute successfully and produce expected output when check=True is used."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "The report indicates a single file was reviewed, with three major findings all identifying the same syntax error in a Node.js test command. The changed command contains duplicate const declarations, causing a syntax error that leads to a CalledProcessError when executed with check=True. All reviewers agree the change is invalid, as the original command executed successfully. The findings consistently note the duplicate variable declaration as the cause of failure and suggest reverting to the original command or correcting the syntax.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "The diff introduces a duplicate const declaration in a Node.js command, causing a syntax error that leads to test failure due to check=True. All reviewers agree the change is invalid, as the original command executed successfully while the new one fails with a duplicate variable error. The unresolved disagreement is minimal, focusing on the same core issue of syntax error leading to CalledProcessError.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' yields a syntax error (duplicate declaration) and exits with code 1, causing CalledProcessError. Correction: Revert to the original command or fix the duplicate declaration.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "subprocess.run with check=True must succeed; the command must be syntactically valid."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' results in a duplicate declaration error (exit code 1), causing subprocess.run to raise CalledProcessError. Correction: Revert to the original command or use a valid JavaScript expression that does not duplicate variable declarations.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The test harness should execute a valid Node.js command that exits successfully when check=True."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When the test runs, the new command 'const require = () => 42; const require = () => 43; console.log(require())' contains duplicate const declaration of 'require', causing a syntax error that makes subprocess.run fail with CalledProcessError due to check=True. Correction: Use unique variable names or different declaration types (let/var) if redefinition is needed, or remove the duplicate declaration.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The subprocess.run command must execute valid JavaScript code; duplicate const declarations are syntax errors in strict mode JavaScript."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' causes a duplicate declaration syntax error, making subprocess.run raise CalledProcessError due to check=True, while the old command executes successfully and prints 42. Correction: Remove the duplicate const declaration or use different variable names to avoid the syntax error.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Test harness commands should execute successfully and produce expected output when check=True is used."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_1",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When sanitize(raw) raises any exception, old code re-raises the exception, preventing further processing. New code returns raw input unchanged, allowing unsanitized content to proceed. Correction: Restore 'raise' to re-throw the exception, or implement a safe fallback that does not return raw input.",
+              "evidence": "    except Exception:",
+              "file": "qualification/case2/bridge/submit.py:4",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that when sanitization raises an exception, the original raw input must not be returned to continue processing."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If sanitize(raw) raises any exception (e.g., due to malformed input), old code re-raises and input is withheld; new code returns raw unsanitized input, allowing it to continue. Correction: Restore 'raise' to maintain fail-closed behavior, or implement a safe fallback that does not return unsanitized input.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that when sanitization raises an exception, the original input must not be returned; raising preserves safety, returning raw violates it."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If sanitize(raw) raises any exception (e.g., ValueError for malformed input), old code re-raises the exception, preventing further processing. New code returns raw, allowing unsanitized input to proceed. Correction: Restore 'raise' to maintain fail-closed behavior, or implement proper error handling that does not return unsanitized input.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that when sanitization raises an exception, the original raw input must not be returned to continue processing."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "The report describes a single code change where exception handling during input sanitization was altered. Previously, exceptions from sanitization were re-raised, halting processing. The new version returns the raw unsanitized input when an exception occurs, allowing it to proceed. All findings concur this modification violates fail-closed security principles by potentially permitting unsafe data to bypass safety controls. The report is based on a review of one file and indicates complete coverage of the provided code chunk.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "All three reviewers agree the change violates fail-closed submission by returning raw input when sanitization fails, replacing exception re-raising. The old code prevented unsafe processing by raising exceptions; the new code allows unsanitized content to proceed. This creates a security boundary violation where unsanitized input could bypass safety controls. The unanimous finding identifies a major flaw requiring restoration of exception handling or implementation of a safe fallback that doesn't return raw input.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input 'malformed_data' causes sanitize(raw) to raise ValueError. Old code re-raises exception, preventing submission. New code returns 'malformed_data', allowing unsanitized input. Correction: Restore 'raise' to re-raise the exception, ensuring unsanitized input is never returned when sanitization fails.",
+              "evidence": "    except Exception:",
+              "file": "qualification/case2/bridge/submit.py:4",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that if sanitization raises an exception, the original raw input must not be returned, as that would permit unsanitized input to continue."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When sanitize(raw) raises any exception, old code re-raises the exception, preventing further processing. New code returns raw input unchanged, allowing unsanitized content to proceed. Correction: Restore 'raise' to re-throw the exception, or implement a safe fallback that does not return raw input.",
+              "evidence": "    except Exception:",
+              "file": "qualification/case2/bridge/submit.py:4",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that when sanitization raises an exception, the original raw input must not be returned to continue processing."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If sanitize(raw) raises any exception (e.g., due to malformed input), old code re-raises and input is withheld; new code returns raw unsanitized input, allowing it to continue. Correction: Restore 'raise' to maintain fail-closed behavior, or implement a safe fallback that does not return unsanitized input.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that when sanitization raises an exception, the original input must not be returned; raising preserves safety, returning raw violates it."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If sanitize(raw) raises any exception (e.g., ValueError for malformed input), old code re-raises the exception, preventing further processing. New code returns raw, allowing unsanitized input to proceed. Correction: Restore 'raise' to maintain fail-closed behavior, or implement proper error handling that does not return unsanitized input.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that when sanitization raises an exception, the original raw input must not be returned to continue processing."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_2",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "The change modifies a return statement from a single string literal to a join of two string literals that concatenate to the same content. All reviewers agree this preserves the exact output with no functional difference. The reviews consistently conclude that both versions produce identical results, indicating no impact on correctness, security, or compatibility. The assessment is based on complete coverage of one file with no excluded assets.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "The change modifies the return statement from a single string literal to a join of two string literals that concatenate to the same content. All reviewers agree this preserves the exact output with no functional difference. The reviews are consistent in concluding that both versions produce identical results, indicating no impact on correctness, security, or compatibility.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_3",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "Reviewers unanimously approved a code change replacing multiplication with addition, asserting semantic equivalence for numeric inputs without functional defects. Their assessment incorrectly generalized equivalence to all numeric types, though it holds for integers but not necessarily for custom classes. Reviews relied on claims rather than observed execution, and no unresolved disagreements existed despite conclusions lacking proof of correctness across all possible inputs.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the change from multiplication to addition is semantically equivalent for numeric inputs, introducing no functional defect. However, they incorrectly claim equivalence for all numeric types without evidence; the equivalence holds for integers but not necessarily for all types (e.g., custom classes). The reviews are based on claims rather than observed execution, and unresolved disagreements are absent as all reviewers concur, though their conclusions lack proof of correctness across all possible inputs.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_4",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input n=4: old returns 2.0; new raises ZeroDivisionError. Correction: Restore non-zero denominator, e.g., return n / 2.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Function should compute a fraction of its input without raising a runtime arithmetic exception for valid numeric inputs."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input n=5: old returns 2.5, new raises ZeroDivisionError. Correction: Restore division by a non-zero denominator, e.g., return n / 2.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Division by zero must be avoided to prevent runtime exceptions."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input n=1: old returns 0.5, new raises ZeroDivisionError. Correction: Restore denominator to a non-zero value, e.g., return n / 2.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Division by zero is undefined and raises ZeroDivisionError in Python, breaking the function's contract to compute a fraction."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "The change introduces a division by zero error in a function, causing it to raise ZeroDivisionError for all numeric inputs instead of computing a fraction. All reviewers independently identify this as a major defect that breaks the function's expected behavior, though they frame the issue through different perspectives like correctness, security, and compatibility. The coverage is complete for the single file reviewed, with no excluded assets or omitted binary changes.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "The code change replaces division by 2 with division by 0, which introduces a division by zero error for all numeric inputs, causing the function to raise ZeroDivisionError instead of computing a fraction. All reviewers agree this is a major issue that breaks the function's expected behavior, though they frame it differently: one emphasizes correctness by violating invariants, another highlights security through runtime exceptions, and the third focuses on compatibility by breaking the function's contract. The unresolved disagreement is only in perspective, not substance, as each reviewer independently concludes the change is defective due to the arithmetic error.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input n=1: old returns 0.5, new raises ZeroDivisionError. Correction: Restore denominator to a non-zero value or add zero-check guard.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Arithmetic operations should not divide by zero as it raises ZeroDivisionError and breaks the function's contract."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input n=4: old returns 2.0; new raises ZeroDivisionError. Correction: Restore non-zero denominator, e.g., return n / 2.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Function should compute a fraction of its input without raising a runtime arithmetic exception for valid numeric inputs."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input n=5: old returns 2.5, new raises ZeroDivisionError. Correction: Restore division by a non-zero denominator, e.g., return n / 2.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Division by zero must be avoided to prevent runtime exceptions."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input n=1: old returns 0.5, new raises ZeroDivisionError. Correction: Restore denominator to a non-zero value, e.g., return n / 2.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Division by zero is undefined and raises ZeroDivisionError in Python, breaking the function's contract to compute a fraction."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_5",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "The single-file change swapped two variables in an addition operation, which reviewers unanimously deemed harmless due to the commutative property of addition preserving identical logic and behavior for all inputs. No defects were introduced, and the function's output remains unchanged. The review was complete with no excluded assets or omitted binary changes.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree the change is harmless. The function's logic remains identical because addition is commutative, so swapping 'spent' and 'requested' does not affect the boolean result. No defect is introduced, and the function's behavior is preserved for all inputs.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_6",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "REQUEST_CHANGES",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input spent=5, requested=3, limit=10: old returns True (5+3=8 \u2264 10), new returns False (5+3=8 \u2265 10). Valid request incorrectly rejected. Correction: Restore the original comparison: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return true when adding requested amount to spent amount does not exceed the limit, ensuring resource allocation stays within bounds."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: spent=5, requested=3, limit=10. Old: 5+3 <= 10 \u2192 true (admission allowed). New: 5+3 >= 10 \u2192 false (admission incorrectly denied). Correction: Restore the original comparison operator: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return true only when the sum of spent and requested does not exceed the limit, ensuring resource allocation stays within bounds."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: spent=5, requested=3, limit=10. Old: 5+3 <= 10 \u2192 True (admit). New: 5+3 >= 10 \u2192 False (reject). The new logic incorrectly rejects a valid request that stays under the limit. Correction: Restore the original inequality: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return True when adding requested to spent does not exceed the limit, ensuring the total stays within bounds."
+            }
+          ],
+          "omitted_binary_changes": [],
+          "overview": "Three independent reviews report the same major defect: a flipped comparison operator in an admit function incorrectly rejects valid resource requests. Using the example spent=5, requested=3, limit=10, they show the new code returns False where the old code correctly returned True, violating the requirement to allow admission when the sum does not exceed the limit. All reviewers concur the logic is reversed and must be corrected by restoring the original operator. The findings are consistent and based on a single reviewed file, with no disagreements or excluded assets noted.",
+          "production_disposition": "REQUEST_CHANGES",
+          "qualification_assumed_for_research": true,
+          "summary": "All three independent code reviews unanimously identify the same critical defect: the change flips the comparison operator from <= to >=, which reverses the admission logic. They demonstrate with the concrete example (spent=5, requested=3, limit=10) that the old code correctly returns True (admit) while the new code incorrectly returns False (reject), violating the invariant that admission should be allowed when the sum does not exceed the limit. The reviewers agree this is a major issue requiring restoration of the original operator. No disagreements exist; each review independently confirms the logic inversion and its negative impact.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input spent=5, requested=3, limit=10. Old: 5+3 <= 10 \u2192 True (admit). New: 5+3 >= 10 \u2192 False (reject). The new logic incorrectly rejects a valid request that stays under limit. Correction: Restore original comparison: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return True when adding requested amount to spent does not exceed limit, ensuring spending stays within budget."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input spent=5, requested=3, limit=10: old returns True (5+3=8 \u2264 10), new returns False (5+3=8 \u2265 10). Valid request incorrectly rejected. Correction: Restore the original comparison: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return true when adding requested amount to spent amount does not exceed the limit, ensuring resource allocation stays within bounds."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: spent=5, requested=3, limit=10. Old: 5+3 <= 10 \u2192 true (admission allowed). New: 5+3 >= 10 \u2192 false (admission incorrectly denied). Correction: Restore the original comparison operator: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return true only when the sum of spent and requested does not exceed the limit, ensuring resource allocation stays within bounds."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: spent=5, requested=3, limit=10. Old: 5+3 <= 10 \u2192 True (admit). New: 5+3 >= 10 \u2192 False (reject). The new logic incorrectly rejects a valid request that stays under the limit. Correction: Restore the original inequality: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return True when adding requested to spent does not exceed the limit, ensuring the total stays within bounds."
+            }
+          ],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_7",
+      "expected": "REQUEST_CHANGES",
+      "oracle": {
+        "new_passed": false,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "The review examined one file and found no functional defects, security issues, or compatibility problems introduced by the change. The added step performs a simple Python assertion that does not modify existing workflow behavior. Reviewers noted the change does not affect security posture or introduce untrusted input handling, but correctly treated their conclusions as claims rather than proof of execution. The unanimous agreement suggests low risk, but does not constitute formal verification of the workflow's overall correctness.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All three reviewers agree the change introduces no functional defects, security issues, or compatibility problems. The added step performs a simple Python assertion that doesn't modify existing workflow behavior. While reviewers note the addition doesn't affect security posture or introduce untrusted input handling, they correctly treat their conclusions as claims rather than proof of execution. The unanimous agreement suggests low risk, but doesn't constitute formal verification of the workflow's correctness.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_8",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    },
+    {
+      "arms": {
+        "current": {
+          "complete": true,
+          "completed_chunks": 1,
+          "disposition": "APPROVE",
+          "excluded_assets": [],
+          "files": 1,
+          "findings": [],
+          "omitted_binary_changes": [],
+          "overview": "The review examined one file and found only a documentation change that replaced a docstring about performance constraints with one describing review policy. No executable code was altered, so there is no impact on functionality, security, compatibility, or runtime behavior. The change does not introduce bugs. The review coverage was complete with no excluded assets or omitted binary changes.",
+          "production_disposition": "APPROVE",
+          "qualification_assumed_for_research": true,
+          "summary": "All reviewers agree this is a documentation-only change that replaces a docstring describing performance constraints with one about review policy. Since no executable code is altered, there is no impact on functionality, security, or compatibility. The change does not introduce bugs or affect runtime behavior.",
+          "synthesis_complete": true,
+          "total_chunks": 1
+        },
+        "single_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "general"
+            ],
+            "required_roles": [
+              "general"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        },
+        "three_role": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ],
+            "required_roles": [
+              "correctness",
+              "security",
+              "compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "lossless": true,
+          "unresolved": []
+        }
+      },
+      "case": "qualification_9",
+      "expected": "APPROVE",
+      "oracle": {
+        "new_passed": true,
+        "old_passed": true,
+        "resolved": true
+      }
+    }
+  ],
+  "date": "2026-11-12",
+  "excluded_unresolved_labels": [],
+  "execution_reporting_sha256": "b64b08533579e69028105575878a31e987253bc72de75ed363c8045e9a6286fb",
+  "execution_revision": "fb5f1b1cc27c9e4dce38cd1537a48a22acbdfff9",
+  "experiment": "review-designs-v1",
+  "frozen_configuration": {
+    "__init__.py": "eda2438f183830c88356fba179bc5e5134d79795ef965f81bf2dc894d657e9b0",
+    "adaptive_review.py": "99ecba3ee9e4646021694460d537853f8e6a1881395bcde4b4cee5ede8d3f2c1",
+    "adversarial_review.py": "cfc8561fe7140d401dfe439b37b4c59b6c54cfa9f0c2a59f8f1d60ac58009ad7",
+    "bedrock_client.py": "763b86103a5f19fabce5d3a5ab7bce85a3951221586157e9156a85cd4345a620",
+    "budget.py": "04ac4d754b49bcd6fb3d9888fe0a3976c55d8bb36a9a6e4b047936d63106e5a4",
+    "chat_transport.py": "aaf4381f29b3e4c97904396a5ed6ee96de408a3572c28af885e8accefbb1b344",
+    "chunk_plan.py": "43d6a7207321575c9d97fac5e6c820f02a3009e439234e525f3f7f4a58c20d98",
+    "cost_policy.py": "29b653367e944b29863e33468dad050e258ac0f3a0573307c9b7588939ed42e9",
+    "diagnostics.py": "0653fea14a675b2397f15af11bacee030b8c422773be258e780e36f6c30d3d46",
+    "egm.py": "58a5a64f44c225f09c1f3cf91eaeebe056ac79ecb0c86b613d9de27df58f6bcf",
+    "evaluate_model.py": "6a46fd2f5dff00161a3ac58143bba8c6128eb1ea48dc779a4f59ed75d228c8bb",
+    "evidence.py": "d0186c8b2026ada78ff3a181ca5a8ea6e17f0254176396bab7582d6666f54dce",
+    "history.py": "a26e0dadc91f46bc322317850b58c253a93b4a19681626f01d831a5fa268bab0",
+    "iam/trust.json": "1b0783a978228576218a89fcfd006028f9bb7509a216d6b521cb1615420bdc17",
+    "investigate.py": "4c06a2566538e7462740130fbc273977054354e92097001cc5784ececeddc580",
+    "model_catalog.py": "1fec09e0a0fd6a43326ce8db878f08009ba75b19bc4300fc236e36372aab7065",
+    "models.json": "ad0392d7b5a9cc222d15871eaa8e89606c474fc7e80fbf9649dd9ccc1f1d3937",
+    "models.py": "9099baf36386ef3040209427c20b6bd128c75383805e657dd4071c29d95cb5dd",
+    "preflight.py": "cf2ccf671675a54e82e6ef32826ad0df06afe46259adea4d2b50fb6ff2fb6672",
+    "prompt_experiment.py": "887c552f77f3181a4eea80889fc062b69ebf63ab2869cb67e72afb1bd3aa17e1",
+    "prompt_profiles.py": "556afd150b76fe86ce4a85372e8d61e79f915f41fedc64d0ac2af9f73f1921b8",
+    "qualify.py": "377e6662e33c7da72520f65f093f1c0530797d824de8ba8ee56b22215530ecd7",
+    "quote.py": "5a41e9c5d5bc81a1a83f034b28e39f7b81ebd77d0732d4132e506b6505908b1e",
+    "reporting.py": "bd7105ae16d1954cb5019b52aafcc1e499674bf263d6c7e14f87b48d5fff1d11",
+    "research.py": "dc52e434dcc8405e0b9d9531b14a7b27baaf8a5711b1e0964cd84d0b544fcd87",
+    "research_cases.py": "0043b580af837a5006580a6845bfe7964b6d1c03df49dcb160a0348dec9fac4e",
+    "research_ledger.py": "d69513afeae08ed11d5cd591066cf9539680fbb21dc02645f9b802aaced3a8fa",
+    "research_reporting.py": "b64b08533579e69028105575878a31e987253bc72de75ed363c8045e9a6286fb",
+    "result_cache.py": "32e90db2d50e47b8379013f9b5dc6cecf1a35b8ef5828e733eaff8c842b45857",
+    "routing.json": "f71b31418caa8146c9404c44c47528aafa01bc99f3a976820ec7e355a8679e22",
+    "run_ci.py": "615ab8d06cca43d1c2b037679908f7b41c852f6adbbe28d6b6ceba8e3c3d135a",
+    "runtime_facts.py": "1095a6e0dd2068e8a2deabe78db975867feeb1186c205bd413ddca7c78adead4",
+    "settle.py": "717c65760b33b0e918aaeb10c87c6ecf22b9b5e638319476d1f219a2ded62c68"
+  },
+  "frozen_digest": "43e37c14eca0c585ba01ab44130406b6063b2baefeb4331e4d5cd531e8f41e4d",
+  "matched_accuracy": {
+    "current": {
+      "assessed_cases": 22,
+      "complete_cases": 21,
+      "false_positive_cases": [],
+      "incomplete_cases": [
+        "consent_revocation_benign"
+      ],
+      "missed_defect_cases": [],
+      "unresolved_defect_cases": []
+    },
+    "single_role": {
+      "assessed_cases": 22,
+      "complete_cases": 22,
+      "false_positive_cases": [],
+      "incomplete_cases": [],
+      "missed_defect_cases": [],
+      "unresolved_defect_cases": []
+    },
+    "three_role": {
+      "assessed_cases": 22,
+      "complete_cases": 22,
+      "false_positive_cases": [],
+      "incomplete_cases": [],
+      "missed_defect_cases": [],
+      "unresolved_defect_cases": []
+    }
+  },
+  "matched_cases": [
+    "consent_revocation_defective",
+    "consent_revocation_benign",
+    "protected_span_defective",
+    "protected_span_benign",
+    "profile_isolation_defective",
+    "profile_isolation_benign",
+    "protocol_compatibility_defective",
+    "protocol_compatibility_benign",
+    "spending_boundary_defective",
+    "spending_boundary_benign",
+    "interrupted_accounting_defective",
+    "interrupted_accounting_benign",
+    "qualification_0",
+    "qualification_1",
+    "qualification_2",
+    "qualification_3",
+    "qualification_4",
+    "qualification_5",
+    "qualification_6",
+    "qualification_7",
+    "qualification_8",
+    "qualification_9"
+  ],
+  "metrics": {
+    "current": {
+      "abstentions": 0,
+      "charged_nanodollars": 127848070,
+      "input_tokens": 150811,
+      "invalid_responses": 3,
+      "invocation_attempts": 140,
+      "latency_seconds": 568.8480413831712,
+      "output_tokens": 18565,
+      "outstanding_nanodollars": 0,
+      "reservations": 140,
+      "truncations": 0,
+      "unknown_usage_calls": 0
+    },
+    "single_role": {
+      "abstentions": 0,
+      "charged_nanodollars": 35501980,
+      "input_tokens": 42879,
+      "invalid_responses": 0,
+      "invocation_attempts": 32,
+      "latency_seconds": 147.34783678798703,
+      "output_tokens": 4820,
+      "outstanding_nanodollars": 0,
+      "reservations": 32,
+      "truncations": 0,
+      "unknown_usage_calls": 0
+    },
+    "three_role": {
+      "assessment_cost_shared_with": "current",
+      "incremental_calls": 0,
+      "incremental_charge_nanodollars": 0,
+      "shared_assessment_calls": 94,
+      "shared_charged_nanodollars": 103037380,
+      "shared_input_tokens": 123884,
+      "shared_latency_seconds": 420.8933210061805,
+      "shared_output_tokens": 14178,
+      "shared_outstanding_nanodollars": 0
+    }
+  },
+  "pairwise_accuracy": {
+    "single_role": {
+      "current": {
+        "assessed_cases": 22,
+        "complete_cases": 21,
+        "false_positive_cases": [],
+        "incomplete_cases": [
+          "consent_revocation_benign"
+        ],
+        "missed_defect_cases": [],
+        "unresolved_defect_cases": []
+      },
+      "single_role": {
+        "assessed_cases": 22,
+        "complete_cases": 22,
+        "false_positive_cases": [],
+        "incomplete_cases": [],
+        "missed_defect_cases": [],
+        "unresolved_defect_cases": []
+      }
+    },
+    "three_role": {
+      "current": {
+        "assessed_cases": 22,
+        "complete_cases": 21,
+        "false_positive_cases": [],
+        "incomplete_cases": [
+          "consent_revocation_benign"
+        ],
+        "missed_defect_cases": [],
+        "unresolved_defect_cases": []
+      },
+      "three_role": {
+        "assessed_cases": 22,
+        "complete_cases": 22,
+        "false_positive_cases": [],
+        "incomplete_cases": [],
+        "missed_defect_cases": [],
+        "unresolved_defect_cases": []
+      }
+    }
+  },
+  "production_qualification": "not run; no cache publication",
+  "python_version": "3.14.5",
+  "reporting_losses": [],
+  "routing": {
+    "models": {
+      "deepseek_v3_2": {
+        "adapter": "converse",
+        "context_tokens": 167936,
+        "model_id": "deepseek.v3.2",
+        "output_tokens": 4096,
+        "pricing": {
+          "checked": "2026-11-04",
+          "input_nanodollars": 620,
+          "output_nanodollars": 1850,
+          "source": "https://aws.amazon.com/bedrock/pricing/",
+          "version": "deepseek-us-standard-2026-11-04"
+        },
+        "provider": "DeepSeek",
+        "region": "us-east-1",
+        "resources": [
+          "arn:aws:bedrock:us-east-1::foundation-model/deepseek.v3.2"
+        ]
+      }
+    },
+    "routing": {
+      "roles": {
+        "compatibility": "deepseek_v3_2",
+        "correctness": "deepseek_v3_2",
+        "elephant": "deepseek_v3_2",
+        "security": "deepseek_v3_2",
+        "verification": "deepseek_v3_2"
+      },
+      "schema": 1
+    }
+  },
+  "runtime_facts": "Trusted execution evidence from fixed reviewer-owned probes (not PR code): {\"node\": \"v26.8.1\", \"mode\": \"--input-type=commonjs -e\", \"observations\": [{\"script\": \"const require = () => 42; console.log(require())\", \"exit_code\": 0, \"printed_42\": true, \"duplicate_declaration_error\": false}, {\"script\": \"const require = () => 42; const require = () => 43; console.log(require())\", \"exit_code\": 1, \"printed_42\": false, \"duplicate_declaration_error\": true}]}",
+  "schema": 1,
+  "status": "one pass completed"
+}

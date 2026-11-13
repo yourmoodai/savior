@@ -13,7 +13,16 @@ def assess_plan(diff, files, context, report, deadline, strategy, dry_run):
         return review_messages(render(units), sorted({u.path for u in units}), context, anchors(units),
                                supporting_context='\nSupporting evidence (context only):\n'+support if support else '')
     try:
-        planned = plan(diff, lambda m: count_tokens(m, deadline), messages, strategy=strategy)
+        from source_graph import snapshots, SourceError
+        from review_plan import frozen_execution, restore, PlanningError
+        frozen = frozen_execution.get()
+        planned = restore(frozen, diff, snapshots.get()) if frozen is not None else plan(
+            diff, lambda m: count_tokens(m, deadline), messages, strategy=strategy)
+        if frozen is not None and any(messages(c['units'], c['support']) != c['messages'] for c in planned['chunks']):
+            raise PlanningError('frozen request differs from execution evidence')
+    except (PlanningError, SourceError) as error:
+        return {**report, 'blocked_reason': 'planning_failed', 'planning_failure': str(error),
+                'summary': f'review incomplete: {error}'}
     except (ValueError, BedrockError) as error:
         return {**report, 'summary': f'review incomplete: {error}'}
     report['manifest'] = manifest(planned)
@@ -30,6 +39,9 @@ def assess_plan(diff, files, context, report, deadline, strategy, dry_run):
     report['total_chunks'] = len(planned['chunks'])
     if dry_run:
         return report
+    if snapshots.get() is not None and report['context_gaps']:
+        return {**report, 'blocked_reason': 'planning_failed',
+                'summary': 'review incomplete: unresolved context or request capacity; inspect context gaps'}
     if os.environ.get('REVIEW_PLAN_DIGEST'):
         from quote import plan_digest
         if plan_digest(report['manifest']) != os.environ['REVIEW_PLAN_DIGEST']:

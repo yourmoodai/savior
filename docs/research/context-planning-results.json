@@ -1,0 +1,877 @@
+{
+  "schema": 1,
+  "snapshots": {
+    "old": "3575521a329b3368593421419f7587b8441f1c3a",
+    "new": "a130b948abcb218674aa152e8f9a09e54b021742"
+  },
+  "diff_digest": "2206dc83c565fb293f30828dad2d0072fea72e7244e01c72fc8c72949e3d3435",
+  "files": 34,
+  "paid_calls": 0,
+  "usage_priced_cost_usd": 0,
+  "model_quality_measured": false,
+  "expected_primary_locations": 8860,
+  "omitted_binary_changes": [],
+  "excluded_assets": [],
+  "analyzers": {
+    "tree-sitter": "0.25.2",
+    "tree-sitter-python": "0.25.0",
+    "tree-sitter-rust": "0.24.0",
+    "tree-sitter-javascript": "0.25.0",
+    "tree-sitter-typescript": "0.23.2"
+  },
+  "harness_fingerprint": "128dd4d8c562d373d402a1a2048e2427d5681f7bf70c1ab6c15a3f869510948d",
+  "plans": {
+    "historical_baseline": {
+      "chunks": 47,
+      "chunks_with_gaps": 46,
+      "feasible": false,
+      "input_units": 1352127,
+      "support_bytes": 216308,
+      "unique_primary_locations": 8860,
+      "primary_locations": 8860,
+      "exact_primary_ownership": true,
+      "worst_case_reservation_nanodollars": 92359557120,
+      "request_estimate_nanodollars": 27769522620,
+      "seconds": 1.8135370840027463,
+      "peak_python_bytes": 2474831,
+      "issues": [
+        "0863174188fb1e3b:5",
+        "1a87897d579b3602:5",
+        "24171241b44d34d8:5",
+        "2ab770bdededb9a7:5",
+        "306829759fe5f295:4",
+        "34af1b448c94d924:5",
+        "3cfabc4ba7af8f67:5",
+        "4105de28da8a2922:5",
+        "4a0825a2deec633e:5",
+        "4ee000f6cc6fc00c:5",
+        "595dbfc0ece584ad:4",
+        "5fcd43877e970ba7:5",
+        "609ffe4396c70354:5",
+        "6b476ca32f319545:5",
+        "6f7ba79d9a848e95:4",
+        "6fcda6da8265fa49:5",
+        "72dcd0efd15859c8:4",
+        "72dcd0efd15859c8:83",
+        "86873c7a17f8ad51:5",
+        "8d37bdf8fbb089a4:5",
+        "8e637522c6bfe01a:5",
+        "9e3548ac910b9e40:5",
+        "b494c7f3a08a6342:5",
+        "c6f2d31a7b817a31:5",
+        "c7f3994e9a8f1598:5",
+        "ca442ac266ee395c:5",
+        "d68af422fa2949f8:5",
+        "db70e4f699b3049a:5",
+        "ee7666b539db3ed5:5",
+        "f22205f454cc8a1b:5",
+        "f6573589f2f1238f:5"
+      ],
+      "plan_digest": null
+    },
+    "dependency_baseline": {
+      "chunks": 48,
+      "chunks_with_gaps": 34,
+      "feasible": false,
+      "input_units": 2801330,
+      "support_bytes": 1652785,
+      "unique_primary_locations": 8860,
+      "primary_locations": 8860,
+      "exact_primary_ownership": true,
+      "worst_case_reservation_nanodollars": 94324654080,
+      "request_estimate_nanodollars": 31002371400,
+      "seconds": 2.513034499977948,
+      "peak_python_bytes": 25676757,
+      "issues": [
+        "required semantic closure exceeds request capacity",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adaptive_review.py:9",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:116",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:143",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:162",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:174",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:18",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:20",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:208",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:292",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:312",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:336",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:363",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:428",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:560",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/bedrock_client.py:29",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/bedrock_client.py:39",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/bedrock_client.py:75",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/budget.py:28",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chat_transport.py:10",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chat_transport.py:25",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chat_transport.py:33",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chat_transport.py:64",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:110",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:114",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:132",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:16",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:198",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:205",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:66",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/cost_policy.py:10",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/cost_policy.py:14",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/cost_policy.py:23",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/cost_policy.py:35",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/diagnostics.py:18",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/diagnostics.py:8",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/egm.py:13",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evaluate_model.py:76",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evidence.py:22",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evidence.py:38",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evidence.py:44",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evidence.py:8",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:16",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:20",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:29",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:66",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:74",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:85",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:95",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:107",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:115",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:146",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:154",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:16",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:170",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:30",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:36",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:43",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:50",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:67",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/prompt_profiles.py:18",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/prompt_profiles.py:7",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/qualify.py:13",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/qualify.py:22",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/qualify.py:33",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/qualify.py:57",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:12",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:142",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:152",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:16",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:163",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:25",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:34",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:73",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/reporting.py:18",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/reporting.py:50",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:105",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:121",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:187",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:220",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:227",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:25",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:264",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:30",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:36",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:42",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:72",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_cases.py:121",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_cases.py:81",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_cases.py:86",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_ledger.py:20",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_ledger.py:35",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_prose_baseline.py:15",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_prose_baseline.py:50",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_prose_baseline.py:79",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:103",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:13",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:181",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:20",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:52",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:57",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:17",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:21",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:28",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:32",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:37",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:53",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:95",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/runtime_facts.py:8",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/test_research.py:126",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/test_research.py:153",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/test_research.py:32",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:140",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:25",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:26",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:27",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:28",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:32",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:38",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:4",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:47",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:54",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:76",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:86",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:12",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:31",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:46",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:76",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:99",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:133",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:151",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:191",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:233",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:24",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:25",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:26",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:27",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:34",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:40",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:45",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:5",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:56",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:68",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:89",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:118",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:13",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:16",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:21",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:29",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:61",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:74",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:10",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:127",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:25",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:62",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:76",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:115",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:145",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:15",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:154",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:19",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:33",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:78",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:89",
+        "unresolved dynamic dependency: tools/review_routing_research/routers.py:14",
+        "unresolved dynamic dependency: tools/review_routing_research/routers.py:50",
+        "unresolved dynamic dependency: tools/review_routing_research/run.py:17",
+        "unresolved dynamic dependency: tools/review_routing_research/run.py:20",
+        "unresolved dynamic dependency: tools/review_routing_research/run.py:52",
+        "unresolved dynamic dependency: tools/review_routing_research/run.py:77",
+        "unresolved dynamic dependency: tools/review_routing_research/test_cost_calibration.py:15",
+        "unresolved dynamic dependency: tools/review_routing_research/test_cpu_routing.py:14",
+        "unresolved dynamic dependency: tools/review_routing_research/test_cpu_routing.py:18",
+        "unresolved dynamic dependency: tools/review_routing_research/test_cpu_routing.py:57",
+        "unresolved dynamic dependency: tools/review_routing_research/test_experiment.py:5",
+        "unresolved dynamic dependency: tools/review_routing_research/test_live_packing.py:22",
+        "unresolved dynamic dependency: tools/review_routing_research/test_packing_quality.py:7",
+        "unresolved imported binding: tools/review_routing_research/packing.py:manifest,parse,plan,render",
+        "unresolved imported binding: tools/review_routing_research/packing.py:parse",
+        "unresolved imported binding: tools/review_routing_research/packing.py:plan,render"
+      ],
+      "plan_digest": "ce9a9a1394fff8aab28cadb8c362f5e4d1a74e1a17afb9a6b7fcce29d11f6375"
+    },
+    "historical_adaptive": {
+      "chunks": 41,
+      "chunks_with_gaps": 41,
+      "feasible": false,
+      "input_units": 1287194,
+      "support_bytes": 227756,
+      "unique_primary_locations": 8860,
+      "primary_locations": 8860,
+      "exact_primary_ownership": true,
+      "worst_case_reservation_nanodollars": 80568975360,
+      "request_estimate_nanodollars": 24424760040,
+      "seconds": 1.3626552500063553,
+      "peak_python_bytes": 26873158,
+      "issues": [
+        "0863174188fb1e3b:5",
+        "1a87897d579b3602:5",
+        "24171241b44d34d8:5",
+        "2ab770bdededb9a7:5",
+        "306829759fe5f295:4",
+        "34af1b448c94d924:5",
+        "3cfabc4ba7af8f67:5",
+        "4105de28da8a2922:5",
+        "4a0825a2deec633e:5",
+        "4ee000f6cc6fc00c:5",
+        "595dbfc0ece584ad:4",
+        "5fcd43877e970ba7:5",
+        "609ffe4396c70354:5",
+        "6b476ca32f319545:5",
+        "6fcda6da8265fa49:5",
+        "72dcd0efd15859c8:4",
+        "72dcd0efd15859c8:83",
+        "86873c7a17f8ad51:5",
+        "888290a064303009:5",
+        "8d37bdf8fbb089a4:5",
+        "8e637522c6bfe01a:5",
+        "9e3548ac910b9e40:5",
+        "b494c7f3a08a6342:5",
+        "c7f3994e9a8f1598:5",
+        "ca442ac266ee395c:5",
+        "d68af422fa2949f8:5",
+        "db70e4f699b3049a:5",
+        "ee7666b539db3ed5:5",
+        "f22205f454cc8a1b:5",
+        "f6573589f2f1238f:5"
+      ],
+      "plan_digest": null
+    },
+    "dependency_adaptive": {
+      "chunks": 47,
+      "chunks_with_gaps": 34,
+      "feasible": false,
+      "input_units": 2787916,
+      "support_bytes": 1652785,
+      "unique_primary_locations": 8860,
+      "primary_locations": 8860,
+      "exact_primary_ownership": true,
+      "worst_case_reservation_nanodollars": 92359557120,
+      "request_estimate_nanodollars": 30440090160,
+      "seconds": 1.9778899580123834,
+      "peak_python_bytes": 23671155,
+      "issues": [
+        "required semantic closure exceeds request capacity",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adaptive_review.py:9",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:116",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:143",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:162",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:174",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:18",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:20",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:208",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:292",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:312",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:336",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:363",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:428",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/adversarial_review.py:560",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/bedrock_client.py:29",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/bedrock_client.py:39",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/bedrock_client.py:75",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/budget.py:28",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chat_transport.py:10",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chat_transport.py:25",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chat_transport.py:33",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chat_transport.py:64",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:110",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:114",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:132",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:16",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:198",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:205",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/chunk_plan.py:66",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/cost_policy.py:10",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/cost_policy.py:14",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/cost_policy.py:23",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/cost_policy.py:35",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/diagnostics.py:18",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/diagnostics.py:8",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/egm.py:13",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evaluate_model.py:76",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evidence.py:22",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evidence.py:38",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evidence.py:44",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/evidence.py:8",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:16",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:20",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:29",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:66",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:74",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:85",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/model_catalog.py:95",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:107",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:115",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:146",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:154",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:16",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:170",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:30",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:36",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:43",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:50",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/models.py:67",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/prompt_profiles.py:18",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/prompt_profiles.py:7",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/qualify.py:13",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/qualify.py:22",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/qualify.py:33",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/qualify.py:57",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:12",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:142",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:152",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:16",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:163",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:25",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:34",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/quote.py:73",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/reporting.py:18",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/reporting.py:50",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:105",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:121",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:187",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:220",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:227",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:25",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:264",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:30",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:36",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:42",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research.py:72",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_cases.py:121",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_cases.py:81",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_cases.py:86",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_ledger.py:20",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_ledger.py:35",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_prose_baseline.py:15",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_prose_baseline.py:50",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_prose_baseline.py:79",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:103",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:13",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:181",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:20",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:52",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/research_reporting.py:57",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:17",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:21",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:28",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:32",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:37",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:53",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/result_cache.py:95",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/runtime_facts.py:8",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/test_research.py:126",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/test_research.py:153",
+        "unresolved dynamic dependency: tools/adversarial_reviewer/test_research.py:32",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:140",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:25",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:26",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:27",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:28",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:32",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:38",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:4",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:47",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:54",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:76",
+        "unresolved dynamic dependency: tools/review_routing_research/cost_calibration.py:86",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:12",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:31",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:46",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:76",
+        "unresolved dynamic dependency: tools/review_routing_research/experiment.py:99",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:133",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:151",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:191",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:233",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:24",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:25",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:26",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:27",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:34",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:40",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:45",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:5",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:56",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:68",
+        "unresolved dynamic dependency: tools/review_routing_research/live_packing.py:89",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:118",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:13",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:16",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:21",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:29",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:61",
+        "unresolved dynamic dependency: tools/review_routing_research/local_model.py:74",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:10",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:127",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:25",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:62",
+        "unresolved dynamic dependency: tools/review_routing_research/packing.py:76",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:115",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:145",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:15",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:154",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:19",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:33",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:78",
+        "unresolved dynamic dependency: tools/review_routing_research/qualify_packing.py:89",
+        "unresolved dynamic dependency: tools/review_routing_research/routers.py:14",
+        "unresolved dynamic dependency: tools/review_routing_research/routers.py:50",
+        "unresolved dynamic dependency: tools/review_routing_research/run.py:17",
+        "unresolved dynamic dependency: tools/review_routing_research/run.py:20",
+        "unresolved dynamic dependency: tools/review_routing_research/run.py:52",
+        "unresolved dynamic dependency: tools/review_routing_research/run.py:77",
+        "unresolved dynamic dependency: tools/review_routing_research/test_cost_calibration.py:15",
+        "unresolved dynamic dependency: tools/review_routing_research/test_cpu_routing.py:14",
+        "unresolved dynamic dependency: tools/review_routing_research/test_cpu_routing.py:18",
+        "unresolved dynamic dependency: tools/review_routing_research/test_cpu_routing.py:57",
+        "unresolved dynamic dependency: tools/review_routing_research/test_experiment.py:5",
+        "unresolved dynamic dependency: tools/review_routing_research/test_live_packing.py:22",
+        "unresolved dynamic dependency: tools/review_routing_research/test_packing_quality.py:7",
+        "unresolved imported binding: tools/review_routing_research/packing.py:manifest,parse,plan,render",
+        "unresolved imported binding: tools/review_routing_research/packing.py:parse",
+        "unresolved imported binding: tools/review_routing_research/packing.py:plan,render"
+      ],
+      "plan_digest": "457413b5a1e03252b35ea6601049ebcad829f6cc227196ff2daa94772fe00682"
+    }
+  },
+  "test_evidence": {
+    "head": "a130b948abcb218674aa152e8f9a09e54b021742",
+    "observed_at": "2026-11-13T03:03:28.274Z",
+    "runs": [
+      {
+        "workflow": ".github/workflows/verify.yml",
+        "id": 43356311004,
+        "attempt": 1,
+        "status": "in_progress",
+        "conclusion": null,
+        "jobs": [
+          {
+            "name": "context",
+            "status": "completed",
+            "conclusion": "success",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "validate pull request context",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "name": "coreml",
+            "status": "in_progress",
+            "conclusion": null,
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "in_progress",
+                "conclusion": null
+              }
+            ]
+          },
+          {
+            "name": "release-tools",
+            "status": "in_progress",
+            "conclusion": null,
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "in_progress",
+                "conclusion": null
+              },
+              {
+                "name": "Run docker build -f scripts/release/Dockerfile -t savior-release-tools .",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run docker run --rm --user \"$(id -u):$(id -g)\" --volume \"$PWD:/workspace:ro\" --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "pending",
+                "conclusion": null
+              }
+            ]
+          },
+          {
+            "name": "tooling",
+            "status": "in_progress",
+            "conclusion": null,
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+                "status": "in_progress",
+                "conclusion": null
+              },
+              {
+                "name": "Run npm ci --ignore-scripts --no-audit --no-fund",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run node scripts/verify-branding.mjs",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run python3 -m pip install -r tools/adversarial_reviewer/requirements.txt",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run python3 -m unittest discover -s tools/adversarial_reviewer",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run python3 -m unittest discover -s tools/review_routing_research",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run python3 tools/review_routing_research/qualify_packing.py",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run python3 -m unittest discover -s scripts/release",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run python3 scripts/release/lint_workflows.py",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "pending",
+                "conclusion": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "workflow": ".github/workflows/commit-messages.yml",
+        "id": 43356311025,
+        "attempt": 1,
+        "status": "in_progress",
+        "conclusion": null,
+        "jobs": [
+          {
+            "name": "check",
+            "status": "in_progress",
+            "conclusion": null,
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "validate pull request context",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8",
+                "status": "in_progress",
+                "conclusion": null
+              },
+              {
+                "name": "Run Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Run cargo test --locked -p commit_check",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "check new commits",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "check pull request title",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "pending",
+                "conclusion": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "workflow": ".github/workflows/qualification.yml",
+        "id": 43356310968,
+        "attempt": 1,
+        "status": "in_progress",
+        "conclusion": null,
+        "jobs": [
+          {
+            "name": "gate",
+            "status": "completed",
+            "conclusion": "success",
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "validate pull request context",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run python3 scripts/release/version_gate.py",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "name": "build (macos-15, darwin-arm64)",
+            "status": "in_progress",
+            "conclusion": null,
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "in_progress",
+                "conclusion": null
+              }
+            ]
+          },
+          {
+            "name": "build (ubuntu-24.04, linux-x64)",
+            "status": "in_progress",
+            "conclusion": null,
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "in_progress",
+                "conclusion": null
+              }
+            ]
+          },
+          {
+            "name": "build (windows-2022, win32-x64)",
+            "status": "in_progress",
+            "conclusion": null,
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "in_progress",
+                "conclusion": null
+              },
+              {
+                "name": "Run ./.github/actions/release-build",
+                "status": "pending",
+                "conclusion": null
+              },
+              {
+                "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "status": "pending",
+                "conclusion": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cost_interpretation": "hypothetical full-plan bounds at catalog prices; no calls, charges or settlement; infeasible plans are not executable alternatives",
+  "interpretation": "structural evidence and local python allocation measurements; unresolved plans remain blocked"
+}

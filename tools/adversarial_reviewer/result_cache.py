@@ -9,13 +9,16 @@ import zipfile
 
 ROOT = Path(__file__).parent
 SOURCES = ('result_cache.py', 'adversarial_review.py', 'adaptive_review.py', 'chunk_plan.py',
+           'source_graph.py', 'review_plan.py', 'requirements.txt',
            'bedrock_client.py', 'prompt_profiles.py', 'evidence.py', 'runtime_facts.py',
            'qualify.py', 'evaluate_model.py', 'model_catalog.py', 'models.json', 'routing.json',
            'egm.py', 'chat_transport.py', 'budget.py', 'cost_policy.py', 'quote.py', 'reporting.py')
 
 
 def fingerprint():
-    return hashlib.sha256(json.dumps({name: source_identity(ROOT / name) for name in SOURCES}, sort_keys=True).encode()).hexdigest()
+    from source_graph import analyzer_versions
+    identity = {'sources': {name: source_identity(ROOT / name) for name in SOURCES}, 'analyzers': analyzer_versions()}
+    return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
 
 def source_identity(path):

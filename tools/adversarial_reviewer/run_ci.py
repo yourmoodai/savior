@@ -10,6 +10,7 @@ from budget import Ledger, BudgetError
 from chunk_plan import ASSESSMENT_LIMIT
 from reporting import finalize, render, fallback_overview
 from qualify import qualify
+from review_plan import PlanningError, admit
 
 root = Path(__file__).resolve().parent
 path = Path('review-result/report.json')
@@ -42,7 +43,11 @@ try:
     for field in ('files', 'total_lines', 'total_chunks', 'total_units', 'excluded_assets', 'test_evidence'):
         report[field] = baseline[field]
     report['overview'] = fallback_overview(report)
+    manifests = {s: json.loads(Path(f'review-result/{s}-manifest.json').read_text())['manifest']
+                 for s in ('baseline', 'adaptive')}
+    admit(manifests, binding)
     qualification = qualify('review-result/qualification.json')
+    report['qualified'] = qualification['qualified']
     if not qualification['qualified']:
         report['blocked_reason'] = 'qualification_failed'
         report['summary'] = 'Live model qualification failed; PR assessment did not start.'
@@ -57,8 +62,6 @@ try:
                         if not chunk.get('complete'):
                             report['review_failures'].append(chunk['summary'])
         raise ValueError('model qualification or baseline comparison did not pass')
-    manifests = {s: json.loads(Path(f'review-result/{s}-manifest.json').read_text())['manifest']
-                 for s in ('baseline', 'adaptive')}
     from quote import create, execution_strategy
     execution_quote = preflight['quote']
     if execution_quote['phase'] == 'qualification_required':
@@ -66,16 +69,25 @@ try:
         Path('review-result/execution-quote.json').write_text(json.dumps(execution_quote, indent=2)+'\n')
     strategy = execution_strategy(execution_quote, manifests, qualification)
     os.environ['REVIEW_PLAN_DIGEST'] = execution_quote['binding']['plans'][strategy]
+    frozen_plan = manifests[strategy].get('review_plan')
+    if frozen_plan is None:
+        raise PlanningError('execution requires an immutable review plan')
+    frozen_path = Path('review-result/execution-plan.json')
+    frozen_path.write_text(json.dumps(frozen_plan)+'\n')
     Path('review-result/strategy.json').write_text(json.dumps({
         'qualified_preference': qualification['strategy'], 'selected': strategy,
         'assessment_limit': ASSESSMENT_LIMIT}))
     path.unlink(missing_ok=True)
     subprocess.run([sys.executable, str(root/'adversarial_review.py'), '--base', os.environ['BASE_SHA'],
                     '--head', head, '--strategy', strategy, '--fail-on', 'none',
-                    '--json-output', str(path)], timeout=2400, check=False)
+                    '--plan-file', str(frozen_path), '--json-output', str(path)], timeout=2400, check=False)
     if not path.exists():
         raise ValueError('review did not produce a report')
     report = json.loads(path.read_text())
+except PlanningError as error:
+    report['blocked_reason'] = 'planning_failed'
+    report['review_failures'].append(str(error))
+    Path('review-result/planning-failure.json').write_text(json.dumps({'reason': 'planning_failed', 'details': str(error)})+'\n')
 except (OSError, ValueError, KeyError, StopIteration, sqlite3.Error, BudgetError, subprocess.SubprocessError) as error:
     report['blocked_reason'] = report.get('blocked_reason', 'spending_unresolved' if isinstance(error, BudgetError) else 'infrastructure_failed')
     report['review_failures'].append('review execution unavailable: '+type(error).__name__)

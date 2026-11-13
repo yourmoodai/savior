@@ -1,0 +1,210 @@
+{
+  "cases": 29,
+  "existing_fixture_cases": 22,
+  "fingerprint": "984bde29b5fb0b30e822914d13bebeacc24a3e74951d87e5920f59368ea7b825",
+  "live_assessment_requests": 234,
+  "live_eligible": 28,
+  "note": "Offline context sufficiency only. No measured finding accuracy or savings. Frozen role prompts remain in .cache/packing-quality/frozen.json.",
+  "offline_passed": true,
+  "original_diff_replay": {
+    "fingerprint": "fb57128934666e7e42ff74479646839f7e3b11c34bf4c671e1cef4294a42aa8f",
+    "plans": {
+      "adaptive": {
+        "chunks": 53,
+        "coverage_complete": true,
+        "reservation_nanodollars": 92218137600
+      },
+      "baseline": {
+        "chunks": 15,
+        "coverage_complete": true,
+        "reservation_nanodollars": 26249456640
+      },
+      "semantic_bytes": {
+        "chunks": 7,
+        "coverage_complete": true,
+        "reservation_nanodollars": 12361313280
+      }
+    }
+  },
+  "paid_authorized": false,
+  "paid_calls": 0,
+  "production_qualified": false,
+  "source_fingerprint": "2ef8982e538fc46cdc0f421acfdc97ed1b9b0de91f0b63c3d31eccf81e4eb409",
+  "stress_cases": [
+    {
+      "arms": {
+        "baseline": {
+          "chunks": 2,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            false
+          ],
+          "reservation_nanodollars": 3681223680
+        },
+        "semantic_bytes": {
+          "chunks": 3,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            true
+          ],
+          "reservation_nanodollars": 5417241600
+        }
+      },
+      "id": "helper_first_benign",
+      "live_eligible": true,
+      "offline_passed": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "chunks": 2,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            false
+          ],
+          "reservation_nanodollars": 3681223680
+        },
+        "semantic_bytes": {
+          "chunks": 3,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            true
+          ],
+          "reservation_nanodollars": 5417241600
+        }
+      },
+      "id": "helper_first_defective",
+      "live_eligible": true,
+      "offline_passed": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "chunks": 2,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            false
+          ],
+          "reservation_nanodollars": 3681223680
+        },
+        "semantic_bytes": {
+          "chunks": 3,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            true
+          ],
+          "reservation_nanodollars": 5417241600
+        }
+      },
+      "id": "helper_last_benign",
+      "live_eligible": true,
+      "offline_passed": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "chunks": 2,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            false
+          ],
+          "reservation_nanodollars": 3681223680
+        },
+        "semantic_bytes": {
+          "chunks": 3,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            true
+          ],
+          "reservation_nanodollars": 5417241600
+        }
+      },
+      "id": "helper_last_defective",
+      "live_eligible": true,
+      "offline_passed": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "chunks": 4,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            true
+          ],
+          "reservation_nanodollars": 7153259520
+        },
+        "semantic_bytes": {
+          "chunks": 3,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            true
+          ],
+          "reservation_nanodollars": 5417241600
+        }
+      },
+      "id": "json_records_benign",
+      "live_eligible": true,
+      "offline_passed": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "chunks": 4,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            true
+          ],
+          "reservation_nanodollars": 7153259520
+        },
+        "semantic_bytes": {
+          "chunks": 3,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            true
+          ],
+          "reservation_nanodollars": 5417241600
+        }
+      },
+      "id": "json_records_defective",
+      "live_eligible": true,
+      "offline_passed": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "chunks": 2,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            false
+          ],
+          "reservation_nanodollars": 3681223680
+        },
+        "semantic_bytes": {
+          "chunks": 2,
+          "coverage_complete": true,
+          "requests_fit": true,
+          "required_context_available": [
+            false
+          ],
+          "reservation_nanodollars": 3681223680
+        }
+      },
+      "id": "oversized_context_control",
+      "live_eligible": false,
+      "offline_passed": true
+    }
+  ]
+}

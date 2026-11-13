@@ -1,0 +1,2572 @@
+{
+  "additional_candidate_case_misses": [],
+  "adjudication_note": "Case-level metrics do not establish finding correctness. Targeted executable audit only; remaining finding semantics are not fully adjudicated.",
+  "budget": {
+    "cap_nanodollars": 4000000000,
+    "charged_nanodollars": 638156880,
+    "experiment": "packing-quality-v1",
+    "outstanding_nanodollars": 0,
+    "remaining_nanodollars": 3361843120
+  },
+  "cases": [
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "current=False, saved=True, text='test', records=[] \u2192 old returns [] (no addition), new returns ['test'] (adds text when current consent is false). Correction: Restore the condition to 'if current and saved:' to require both consents.",
+              "evidence": "    if saved:",
+              "file": "research/case0/consent_revocation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent to retain text."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If current consent is false (user revoked) but saved consent is true, old code rejects retention, new code appends text, persisting data after revocation. Correction: Restore the condition 'if current and saved:' to require both consents for retention.",
+              "evidence": "    if saved:",
+              "file": "research/case0/consent_revocation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Data should be retained only when both current and saved consent are present, ensuring revocation of current consent immediately stops retention."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "current=False, saved=True, text='test', records=[] \u2192 old returns [], new returns ['test'] Correction: Restore 'if current and saved:' to require both conditions.",
+              "evidence": "    if saved:",
+              "file": "research/case0/consent_revocation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7378380,
+            "input_tokens": 8684,
+            "latency_seconds": 25.257369580998784,
+            "output_tokens": 1078
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "current = False, saved = True, text = 'example', records = [] -> old returns [], new returns ['example']. Correction: Restore the condition to 'if current and saved:'.",
+              "evidence": "    if saved:",
+              "file": "research/case0/consent_revocation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence requires both current and saved explicit consent."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When current=False, saved=True, text='sensitive_data', records=[]: old returns [] (no retention), new returns ['sensitive_data'] (retention without current consent). Correction: Restore the condition 'if current and saved:' to require both consents.",
+              "evidence": "    if saved:",
+              "file": "research/case0/consent_revocation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Text should only be retained when both current and saved consent are true."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When current=False, saved=True, text='sensitive', records=[]: old returns [] (no persistence), new returns ['sensitive'] (persists despite revoked current consent). Correction: Restore the condition 'if current and saved:' to require both consents.",
+              "evidence": "def retain(current, saved, text, records):",
+              "file": "research/case0/consent_revocation.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Trace persistence should require both current and saved explicit consent to ensure data is only retained when consent is currently active."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7292050,
+            "input_tokens": 8685,
+            "latency_seconds": 40.900327253038995,
+            "output_tokens": 1031
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "consent_revocation_defective",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2777170,
+            "input_tokens": 3796,
+            "latency_seconds": 10.81869100005133,
+            "output_tokens": 229
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2790120,
+            "input_tokens": 3796,
+            "latency_seconds": 8.080124959000386,
+            "output_tokens": 236
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "consent_revocation_benign",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "text='abc', start=1, end=2, protected=[(0,3)], marker='X'. Old: start(1) < b(3) and a(0) < end(2) \u2192 True \u2192 raises ValueError. New: start(1) <= a(0) and b(3) <= end(2) \u2192 False \u2192 allows replacement, editing protected span. Correction: Restore original condition: if any(start < b and a < end for a, b in protected):",
+              "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+              "file": "research/case2/protected_span.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected intervals must never be edited, meaning any overlap between replacement interval [start, end) and protected interval [a, b) should be rejected."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "text='abcXYZdef', start=2, end=5, protected=[(3,6)], marker='*'. Old: start(2) < b(6) and a(3) < end(5) \u2192 2<6 and 3<5 \u2192 True \u2192 raises ValueError. New: start(2) \u2264 a(3) and b(6) \u2264 end(5) \u2192 2\u22643 and 6\u22645 \u2192 False \u2192 proceeds, editing protected span 'XYZ'. Correction: Restore overlap check: if any(start < b and a < end for a, b in protected):",
+              "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+              "file": "research/case2/protected_span.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected intervals must never be edited; any overlap between replacement interval and protected interval should raise ValueError."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Text length 10, replace range start=2 end=5, protected interval start=4 end=6 (overlaps but not fully contained). Old code: start<4 and 4<5 \u2192 True, raises ValueError. New code: 2\u22644 and 6\u22645 \u2192 False, no error, replacement proceeds, corrupting protected span. Correction: Restore the original condition: `if any(start < b and a < end for a, b in protected):`",
+              "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+              "file": "research/case2/protected_span.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected intervals must never be edited; any overlap between the replacement range and a protected interval should raise ValueError."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 8872320,
+            "input_tokens": 9166,
+            "latency_seconds": 70.9177428749681,
+            "output_tokens": 1724
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "text = 'abcdef', protected = [(2, 5)], start = 3, end = 6, marker = 'X'. Old raises ValueError, new returns 'abXf', editing characters 3-5 which are protected. Correction: Restore overlap check: any(start < b and a < end for a, b in protected).",
+              "evidence": "def replace(text, start, end, protected, marker):",
+              "file": "research/case2/protected_span.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected spans must never be edited, even partially."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Protected span (2,5), replacement interval (3,4). Old code: start=3 < b=5 and a=2 < end=4 \u2192 True, raises ValueError. New code: start=3 <= a=2 \u2192 False, b=5 <= end=4 \u2192 False, condition false, proceeds to replace, editing part of protected span. Correction: Restore original condition: `if any(start < b and a < end for a, b in protected):`",
+              "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+              "file": "research/case2/protected_span.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected intervals must never be edited; any overlap between the replacement interval and a protected interval should raise ValueError."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "text='abcdefghij', protected intervals=[(5,10)], start=7, end=12, marker='X'. Old: detects overlap (7<10 and 5<12) \u2192 raises ValueError. New: condition (7\u22645 and 10\u226412) false \u2192 no error, returns 'abcdefX' which modifies characters 7-9 inside protected span. Correction: Restore overlap detection: if any(start < b and a < end for a, b in protected).",
+              "evidence": "    if any(start <= a and b <= end for a, b in protected):",
+              "file": "research/case2/protected_span.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Protected intervals must never be edited, even partially."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 8688800,
+            "input_tokens": 9055,
+            "latency_seconds": 42.05027812498156,
+            "output_tokens": 1662
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "protected_span_defective",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 3036530,
+            "input_tokens": 3904,
+            "latency_seconds": 15.764811541012023,
+            "output_tokens": 333
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2999530,
+            "input_tokens": 3904,
+            "latency_seconds": 9.219399416004308,
+            "output_tokens": 313
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "protected_span_benign",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If profiles = {'default': {'trace': 'default_trace'}} and selected = 'missing', old code raises KeyError (failing closed), new code returns 'default_trace' (proceeding unsafely). Correction: Restrict to direct indexing or explicitly reject missing keys without fallback.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; the function should not proceed with a default profile when the requested profile is absent."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "profiles = {'default': {'trace': 'sensitive_default_trace'}}, selected = 'attacker'. Old: KeyError raised, access fails closed. New: returns 'sensitive_default_trace', leaking default trace to unauthorized requester. Correction: Remove the fallback; use profiles[selected]['trace'] to maintain fail-closed behavior.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; accessing a non-existent profile should raise an error rather than fall back to a default profile."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If profiles = {'default': {'trace': 'default_trace'}} and selected = 'missing', old code raises KeyError, new code returns 'default_trace'. Correction: Remove the fallback; keep direct lookup or implement explicit error handling that fails closed.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed; the function should not silently fall back to a default profile."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7565000,
+            "input_tokens": 8615,
+            "latency_seconds": 35.462821666005766,
+            "output_tokens": 1202
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If selected='missing' and profiles={'default': {'trace': 'data'}}, old code raises KeyError, new code returns 'data'. Correction: Remove the fallback; keep direct lookup or implement explicit missing-profile handling that fails closed.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing profiles must fail closed, not fall back to a default."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: profiles = {'default': {'trace': 'sensitive_data'}}, selected = 'attacker'. Old: raises KeyError (fails closed). New: returns 'sensitive_data' (exposes default trace). Correction: Remove the fallback; keep direct indexing or implement proper error handling that fails closed.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing requested profiles must fail closed, not fall back to a default profile's trace."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When selected='attacker' is not in profiles but profiles['default'] exists, old code raises KeyError (failing closed), new code returns profiles['default']['trace'] (exposing default trace). Correction: Remove the fallback; use profiles[selected] directly or raise a specific error for missing profiles.",
+              "evidence": "    return profiles.get(selected, profiles[\"default\"])[\"trace\"]",
+              "file": "research/case4/profile_isolation.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing requested profiles must fail closed, not fall back to a default profile."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7534740,
+            "input_tokens": 8602,
+            "latency_seconds": 27.05084700003499,
+            "output_tokens": 1190
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "profile_isolation_defective",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2784330,
+            "input_tokens": 3724,
+            "latency_seconds": 10.81333175097825,
+            "output_tokens": 257
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2712180,
+            "input_tokens": 3724,
+            "latency_seconds": 15.656323584989877,
+            "output_tokens": 218
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "profile_isolation_benign",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'test'}. Old code: returns 'test'. New code: raises ValueError('version'). Correction: Restore the check for version 1: if response['version'] not in (1, 2):",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes; all other versions must be rejected."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'Hello'}. Old code returns 'Hello'. New code raises ValueError('version'). Correction: Restore the condition to 'if response[\"version\"] not in (1, 2):' to accept both versions.",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'test'}. Old output: returns 'test'. New output: raises ValueError('version'). Correction: Restore version 1 support by changing the condition back to 'if response[\"version\"] not in (1, 2):' or explicitly checking for both versions.",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept both version 1 and version 2 response envelopes."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7532940,
+            "input_tokens": 8802,
+            "latency_seconds": 49.80618325105752,
+            "output_tokens": 1122
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: {'version': 1, 'text': 'test'}. Old code accepts it (version 1 is in (1,2)). New code rejects it (version != 2). Correction: Restore the check for version in (1, 2) to accept both valid versions.",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept both version 1 and version 2 response envelopes."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'test'}. Old output: returns 'test'. New output: raises ValueError('version'). Correction: Restore check for both versions: if response['version'] not in (1, 2): raise ValueError('version')",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept version 1 and version 2 response envelopes; all other versions must be rejected."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: response = {'version': 1, 'text': 'Hello'}. Old code returns 'Hello'. New code raises ValueError('version'). Correction: Restore the condition to check if response['version'] not in (1, 2).",
+              "evidence": "    if response[\"version\"] != 2:",
+              "file": "research/case6/protocol_compatibility.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The host must accept both version 1 and version 2 response envelopes."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7565580,
+            "input_tokens": 8789,
+            "latency_seconds": 31.236621126008686,
+            "output_tokens": 1144
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "protocol_compatibility_defective",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 3077010,
+            "input_tokens": 3838,
+            "latency_seconds": 22.66131162500824,
+            "output_tokens": 377
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2903110,
+            "input_tokens": 3838,
+            "latency_seconds": 7.588351917016553,
+            "output_tokens": 283
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "protocol_compatibility_benign",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=100, outstanding=200, requested=50, cap=300. Old: 100+200+50=300 <= 300 returns True (admit). New: 100+50=150 <= 300 returns True (admit) but total commitments would be 350 > 300. Correction: Restore the original condition: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Total spending (charged + outstanding + requested) must not exceed the cap"
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Given charged=50, outstanding=30, requested=30, cap=100, the old code correctly rejects because 50+30+30=110 > 100, but the new code admits because 50+30=80 <= 100, allowing total potential spending to reach 110. Correction: Restore the original condition: 'return charged + outstanding + requested <= cap'.",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The sum of charged nanodollars, outstanding reservations, and the next requested reservation must not exceed the cap."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=5, outstanding=3, requested=2, cap=9. Old: 5+3+2=10 > 9 \u2192 False (reject). New: 5+2=7 \u2264 9 \u2192 True (admit), but total 10 exceeds cap. Correction: Restore the original condition: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 8049010,
+            "input_tokens": 8778,
+            "latency_seconds": 49.32866291704704,
+            "output_tokens": 1409
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=50, outstanding=30, requested=20, cap=90. Old: 50+30+20=100 <= 90 \u2192 False (rejects). New: 50+20=70 <= 90 \u2192 True (admits), but total 100 exceeds cap. Correction: Restore the original calculation: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Total spending (charged + outstanding + requested) must never exceed the cap"
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=5, outstanding=3, requested=4, cap=10. Old: 5+3+4=12 > 10 \u2192 returns False (rejects). New: 5+4=9 \u2264 10 \u2192 returns True (admits), violating the cap because total 12 exceeds 10. Correction: Restore the original condition: return charged + outstanding + requested <= cap",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Nonnegative integer nanodollars: charges plus outstanding reservations plus the next reservation may equal but never exceed the cap."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "charged=0, outstanding=10, requested=5, cap=10. Old output: False (0+10+5 <= 10 is false). New output: True (0+5 <= 10 is true). Correction: Restore the original condition: return charged + outstanding + requested <= cap.",
+              "evidence": "    return charged + requested <= cap",
+              "file": "research/case8/spending_boundary.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Total of charged, outstanding reservations, and the next requested reservation must not exceed the cap."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7878770,
+            "input_tokens": 8766,
+            "latency_seconds": 48.12713045900455,
+            "output_tokens": 1321
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "spending_boundary_defective",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2662430,
+            "input_tokens": 3784,
+            "latency_seconds": 7.792465335020097,
+            "output_tokens": 171
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2738280,
+            "input_tokens": 3784,
+            "latency_seconds": 8.809778541035485,
+            "output_tokens": 212
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "spending_boundary_benign",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old returns 100 (correct for interrupted call). New returns 0 (incorrectly treats None as falsy). Correction: Restore explicit check for None: return reserved if charged is None else charged",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case10/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None (interrupted call), the function should return the reserved amount; when charged is 0 (settled usage), it should return 0."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input reserved=100, charged=None. Old code returns 100 (reserved). New code evaluates charged or 0 \u2192 None or 0 \u2192 0, returning 0, discarding the reservation. Correction: Restore the original logic: return reserved if charged is None else charged.",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case10/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Missing usage after an interrupted call retains its entire reservation; a reported zero charge is settled usage."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old output: 100 (reserved amount retained). New output: 0 (boolean OR treats None as falsy, returns 0). Correction: Restore the conditional: return reserved if charged is None else charged.",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case10/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None (unreported usage), the function must return the reserved amount to retain the reservation."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7643500,
+            "input_tokens": 8670,
+            "latency_seconds": 43.57285741699161,
+            "output_tokens": 1226
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old output: 100 (reserved). New output: 0 (since None is falsy, 'charged or 0' evaluates to 0). Correction: Restore the conditional: 'return reserved if charged is None else charged' or handle falsy charged explicitly if 0 should also return reserved.",
+              "evidence": "    return charged or 0",
+              "file": "research/case10/interrupted_accounting.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None (interrupted call), the function should return the reserved amount to retain the reservation."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "reserved=100, charged=None \u2192 old returns 100, new returns 0, losing the reservation. Correction: Restore the conditional: return reserved if charged is None else charged.",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case10/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charging is interrupted (charged=None), the function must return the reserved amount to retain the reservation."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: reserved=100, charged=None. Old output: 100 (correctly retains reservation). New output: 0 (incorrectly discards reservation). Correction: Restore the original logic: return reserved if charged is None else charged.",
+              "evidence": "def committed(reserved, charged):",
+              "file": "research/case10/interrupted_accounting.py:1",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When charged is None, the function should return the reserved amount, not zero."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7824070,
+            "input_tokens": 8636,
+            "latency_seconds": 31.097461124008987,
+            "output_tokens": 1335
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "interrupted_accounting_defective",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2684550,
+            "input_tokens": 3760,
+            "latency_seconds": 7.828763458004687,
+            "output_tokens": 191
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 3000900,
+            "input_tokens": 3760,
+            "latency_seconds": 10.86258058299427,
+            "output_tokens": 362
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "interrupted_accounting_benign",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2856900,
+            "input_tokens": 3850,
+            "latency_seconds": 10.74407729197992,
+            "output_tokens": 254
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2912400,
+            "input_tokens": 3850,
+            "latency_seconds": 9.022560251003597,
+            "output_tokens": 284
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "qualification_0",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' causes a duplicate declaration syntax error, exit code 1, and raises CalledProcessError. Correction: Remove duplicate const declaration or use different variable names to avoid syntax error.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "subprocess.run with check=True requires the command to succeed (exit code 0)."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' results in a syntax error (duplicate const declaration) and exit code 1, causing subprocess.run to raise CalledProcessError. Correction: Remove the duplicate const declaration or use a different variable name to avoid the syntax error.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "subprocess.run with check=True must succeed for the test to pass; the command must be syntactically valid JavaScript."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the test harness executes 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' which triggers a duplicate declaration error (exit code 1), causing subprocess.run with check=True to raise CalledProcessError. Correction: Restore the original valid script or fix the duplicate declaration to maintain test correctness.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Test harnesses should execute valid code that passes, not introduce syntax errors that cause CalledProcessError."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 8006630,
+            "input_tokens": 9014,
+            "latency_seconds": 39.03694845899008,
+            "output_tokens": 1307
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' causes a duplicate declaration error (exit code 1), while the old command executes successfully (exit code 0). Correction: Restore the original command or use a valid JavaScript expression that doesn't contain duplicate declarations.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Test harness commands should execute successfully to verify correct behavior."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' will produce a syntax error (duplicate declaration) and exit with code 1, causing subprocess.run to raise CalledProcessError. Correction: Remove the duplicate const declaration or use a different variable name to avoid the syntax error.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "subprocess.run with check=True should succeed when the command executes without error."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Running the new command 'node --input-type=commonjs -e \"const require = () => 42; const require = () => 43; console.log(require())\"' causes Node.js to exit with code 1 due to duplicate const declaration, triggering CalledProcessError. Correction: Revert to the original command or fix the JavaScript to avoid duplicate declarations while maintaining the test's purpose.",
+              "evidence": "subprocess.run(['node', '--input-type=commonjs', '-e', 'const require = () => 42; const require = () => 43; console.log(require())'], check=True)",
+              "file": "qualification/case1/tests/harness.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Test harnesses should execute successfully to verify functionality; subprocess.run with check=True requires zero exit code."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7931380,
+            "input_tokens": 9009,
+            "latency_seconds": 43.4832412499818,
+            "output_tokens": 1268
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "qualification_1",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If sanitize(raw) raises any exception (e.g., due to malformed input), old code re-raises the exception, halting submission. New code returns raw, potentially unsafe input. Correction: Revert to raising the exception, or implement a safe fallback that does not return unsanitized input.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that if sanitization raises an exception, the original raw input must not be returned, as that would allow unsanitized input to continue."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "If sanitize(raw) raises any exception (e.g., due to malformed input), old code raises the exception, halting processing; new code returns raw, allowing unsanitized input to continue. Correction: Restore 'raise' to preserve fail-closed behavior, or implement a safe fallback that does not return unsanitized input.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When sanitization raises an exception, fail-closed submission requires raising to withhold input, not returning raw unsanitized data."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input 'malicious<script>' causes sanitize() to raise ValueError due to invalid characters. Old code raises ValueError, stopping processing. New code returns 'malicious<script>' unchanged, allowing unsafe input. Correction: Restore 'raise' to maintain fail-closed behavior, or implement a safe fallback that doesn't return unsanitized input.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When sanitization raises an exception, the system must fail closed by not returning the original raw input."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7554510,
+            "input_tokens": 8613,
+            "latency_seconds": 40.8257552490395,
+            "output_tokens": 1197
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "When sanitize(raw) raises ValueError('invalid input'), old code re-raises it, preventing submission; new code returns raw, allowing unsanitized input to continue. Correction: Restore 'raise' to re-raise the exception, or catch only specific expected exceptions and handle them appropriately while preserving fail-closed behavior.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Fail-closed submission requires that if sanitization raises an exception, the original exception must propagate rather than returning unsanitized input."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input 'malformed' causes sanitize(raw) to raise ValueError. Old code raises ValueError, stopping processing. New code catches ValueError and returns 'malformed', allowing unsanitized input. Correction: Restore 'raise' to propagate the exception, or handle specific exceptions only after ensuring safety.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "When sanitization raises an exception, the submit function must not return unsanitized input; it must propagate the exception to withhold the input, preserving fail-closed submission."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input 'malicious<script>' causes sanitize to raise ValueError. Old code raises ValueError, rejecting input. New code returns 'malicious<script>', allowing unsanitized input to continue. Correction: Restore 'raise' to re-raise the exception after the try-except block.",
+              "evidence": "        return raw",
+              "file": "qualification/case2/bridge/submit.py:5",
+              "severity": "major",
+              "source_side": "new",
+              "title": "If sanitization raises an exception, the submit function must raise to withhold unsanitized input, ensuring fail-closed submission."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7524270,
+            "input_tokens": 8606,
+            "latency_seconds": 37.68065899802605,
+            "output_tokens": 1183
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "qualification_2",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2647650,
+            "input_tokens": 3790,
+            "latency_seconds": 6.32971837502555,
+            "output_tokens": 161
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2721650,
+            "input_tokens": 3790,
+            "latency_seconds": 8.78875466703903,
+            "output_tokens": 201
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "qualification_3",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2648980,
+            "input_tokens": 3634,
+            "latency_seconds": 6.89190350001445,
+            "output_tokens": 214
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2545380,
+            "input_tokens": 3634,
+            "latency_seconds": 8.717475709010614,
+            "output_tokens": 158
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "qualification_4",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Calling fraction(5) in old code returns 2.5, but in new code raises ZeroDivisionError. Correction: Change denominator from 0 to a non-zero value, e.g., 2.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Division by zero should be avoided as it raises ZeroDivisionError in Python."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Calling fraction(5) previously returned 2.5, but now raises ZeroDivisionError. Correction: Restore a non-zero divisor, such as the original 'n / 2', or handle zero divisor cases appropriately.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "A function performing arithmetic division should not have a constant divisor of zero, as this causes a runtime ZeroDivisionError for all non-zero inputs."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "For input n=5, old code returns 2.5, new code raises ZeroDivisionError. Correction: Change divisor from 0 to a non-zero value or handle zero division case.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Division by zero should be avoided as it raises ZeroDivisionError for all non-zero inputs."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 6925970,
+            "input_tokens": 8381,
+            "latency_seconds": 34.90088858400122,
+            "output_tokens": 935
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input n=5: old returns 2.5, new raises ZeroDivisionError. Correction: Restore division by 2 or handle zero denominator case.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Arithmetic operations should not divide by zero as it raises ZeroDivisionError and breaks the function's contract."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Calling fraction(5) previously returned 2.5, but now raises ZeroDivisionError. Correction: Change the divisor from 0 to a non-zero value, such as the original 2 or another appropriate denominator.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Division by zero should be avoided as it raises ZeroDivisionError and prevents normal function execution."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Calling fraction(5) previously returned 2.5, but now raises ZeroDivisionError. Correction: Use a non-zero denominator or add a guard clause to handle the zero denominator case.",
+              "evidence": "    return n / 0",
+              "file": "qualification/case5/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Division by zero should be avoided as it raises ZeroDivisionError and prevents normal function execution."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 6847600,
+            "input_tokens": 8365,
+            "latency_seconds": 24.514287333004177,
+            "output_tokens": 898
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "qualification_5",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2612060,
+            "input_tokens": 3658,
+            "latency_seconds": 16.75446450000163,
+            "output_tokens": 186
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2667560,
+            "input_tokens": 3658,
+            "latency_seconds": 8.101743082981557,
+            "output_tokens": 216
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "qualification_6",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: spent=5, requested=3, limit=10. Old: 5+3 <= 10 \u2192 True (admission allowed). New: 5+3 >= 10 \u2192 False (admission incorrectly denied). Correction: Restore the original comparison: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return True when the sum of spent and requested does not exceed the limit, ensuring the operation stays within bounds."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: spent=5, requested=3, limit=10. Old output: True (5+3=8 <= 10). New output: False (8 >= 10). The new logic incorrectly rejects a valid request that stays under the limit. Correction: Restore the original comparison: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return True when adding requested amount to spent does not exceed the limit, ensuring resource allocation stays within bounds."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input spent=5, requested=3, limit=10. Old returns True (5+3=8 <= 10), new returns False (5+3=8 >= 10). The function now incorrectly rejects valid requests. Correction: Restore the original comparison: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return true when adding requested amount to spent does not exceed the limit (spent + requested <= limit)."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7760120,
+            "input_tokens": 8506,
+            "latency_seconds": 35.82499408297008,
+            "output_tokens": 1344
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input: spent=5, requested=3, limit=10. Old: 5+3 <= 10 \u2192 True (admission allowed). New: 5+3 >= 10 \u2192 False (admission incorrectly denied). Correction: Restore the original comparison: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return True when the sum of spent and requested does not exceed the limit, ensuring the operation stays within bounds."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "spent=5, requested=3, limit=10 \u2192 old returns True (admit), new returns False (reject). Correction: Restore the original comparison: return spent + requested <= limit",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The function should admit when the sum of spent and requested does not exceed the limit."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Input spent=5, requested=3, limit=10: old returns True (correct admission), new returns False (incorrect rejection). Correction: Restore the comparison to 'spent + requested <= limit'.",
+              "evidence": "    return spent + requested >= limit",
+              "file": "qualification/case7/example.py:2",
+              "severity": "major",
+              "source_side": "new",
+              "title": "The admit function should return True when the sum of spent and requested does not exceed the limit, ensuring admission only if within capacity."
+            }
+          ],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 7573120,
+            "input_tokens": 8461,
+            "latency_seconds": 32.609334750974085,
+            "output_tokens": 1258
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "qualification_7",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2567490,
+            "input_tokens": 3607,
+            "latency_seconds": 6.717187833972275,
+            "output_tokens": 179
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2563790,
+            "input_tokens": 3607,
+            "latency_seconds": 7.586170167021919,
+            "output_tokens": 177
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "qualification_8",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2756700,
+            "input_tokens": 3760,
+            "latency_seconds": 9.82179379198351,
+            "output_tokens": 230
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 3,
+            "charged_nanodollars": 2673450,
+            "input_tokens": 3760,
+            "latency_seconds": 8.126750167954015,
+            "output_tokens": 185
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "qualification_9",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": false,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility"
+            ]
+          },
+          "disposition": "COMMENT",
+          "findings": [],
+          "unresolved": [
+            {
+              "reason": "review incomplete: prompt exceeds token budget; subdivision required.",
+              "role": "1:correctness"
+            },
+            {
+              "reason": "review incomplete: prompt exceeds token budget; subdivision required.",
+              "role": "1:security"
+            }
+          ],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 27317930,
+            "input_tokens": 42059,
+            "latency_seconds": 23.442756915959762,
+            "output_tokens": 671
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 9,
+            "charged_nanodollars": 37907300,
+            "input_tokens": 58515,
+            "latency_seconds": 40.694660915993154,
+            "output_tokens": 880
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "helper_first_benign",
+      "matched_complete": false
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 27171750,
+            "input_tokens": 42050,
+            "latency_seconds": 35.20419212599518,
+            "output_tokens": 595
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 9,
+            "charged_nanodollars": 37957220,
+            "input_tokens": 58506,
+            "latency_seconds": 31.508539334958186,
+            "output_tokens": 910
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "helper_first_defective",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": false,
+          "coverage": {
+            "completed_roles": [
+              "1:correctness",
+              "1:security",
+              "1:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility"
+            ]
+          },
+          "disposition": "COMMENT",
+          "findings": [],
+          "unresolved": [
+            {
+              "reason": "review incomplete: prompt exceeds token budget; subdivision required.",
+              "role": "0:correctness"
+            },
+            {
+              "reason": "review incomplete: prompt exceeds token budget; subdivision required.",
+              "role": "0:security"
+            },
+            {
+              "reason": "review incomplete: prompt exceeds token budget; subdivision required.",
+              "role": "0:compatibility"
+            }
+          ],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 27739730,
+            "input_tokens": 42059,
+            "latency_seconds": 42.1752614560246,
+            "output_tokens": 899
+          }
+        },
+        "semantic_bytes": {
+          "complete": false,
+          "coverage": {
+            "completed_roles": [
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ]
+          },
+          "disposition": "COMMENT",
+          "findings": [],
+          "unresolved": [
+            {
+              "reason": "review incomplete: prompt exceeds token budget; subdivision required.",
+              "role": "0:correctness"
+            },
+            {
+              "reason": "review incomplete: prompt exceeds token budget; subdivision required.",
+              "role": "0:security"
+            },
+            {
+              "reason": "review incomplete: prompt exceeds token budget; subdivision required.",
+              "role": "0:compatibility"
+            }
+          ],
+          "usage": {
+            "calls": 9,
+            "charged_nanodollars": 38192400,
+            "input_tokens": 58575,
+            "latency_seconds": 46.138888167915866,
+            "output_tokens": 1014
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "helper_last_benign",
+      "matched_complete": false
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 6,
+            "charged_nanodollars": 26979350,
+            "input_tokens": 42050,
+            "latency_seconds": 19.58377816603752,
+            "output_tokens": 491
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 9,
+            "charged_nanodollars": 37975890,
+            "input_tokens": 58557,
+            "latency_seconds": 34.97528470994439,
+            "output_tokens": 903
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "helper_last_defective",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility",
+              "3:correctness",
+              "3:security",
+              "3:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility",
+              "3:correctness",
+              "3:security",
+              "3:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 12,
+            "charged_nanodollars": 34149790,
+            "input_tokens": 52732,
+            "latency_seconds": 41.999050751008326,
+            "output_tokens": 787
+          }
+        },
+        "semantic_bytes": {
+          "complete": true,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ]
+          },
+          "disposition": "APPROVE",
+          "findings": [],
+          "unresolved": [],
+          "usage": {
+            "calls": 9,
+            "charged_nanodollars": 40286250,
+            "input_tokens": 62910,
+            "latency_seconds": 42.56219566499931,
+            "output_tokens": 693
+          }
+        }
+      },
+      "expected": "APPROVE",
+      "id": "json_records_benign",
+      "matched_complete": true
+    },
+    {
+      "arms": {
+        "baseline": {
+          "complete": false,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "2:correctness",
+              "2:security",
+              "2:compatibility",
+              "3:correctness",
+              "3:security",
+              "3:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility",
+              "3:correctness",
+              "3:security",
+              "3:compatibility"
+            ]
+          },
+          "disposition": "REQUEST_CHANGES",
+          "findings": [
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Record with record_id 37 has used=5 and cap=4, which violates used <= cap. Correction: Set used to a value <= 4 for record_id 37, or adjust cap to be >= 5.",
+              "evidence": "  },",
+              "file": "synthetic/records.json:157",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Each newly added record must have used <= cap."
+            },
+            {
+              "category": "model_critique",
+              "code": "MODEL001",
+              "details": "Record with ID 37 has used=5 and cap=4, which violates the invariant that used must not exceed cap. Correction: Set used to a value \u2264 4, such as 0, 1, 2, 3, or 4, to satisfy used \u2264 cap.",
+              "evidence": "  },",
+              "file": "synthetic/records.json:157",
+              "severity": "major",
+              "source_side": "new",
+              "title": "Each newly added record must have used \u2264 cap."
+            }
+          ],
+          "unresolved": [
+            {
+              "reason": "review incomplete: invalid evidence location.",
+              "role": "1:compatibility"
+            }
+          ],
+          "usage": {
+            "calls": 14,
+            "charged_nanodollars": 41535960,
+            "input_tokens": 62273,
+            "latency_seconds": 66.12101007893216,
+            "output_tokens": 1582
+          }
+        },
+        "semantic_bytes": {
+          "complete": false,
+          "coverage": {
+            "completed_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ],
+            "required_roles": [
+              "0:correctness",
+              "0:security",
+              "0:compatibility",
+              "1:correctness",
+              "1:security",
+              "1:compatibility",
+              "2:correctness",
+              "2:security",
+              "2:compatibility"
+            ]
+          },
+          "disposition": "COMMENT",
+          "findings": [],
+          "unresolved": [
+            {
+              "reason": "review incomplete: invalid evidence location.",
+              "role": "1:correctness"
+            },
+            {
+              "reason": "review incomplete: invalid evidence location.",
+              "role": "1:security"
+            },
+            {
+              "reason": "review incomplete: invalid evidence location.",
+              "role": "1:compatibility"
+            }
+          ],
+          "usage": {
+            "calls": 9,
+            "charged_nanodollars": 40654400,
+            "input_tokens": 62910,
+            "latency_seconds": 38.863009790016804,
+            "output_tokens": 892
+          }
+        }
+      },
+      "expected": "REQUEST_CHANGES",
+      "id": "json_records_defective",
+      "matched_complete": false
+    }
+  ],
+  "execution_fingerprint": "1485381a98da4d2194bcf4b0c6bcc382e826840f5b7365a938a9135e5504c6df",
+  "experiment": "packing-quality-v1",
+  "invalid_responses": 4,
+  "json_location_audit": {
+    "baseline_evidence": "  },",
+    "baseline_retained_locations": [
+      157,
+      157
+    ],
+    "candidate_location_returned": 224,
+    "candidate_result": "out-of-range chunk-local ID; all three roles incomplete",
+    "case": "json_records_defective",
+    "conclusion": "baseline retained the correct defect description with incorrect source attachment",
+    "correct_cap_line": 227,
+    "correct_record_id_line": 225,
+    "correct_used_line": 226
+  },
+  "matched_candidate_cost_change_percent": 13.79309130041424,
+  "matched_complete_cases": 25,
+  "matched_labels": {
+    "APPROVE": 13,
+    "REQUEST_CHANGES": 12
+  },
+  "matched_usage": {
+    "baseline": {
+      "calls": 120,
+      "charged_nanodollars": 198701070,
+      "input_tokens": 269166,
+      "latency_seconds": 654.6597651281627,
+      "output_tokens": 17199
+    },
+    "semantic_bytes": {
+      "calls": 123,
+      "charged_nanodollars": 226108090,
+      "input_tokens": 312052,
+      "latency_seconds": 578.3562201750174,
+      "output_tokens": 17641
+    }
+  },
+  "metrics": {
+    "baseline": {
+      "calls": 146,
+      "charged_nanodollars": 295294690,
+      "incomplete_cases": 3,
+      "input_tokens": 415557,
+      "latency_seconds": 786.3987935790792,
+      "matched_case_false_positives": 0,
+      "matched_case_misses": 2,
+      "output_tokens": 20351,
+      "truncations": 0,
+      "unknown_usage": 0
+    },
+    "semantic_bytes": {
+      "calls": 150,
+      "charged_nanodollars": 342862190,
+      "incomplete_cases": 2,
+      "input_tokens": 492052,
+      "latency_seconds": 704.0527790489432,
+      "matched_case_false_positives": 0,
+      "matched_case_misses": 2,
+      "output_tokens": 20427,
+      "truncations": 0,
+      "unknown_usage": 0
+    }
+  },
+  "protected_span_audit": [
+    {
+      "arguments": [
+        "abc",
+        1,
+        2,
+        [
+          [
+            0,
+            3
+          ]
+        ],
+        "X"
+      ],
+      "claimed_new_output": null,
+      "finding": "baseline_correctness",
+      "observed": {
+        "new": {
+          "return": "aXc"
+        },
+        "old": {
+          "message": "protected",
+          "raises": "ValueError"
+        }
+      },
+      "offsets_valid": true
+    },
+    {
+      "arguments": [
+        "abcdef",
+        3,
+        6,
+        [
+          [
+            2,
+            5
+          ]
+        ],
+        "X"
+      ],
+      "claimed_new_output": "abXf",
+      "finding": "candidate_correctness",
+      "observed": {
+        "new": {
+          "return": "abcX"
+        },
+        "old": {
+          "message": "protected",
+          "raises": "ValueError"
+        }
+      },
+      "offsets_valid": true
+    },
+    {
+      "arguments": [
+        "abcdefghij",
+        7,
+        12,
+        [
+          [
+            5,
+            10
+          ]
+        ],
+        "X"
+      ],
+      "claimed_new_output": "abcdefX",
+      "finding": "candidate_compatibility",
+      "observed": {
+        "new": {
+          "return": "abcdefgX"
+        },
+        "old": {
+          "message": "protected",
+          "raises": "ValueError"
+        }
+      },
+      "offsets_valid": false
+    }
+  ],
+  "protocol_fingerprint": "984bde29b5fb0b30e822914d13bebeacc24a3e74951d87e5920f59368ea7b825",
+  "qualification": "not promoted; finding semantics require adjudication beyond case-level flags",
+  "recommendation": "do not promote; repair finding grounding and verification capacity, then evaluate smaller semantic review units",
+  "status": "one pass completed"
+}

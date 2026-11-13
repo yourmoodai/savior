@@ -67,8 +67,10 @@ class DiagnosticTests(unittest.TestCase):
             quote['id'] = digest(quote)
             Path('review-result/preflight.json').write_text(json.dumps({'blocked_reason':None,'commit_id':'test','quote':quote}))
             Path('review-result/baseline-manifest.json').write_text(json.dumps({
+                'manifest': {'chunks': [{'input_tokens': 100}]},
                 'files': 162, 'total_lines': 26939, 'total_chunks': 100,
                 'total_units': 258, 'excluded_assets': [], 'test_evidence': {'head': 'test'}}))
+            Path('review-result/adaptive-manifest.json').write_text(json.dumps({'manifest': {'chunks': [{'input_tokens': 100}]}}))
             result = {'qualified': False, 'cases': [], 'comparison': {'baseline': {'batches': [{
                 'passed': False, 'missing_defects': ['qualification/case2/bridge/submit.py'],
                 'unexpected_findings': [], 'report': {'chunks': [{
@@ -80,6 +82,7 @@ class DiagnosticTests(unittest.TestCase):
                                           'REVIEW_BUDGET_LEDGER': ''}), \
                     patch('subprocess.run') as run, \
                     patch('preflight.restore', return_value=ledger), \
+                    patch('review_plan.admit'), \
                     patch('qualify.qualify', return_value=result):
                 runpy.run_path(str(script), run_name='__main__')
             report = json.loads(Path('review-result/report.json').read_text())
