@@ -33,9 +33,10 @@ def pack(diff, count, messages, sources, strategy):
     graph = Graph(sources)
     original = parse(diff)
     chunks, pending = [], sorted(original, key=lambda u: (u.path, u.start))
+    source_fits, subdivisions = {}, 0
 
-    def request(units):
-        roots = {n for u in units for n in graph.roots(u)}
+    def request(units, roots=None):
+        roots = {n for u in units for n in graph.roots(u)} if roots is None else roots
         required, issues = graph.closure(roots)
         support = '\n'.join(f'[{graph.nodes[n].side} {graph.nodes[n].path}:{graph.nodes[n].start}-{graph.nodes[n].end}]\n'
                             +graph.nodes[n].text for n in required)
@@ -54,16 +55,21 @@ def pack(diff, count, messages, sources, strategy):
         group = [pending.pop(0)]
         chunk = request(group)
         if not fits(chunk):
-            try:
-                children = group[0].split()
-            except ValueError:
-                chunk['omitted_support'] += ['indivisible evidence exceeds request capacity']
+            # A root's full dependencies must fit even before adding primary diff evidence.
+            for root in chunk['dependency_roots']:
+                if root not in source_fits:
+                    source_fits[root] = fits(request([], {root}))
+            if not all(source_fits[root] for root in chunk['dependency_roots']):
+                chunk['omitted_support'] += ['required semantic closure exceeds request capacity']
+            elif subdivisions >= ASSESSMENT_LIMIT:
+                chunk['omitted_support'] += ['planning subdivision limit exceeded']
             else:
-                # Splitting must reduce required source, otherwise it cannot repair capacity.
-                candidates = [request([u]) for u in children]
-                if chunk['required_evidence'] and any(set(c['required_evidence']) == set(chunk['required_evidence']) for c in candidates):
-                    chunk['omitted_support'] += ['required semantic closure exceeds request capacity']
+                try:
+                    children = group[0].split()
+                except ValueError:
+                    chunk['omitted_support'] += ['indivisible evidence exceeds request capacity']
                 else:
+                    subdivisions += 1
                     pending[:0] = children
                     continue
         if fits(chunk):
