@@ -108,3 +108,44 @@ or evidence that a candidate passes this reviewer.
 
 The [reviewer guide](https://github.com/yourmoodai/savior/blob/main/tools/adversarial_reviewer/README.md) owns commands,
 activation prerequisites, qualification evidence, and disabling procedure.
+
+### Research boundary
+
+A standalone synthetic comparison may investigate whether deterministic
+reporting can preserve every verified finding, coverage gap and abstention while
+removing paid prose calls. It compares the current design, deterministic reporting
+over its three assessments, and a fresh general reviewer with finding verification.
+The three-role candidate shares assessment evidence with the current arm so that
+the reporting comparison does not confound new model responses with rendering.
+
+The explicitly authorized research allowance is $4 across all calls, retries and
+restarts, with one persistent experiment identity. This local exemption does not
+alter the $2 PR or $5 daily CI limits. Freeze prompts, executable fixture labels,
+runtime evidence, configuration and prices before inference. Missing or conflicting
+history, identity or routing mismatch, and an unaffordable next reservation stop
+the trial. Interrupted calls and missing usage retain their full reservations.
+
+Any lost finding, gap or abstention disqualifies deterministic reporting. A single
+reviewer's additional missed defect prevents recommending it; a small passing
+sample cannot establish equivalence. Research produces evidence and proposals,
+never automatic promotion, qualification-cache entries, a waiver or an approval.
+The [research report](../research/reviewer-designs.md) owns measured outcomes,
+offline reservation comparisons and the proposed quote and cache contracts.
+
+### Proposed CPU routing research
+
+The [CPU routing experiment](../research/cpu-review-routing.md) compares offline
+packing candidates and advisory escalation rules, a logistic classifier, and a
+small local language model. It replays existing evidence and explicitly labeled
+simulations without new provider calls. It does not reopen the completed $4 trial.
+
+The CI reviewer retains ownership of model selection and spending. Research
+routers cannot suppress mandatory escalation, waive coverage, change qualification
+or authorize approval. Missing context, invalid output, unavailable artifacts and
+runtime failures produce abstention or mandatory escalation. Model artifacts and
+runtime revisions are pinned; PR content remains data.
+
+The experiment may reveal cheaper packing and useful routing signals, but its
+simulated labels cannot establish savings or production review equivalence.
+Promotion requires a separately approved paired-model evaluation and an explicit
+production decision; it never follows automatically from a benchmark score.

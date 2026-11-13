@@ -1,38 +1,471 @@
 {
   "version": "2.0.0",
   "tasks": [
-    {"label":"reviewer model status","type":"shell","command":"npm run reviewer:models -- status","problemMatcher":[]},
-    {"label":"test reviewer routing","type":"shell","command":"npm run test:reviewer","problemMatcher":[]},
-    {"label":"check claude compatibility","type":"process","command":"npm","args":["run","check:claude"],"problemMatcher":[]},
-    {"label":"test claude compatibility","type":"process","command":"npm","args":["run","test:compatibility"],"problemMatcher":[]},
-    {"label":"test compatibility window","type":"process","command":"npm","args":["run","compatibility:test"],"problemMatcher":[]},
-    {"label":"discover compatibility window","type":"process","command":"npm","args":["run","compatibility:discover","--","${input:compatibility_inventory}"],"problemMatcher":[]},
-    {"label":"assess native compatibility","type":"process","command":"python3","args":["scripts/release/compatibility-run.py","${input:compatibility_inventory}","${input:compatibility_output}"],"problemMatcher":[]},
-    {"label":"preview homepage","type":"process","command":"python3","args":["scripts/site.py","serve"],"problemMatcher":[]},
-    {"label":"build homepage","type":"process","command":"python3","args":["scripts/site.py","build"],"problemMatcher":[]},
-    {"label":"verify homepage","type":"process","command":"python3","args":["scripts/site.py","check"],"problemMatcher":[]},
-    {"label":"test homepage in browser","type":"process","command":"npm","args":["run","site:test"],"problemMatcher":[]},
-    {"label":"watch replacements release","type":"process","command":"npm","args":["run","watch"],"problemMatcher":[]},
-    {"label":"watch replacements debug","type":"process","command":"npm","args":["run","watch:debug"],"problemMatcher":["$rustc"]},
-    {"label":"build replacement watcher release","type":"process","command":"npm","args":["run","watch:build:release"],"problemMatcher":["$rustc"]},
-    {"label":"test replacement watcher","type":"process","command":"npm","args":["run","watch:test"],"problemMatcher":[]},
-    {"label":"profile replacement watcher memory","type":"process","command":"npm","args":["run","watch:profile"],"problemMatcher":[]},
-    {"label":"plan release signing","type":"process","command":"cmake","args":["--workflow","--preset","release_plan"],"problemMatcher":[]},
-    {"label":"test release signing","type":"process","command":"cmake","args":["--build","--preset","release_test"],"problemMatcher":[]},
-    {"label":"prepare signed candidate","type":"process","command":"cmake","args":["--build","--preset","release_candidate"],"problemMatcher":[]},
-    {"label":"inspect replacements release","type":"process","command":"npm","args":["run","inspect"],"problemMatcher":[]},
-    {"label":"inspect replacements debug","type":"process","command":"npm","args":["run","inspect:debug"],"problemMatcher":["$rustc"]},
-    {"label":"test private inspector","type":"process","command":"npm","args":["run","inspect:test"],"problemMatcher":[]},
-    {"label":"inspector browser e2e","type":"process","command":"npm","args":["run","inspect:e2e"],"problemMatcher":[]},
-    {"label":"profile inspector latency and memory","type":"process","command":"npm","args":["run","inspect:profile"],"problemMatcher":[]},
-    {"label":"fetch benchmark corpora","type":"process","command":"npm","args":["run","corpus:fetch"],"problemMatcher":[]},
-    {"label":"build benchmarks release","type":"process","command":"npm","args":["run","bench:build"],"problemMatcher":["$rustc"]},
-    {"label":"build benchmarks debug","type":"process","command":"npm","args":["run","bench:build:debug"],"problemMatcher":["$rustc"]},
-    {"label":"test benchmark tooling","type":"process","command":"npm","args":["run","bench:test"],"problemMatcher":[]},
-    {"label":"run benchmark suite","type":"process","command":"npm","args":["run","bench:all","--","--output","${input:battle_output}"],"problemMatcher":[]},
-    {"label":"profile benchmark memory","type":"process","command":"npm","args":["run","bench:memory","--","--output","${input:battle_output}"],"problemMatcher":[]},
-    {"label":"profile benchmark stages","type":"process","command":"npm","args":["run","bench:profile","--","--output","${input:battle_output}"],"problemMatcher":[]},
-    {"label":"triage benchmark failures","type":"process","command":"npm","args":["run","bench:triage","--","--quality","${input:quality_report}","--performance","${input:performance_report}","--output","${input:battle_output}"],"problemMatcher":[]},
+    {
+      "label": "qualify research packing offline",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:packing:qualify"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "benchmark cpu review routers",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:cpu",
+        "--",
+        "benchmark",
+        "--local-llm"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "test cpu review routers",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:cpu:test"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "debug cpu review routers",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:cpu:debug",
+        "--",
+        "benchmark"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "build cpu router debug runtime",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:cpu:build:debug"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "build cpu router release runtime",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:cpu:build:release"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "profile cpu router memory",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:cpu:profile"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "reviewer research report",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:research",
+        "--",
+        "report"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "test reviewer research",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:research:test"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "debug reviewer research report",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:research:debug",
+        "--",
+        "report"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "profile reviewer research allocations",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "reviewer:research:profile",
+        "--",
+        "report"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "reviewer model status",
+      "type": "shell",
+      "command": "npm run reviewer:models -- status",
+      "problemMatcher": []
+    },
+    {
+      "label": "test reviewer routing",
+      "type": "shell",
+      "command": "npm run test:reviewer",
+      "problemMatcher": []
+    },
+    {
+      "label": "check claude compatibility",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "check:claude"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "test claude compatibility",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "test:compatibility"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "test compatibility window",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "compatibility:test"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "discover compatibility window",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "compatibility:discover",
+        "--",
+        "${input:compatibility_inventory}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "assess native compatibility",
+      "type": "process",
+      "command": "python3",
+      "args": [
+        "scripts/release/compatibility-run.py",
+        "${input:compatibility_inventory}",
+        "${input:compatibility_output}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "preview homepage",
+      "type": "process",
+      "command": "python3",
+      "args": [
+        "scripts/site.py",
+        "serve"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "build homepage",
+      "type": "process",
+      "command": "python3",
+      "args": [
+        "scripts/site.py",
+        "build"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "verify homepage",
+      "type": "process",
+      "command": "python3",
+      "args": [
+        "scripts/site.py",
+        "check"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "test homepage in browser",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "site:test"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "watch replacements release",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "watch"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "watch replacements debug",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "watch:debug"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ]
+    },
+    {
+      "label": "build replacement watcher release",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "watch:build:release"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ]
+    },
+    {
+      "label": "test replacement watcher",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "watch:test"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "profile replacement watcher memory",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "watch:profile"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "plan release signing",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--workflow",
+        "--preset",
+        "release_plan"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "test release signing",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "release_test"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "prepare signed candidate",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "release_candidate"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "inspect replacements release",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "inspect"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "inspect replacements debug",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "inspect:debug"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ]
+    },
+    {
+      "label": "test private inspector",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "inspect:test"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "inspector browser e2e",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "inspect:e2e"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "profile inspector latency and memory",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "inspect:profile"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "fetch benchmark corpora",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "corpus:fetch"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "build benchmarks release",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "bench:build"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ]
+    },
+    {
+      "label": "build benchmarks debug",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "bench:build:debug"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ]
+    },
+    {
+      "label": "test benchmark tooling",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "bench:test"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "run benchmark suite",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "bench:all",
+        "--",
+        "--output",
+        "${input:battle_output}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "profile benchmark memory",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "bench:memory",
+        "--",
+        "--output",
+        "${input:battle_output}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "profile benchmark stages",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "bench:profile",
+        "--",
+        "--output",
+        "${input:battle_output}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "triage benchmark failures",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "bench:triage",
+        "--",
+        "--quality",
+        "${input:quality_report}",
+        "--performance",
+        "${input:performance_report}",
+        "--output",
+        "${input:battle_output}"
+      ],
+      "problemMatcher": []
+    },
     {
       "label": "build evaluation profiling",
       "type": "shell",
@@ -277,14 +710,45 @@
       "problemMatcher": [
         "$rustc"
       ]
+    },
+    {
+      "label": "reviewer:experiment:replay",
+      "type": "shell",
+      "command": "npm run reviewer:experiment -- replay",
+      "problemMatcher": []
     }
   ],
   "inputs": [
-    {"id":"compatibility_inventory","type":"promptString","description":"Frozen compatibility inventory path","default":".cache/compatibility/inventory.json"},
-    {"id":"compatibility_output","type":"promptString","description":"Fresh native assessment directory","default":".cache/compatibility/assessments"},
-    {"id":"quality_report","type":"promptString","description":"Quality report to review","default":".cache/battle-2026-10-20/quality.json"},
-    {"id":"performance_report","type":"promptString","description":"Performance report to classify","default":".cache/battle-2026-10-20/performance.json"},
-    {"id":"battle_output","type":"promptString","description":"New benchmark directory (suite) or JSON file (memory)","default":".cache/battle-new"},
+    {
+      "id": "compatibility_inventory",
+      "type": "promptString",
+      "description": "Frozen compatibility inventory path",
+      "default": ".cache/compatibility/inventory.json"
+    },
+    {
+      "id": "compatibility_output",
+      "type": "promptString",
+      "description": "Fresh native assessment directory",
+      "default": ".cache/compatibility/assessments"
+    },
+    {
+      "id": "quality_report",
+      "type": "promptString",
+      "description": "Quality report to review",
+      "default": ".cache/battle-2026-10-20/quality.json"
+    },
+    {
+      "id": "performance_report",
+      "type": "promptString",
+      "description": "Performance report to classify",
+      "default": ".cache/battle-2026-10-20/performance.json"
+    },
+    {
+      "id": "battle_output",
+      "type": "promptString",
+      "description": "New benchmark directory (suite) or JSON file (memory)",
+      "default": ".cache/battle-new"
+    },
     {
       "id": "inference_report",
       "type": "promptString",
