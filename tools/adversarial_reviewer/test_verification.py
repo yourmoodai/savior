@@ -71,10 +71,11 @@ class VerificationTests(unittest.TestCase):
         self.assertNotEqual(identifier, candidates([FINDING], [{**ANCHORS[0], 'line': 9}])[0]['finding_id'])
 
     def test_bound_covers_maximum_unicode_candidate(self):
-        finding = {**FINDING, **{k: '🧪'*600 for k in ('invariant', 'scenario', 'correction')}}
-        base = review_messages('', ['test.py'], '', ANCHORS)
-        verified = review_messages('', ['test.py'], '', ANCHORS, [finding])
-        self.assertLessEqual(estimate_input_units(verified), verification_bound(base))
+        for character in ['🧪', '\x00', '\\', '"', '\n']:
+            finding = {**FINDING, **{k: character*600 for k in ('invariant', 'scenario', 'correction')}}
+            base = review_messages('', ['test.py'], '', ANCHORS)
+            verified = review_messages('', ['test.py'], '', ANCHORS, [finding])
+            self.assertLessEqual(estimate_input_units(verified), verification_bound(base))
 
     def test_invalid_original_never_reaches_transport(self):
         with patch('adversarial_review.complete') as call:

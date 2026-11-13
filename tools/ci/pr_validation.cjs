@@ -23,10 +23,16 @@ async function execute({github,context,core,phase,binding,results}) {
   const args={...context.repo,pull_number:number};
   const pr=(await github.rest.pulls.get(args)).data;
   const target=binding || {pr:String(number),head:pr.head.sha,base:pr.base.sha};
+  const run_url=`${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/attempts/${target.attempt || process.env.GITHUB_RUN_ATTEMPT}`;
   async function status(state,description) {
+    if (phase==='finish') {
+      const statuses=await github.paginate(github.rest.repos.listCommitStatuses,{...context.repo,ref:target.head,per_page:100});
+      const current=statuses.find(s=>s.context===context_name);
+      if (current?.target_url!==run_url) throw Error('validation status superseded');
+    }
     for (const name of ['pr verification','pr qualification','pr site','pr commits',context_name])
       await github.rest.repos.createCommitStatus({...context.repo,sha:target.head,context:name,state,description,
-        target_url:`${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`});
+        target_url:run_url});
   }
   if (phase==='start') {
     for (const [key,value] of Object.entries(target)) core.setOutput(key,value);
