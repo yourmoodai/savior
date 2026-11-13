@@ -4,6 +4,9 @@ Date: 2026-11-12
 
 ## Status
 
+[ADR 11](0011-disclose-runtime-review-uncertainty.md) proposes superseding the
+blanket abstention for ordinary runtime dispatch; other evidence gates remain.
+
 Proposed; implemented for review in PR #19. This decision owns source evidence
 and planning admission. Model qualification remains governed by ADR 6 and
 per-call spending by ADR 9. No live qualification or model promotion is implied.

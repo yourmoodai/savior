@@ -7,7 +7,7 @@ import json
 from chunk_plan import Unit, anchors, parse, ASSESSMENT_LIMIT
 from source_graph import Graph, analyzer_versions, digest
 
-SCHEMA = 1
+SCHEMA = 2
 frozen_execution = ContextVar('frozen_review_plan', default=None)
 
 
@@ -29,6 +29,12 @@ def verification_bound(messages):
     return estimate_input_units(expanded)
 
 
+def limitation_context(items):
+    return json.dumps([[i['side'], i['path'], i['line'], i['expression'],
+                        'callback' if i['reason'].startswith('injected') else 'receiver']
+                       for i in items], separators=(',', ':'))
+
+
 def pack(diff, count, messages, sources, strategy):
     graph = Graph(sources)
     original = parse(diff)
@@ -40,10 +46,16 @@ def pack(diff, count, messages, sources, strategy):
         required, issues = graph.closure(roots)
         support = '\n'.join(f'[{graph.nodes[n].side} {graph.nodes[n].path}:{graph.nodes[n].start}-{graph.nodes[n].end}]\n'
                             +graph.nodes[n].text for n in required)
+        limitations = [item for n in required for item in graph.nodes[n].limitations]
+        if limitations:
+            support += '\nRuntime analysis limitations (source coverage is not runtime proof):\n'
+            support += 'Each row: revision side, path, line, expression, unresolved target kind.\n'
+            support += limitation_context(limitations)
+            support += '\nAssess these uncertainties using the supplied source. Abstain if a judgment requires unavailable runtime targets.'
         prompt = messages(units, support)
         return {'units': units, 'support': support, 'input_tokens': count(prompt),
                 'support_tokens': count([{'content': support}]) if support else 0,
-                'omitted_support': issues, 'required_evidence': required,
+                'omitted_support': issues, 'required_evidence': required, 'analysis_limitations': limitations,
                 'dependency_roots': sorted(roots),
                 'prompt_sha256': digest(prompt), 'messages': prompt,
                 'verification_input_units': verification_bound(prompt)}
@@ -121,6 +133,12 @@ def restore(frozen, diff, sources):
             raise PlanningError('dependency closure is incomplete')
         if digest(c['messages']) != c['prompt_sha256']:
             raise PlanningError('frozen request changed')
+        expected_limitations = [item for n in c['required_evidence']
+                                for item in frozen['nodes'][n]['limitations']]
+        if c.get('analysis_limitations') != expected_limitations:
+            raise PlanningError('analysis limitations changed')
+        if expected_limitations and limitation_context(expected_limitations) not in c['support']:
+            raise PlanningError('analysis limitations omitted from context')
     return {'strategy': frozen['strategy'], 'original_units': len(parse(diff)), 'primary_token_ceiling': 48000,
             'chunks': chunks, 'review_plan': frozen}
 

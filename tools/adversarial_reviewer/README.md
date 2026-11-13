@@ -260,6 +260,13 @@ Non-executable PNG/JPEG/WebP files under `docs/assets` are excluded from code-re
 coverage and listed as unreviewed assets. Other binary changes remain unresolved
 coverage. Stale results are discarded. Model agreement is not proof of correctness.
 
+Runtime receiver and callback targets that syntax cannot establish are disclosed
+in the frozen plan, assessment and verification prompts, and report artifacts.
+They do not alone indicate missing source. Reviewers must abstain when a judgment
+requires unavailable runtime behavior. Missing imports, ambiguous definitions,
+syntax failures, dynamic loading, reflection, macros and evidence capacity limits
+remain blocking. See [ADR 11](../../docs/adr/0011-disclose-runtime-review-uncertainty.md).
+
 ### Build caches
 
 Native verification and release jobs share dependency caches by runner image and

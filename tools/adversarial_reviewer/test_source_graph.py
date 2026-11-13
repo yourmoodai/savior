@@ -33,6 +33,30 @@ def messages(units, support):
 
 
 class SourceGraphTests(unittest.TestCase):
+    def test_runtime_uncertainty_survives_planning_and_restore(self):
+        examples = {
+            'a.py': 'from pathlib import Path\nroot = Path(__file__).resolve()\ndef f(paths):\n    return any(p.startswith("site/") for p in paths)\n',
+            'b.py': 'class C:\n    def method(self):\n        return 1\ndef f():\n    return C().method()\n',
+            'c.mjs': 'const server = createServer(handler);\nawait new Promise(resolve => server.listen(0, resolve));\n',
+            'd.py': 'import external as client\ndef f(client):\n    return client.method()\n',
+            'e.py': 'import external as client\nclient = factory()\ndef f():\n    return client.method()\n',
+        }
+        for path, code in examples.items():
+            with self.subTest(path=path):
+                new = {path: code}
+                snapshot, diff = sources({}, new), difference({}, new)
+                for strategy in ('baseline', 'adaptive'):
+                    planned = pack(diff, estimate_input_units, messages, snapshot, strategy)
+                    require_feasible({strategy: manifest(planned)})
+                    self.assertTrue(planned['chunks'][0]['analysis_limitations'])
+                    self.assertIn('runtime', planned['chunks'][0]['support'])
+                    restore(planned['review_plan'], diff, snapshot)
+                    broken = copy.deepcopy(planned['review_plan'])
+                    broken['chunks'][0]['analysis_limitations'] = []
+                    broken['digest'] = digest({k:v for k,v in broken.items() if k != 'digest'})
+                    with self.assertRaises(PlanningError):
+                        restore(broken, diff, snapshot)
+
     def setUp(self):
         guard = patch('bedrock_client.invoke', side_effect=AssertionError('offline only'))
         guard.start()
@@ -73,7 +97,7 @@ class SourceGraphTests(unittest.TestCase):
         closure, issues = graph.closure(graph.module('new', 'a.py'))
         self.assertEqual(len(closure), 4)
         self.assertFalse(issues)
-        for path, source in [('a.py','def f(x):\n    return x.method()\n'), ('a.rs','fn f() { arbitrary!(); }')]:
+        for path, source in [('a.py','def f(x):\n    return getattr(x, name)()\n'), ('a.rs','fn f() { arbitrary!(); }')]:
             graph = Graph(sources({}, {path:source}))
             self.assertTrue(graph.closure(graph.module('new', path))[1])
         for code in ['export async function f(path) { return import(path); }',
@@ -133,13 +157,9 @@ class SourceGraphTests(unittest.TestCase):
                     actual = Counter(a['id'] for c in packed['chunks'] for a in anchors(c['units']))
                     self.assertEqual(actual, expected)
                     if dynamic:
-                        self.assertTrue(all(any('unresolved dynamic dependency' in gap for gap in c['omitted_support'])
-                                            for c in packed['chunks']))
-                        with self.assertRaises(PlanningError):
-                            require_feasible({'plan': manifest(packed)})
-                    else:
-                        require_feasible({'plan': manifest(packed)})
-                        restore(packed['review_plan'], diff, snapshot)
+                        self.assertTrue(all(c['analysis_limitations'] for c in packed['chunks']))
+                    require_feasible({'plan': manifest(packed)})
+                    restore(packed['review_plan'], diff, snapshot)
 
     def test_indivisible_source_and_subdivision_limits_preserve_coverage(self):
         for rows, limit, reason in [(1500, 512, 'required semantic closure exceeds request capacity'),
@@ -281,7 +301,9 @@ class SourceGraphTests(unittest.TestCase):
         for code in ['from external import client\ndef f():\n    return client.method()\n',
                      'def f(callback):\n    return callback()\n']:
             graph = Graph(sources({}, {'a.py': code}))
-            self.assertTrue(graph.closure(graph.module('new', 'a.py'))[1])
+            closure, issues = graph.closure(graph.module('new', 'a.py'))
+            self.assertFalse(issues)
+            self.assertTrue(any(graph.nodes[n].limitations for n in closure))
 
     def test_git_snapshot_excludes_links_and_missing_source_blocks(self):
         def git(argv, **kwargs):
