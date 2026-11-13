@@ -66,15 +66,22 @@ class QuoteTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'unsupported_pricing'):
                 current_pricing(model)
 
-    def test_projected_cost_equality_is_allowed_but_one_nanodollar_over_blocks(self):
+    def test_next_call_equality_is_allowed_but_one_nanodollar_over_blocks(self):
         for amount, reason in [(2_000_000_000,None),(2_000_000_001,'cost_limit')]:
-            quote = apply_policy({**self.quote,'projected_nanodollars':amount},self.ledger.policy_budget())
+            quote = apply_policy({**self.quote,'next_call_reserved_nanodollars':amount},self.ledger.policy_budget())
             self.assertEqual(quote['blocked_reason'],reason)
             validate(quote)
 
+    def test_large_whole_plan_projection_does_not_block_qualification(self):
+        quote = apply_policy(create(MANIFESTS, self.ledger.summary(), None), self.ledger.policy_budget())
+        self.assertGreater(quote['projected_nanodollars'], 2_000_000_000)
+        self.assertLess(quote['next_call_reserved_nanodollars'], 2_000_000_000)
+        self.assertTrue(quote['projection_informational'])
+        self.assertIsNone(quote['blocked_reason'])
+
     def test_preflight_never_calls_provider_and_ignores_old_grant_files(self):
         (self.directory/'approval.json').write_text('{"grant":{"cap_nanodollars":100000000000}}')
-        quote = apply_policy({**self.quote,'projected_nanodollars':2_000_000_001},self.ledger.policy_budget())
+        quote = apply_policy({**self.quote,'next_call_reserved_nanodollars':2_000_000_001},self.ledger.policy_budget())
         with patch.object(preflight,'DIRECTORY',self.directory), patch.object(preflight,'restore',return_value=self.ledger), \
                 patch.object(preflight,'build_quote',return_value=quote), patch.dict(os.environ,GITHUB_OUTPUT=str(self.directory/'outputs')), \
                 patch('bedrock_client.complete',side_effect=AssertionError('inference forbidden')):
@@ -93,7 +100,7 @@ class QuoteTests(unittest.TestCase):
     def test_qualified_execution_uses_policy_reservations_and_settles(self):
         manifests = copy.deepcopy(MANIFESTS)
         for manifest in manifests.values():
-            manifest['chunks'][0]['cached_assessment'] = True
+            manifest['chunks'] *= 3
         self.quote = apply_policy(create(manifests, self.ledger.summary(), QUALIFIED), self.ledger.policy_budget())
         script = Path(__file__).with_name('run_ci.py').resolve()
         previous = Path.cwd()
@@ -105,7 +112,8 @@ class QuoteTests(unittest.TestCase):
         for strategy, manifest in manifests.items():
             (directory/(strategy+'-manifest.json')).write_text(json.dumps({'manifest':manifest,'files':1,
                 'total_lines':2,'total_chunks':1,'total_units':1,'excluded_assets':[],'test_evidence':{'head':'head'}}))
-        # One chunk with cached qualification fits the fixed policy.
+        # The plan exceeds the cap; individual calls still settle within it.
+        self.assertGreater(self.quote['projected_nanodollars'], 2_000_000_000)
         self.assertIsNone(self.quote['blocked_reason'])
         with patch.object(preflight,'restore',return_value=self.ledger), patch.object(preflight,'build_quote',return_value=self.quote), \
                 patch.dict(os.environ,GITHUB_OUTPUT=str(self.directory/'outputs')):
@@ -125,3 +133,39 @@ class QuoteTests(unittest.TestCase):
         provider.assert_called_once()
         self.assertTrue(json.loads((directory/'report.json').read_text())['complete'])
         self.assertLess(self.ledger.policy_budget()['pr_remaining_nanodollars'],2_000_000_000)
+        summary = self.ledger.summary()
+        self.assertGreater(summary['settled_usage_nanodollars'], 0)
+        self.assertEqual(summary['outstanding_reserved_nanodollars'], 0)
+
+    def test_exhaustion_preserves_failed_call_reservation_in_published_quote(self):
+        from bedrock_client import BedrockError
+        import time
+        script = Path(__file__).with_name('run_ci.py').resolve()
+        previous = Path.cwd()
+        self.addCleanup(os.chdir, previous)
+        os.chdir(self.directory)
+        directory = Path('review-result')
+        directory.mkdir()
+        (directory/'preflight.json').write_text(json.dumps({'blocked_reason': None, 'commit_id': 'head', 'quote': self.quote}))
+        (directory/'baseline-manifest.json').write_text(json.dumps({'files': 1, 'total_lines': 1, 'total_chunks': 1,
+            'total_units': 1, 'excluded_assets': [], 'test_evidence': {}}))
+        self.ledger.reserve(2_000_000_000, 0, 'review', 'earlier-call',
+                            model={'pricing': {'input_nanodollars': 1, 'output_nanodollars': 1}})
+        def qualification(*args):
+            with self.assertRaises(BedrockError):
+                complete([{'role': 'user', 'content': 'synthetic'}], time.monotonic()+5)
+            return {'qualified': False, 'cases': [], 'comparison': {}}
+        with patch.object(preflight, 'restore', return_value=self.ledger), \
+                patch.object(preflight, 'build_quote', return_value={**self.quote, 'next_call_reserved_nanodollars': 0}), \
+                patch('qualify.qualify', side_effect=qualification), patch('bedrock_client.invoke') as provider, \
+                patch.dict(os.environ, REVIEW_BUDGET_LEDGER=str(directory/'ledger.db'), GITHUB_STEP_SUMMARY=''), \
+                patch('bedrock_client.Ledger', return_value=self.ledger):
+            runpy.run_path(str(script), run_name='__main__')
+        provider.assert_not_called()
+        report = json.loads((directory/'report.json').read_text())
+        quote = json.loads((directory/'quote.json').read_text())
+        self.assertEqual(report['blocked_reason'], 'cost_limit')
+        self.assertFalse(report['complete'])
+        self.assertEqual(quote, report['quote'])
+        self.assertGreater(quote['next_call_reserved_nanodollars'], 0)
+        validate(quote)

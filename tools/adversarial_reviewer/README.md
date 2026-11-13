@@ -25,13 +25,16 @@ the daily allowance only. Comments cannot increase either limit.
 
 Before inference, the workflow projects the remaining cost using configured
 prices, full model context bounds, output limits, and all planned retries.
-Reusable results reduce the remaining work. The projection must fit both
-remaining allowances; equality is allowed. Prices older than 90 days, missing
+Reusable results reduce the remaining work. This whole-plan worst-case projection
+is informational, not expected or actual spend. The next call's reservation must
+fit both remaining allowances; equality is allowed. Prices older than 90 days, missing
 prices, and unresolved spending evidence block paid calls. Each invocation
 atomically reserves its own maximum and settles actual usage. Extra subdivision
 must still fit the same caps. Taxes and unrelated AWS charges are excluded.
 
-A cost block shows the projected additional cost and the two remaining balances.
+A cost block shows the next-call reservation, the informational whole-plan
+projection, and the two remaining balances. Usage-priced cost and outstanding
+reservations are reported separately; pricing usage does not reconcile an invoice.
 It notifies matching owners from the trusted base's `CODEOWNERS` once per blocked
 revision. Only a repository **admin**, including an admin who authored the PR,
 can waive automated review with a newly created, unedited human comment:
@@ -44,7 +47,7 @@ The waiver requires a recorded cost block from a trusted workflow for the exact
 current head and base, with evidence no older than 24 hours. It rechecks admin
 permissions, comment integrity, PR readiness, and outstanding requests for
 changes before submitting one GitHub `APPROVE` review. That review records the
-admin, authorizing comment, revision, projection, and balances, and explicitly
+admin, authorizing comment, revision, reservation, and balances, and explicitly
 states that no automated code-review pass is asserted. CODEOWNER status alone
 does not grant waiver authority. The old `approve … max-usd=…` command is rejected.
 

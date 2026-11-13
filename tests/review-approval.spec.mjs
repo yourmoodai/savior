@@ -14,7 +14,8 @@ function fixture() {
   const comment = {id:42,body:command,user:{id:7,type:'User',login:'owner'},created_at:'now',updated_at:'now'};
   const pr = {number:5,state:'open',draft:false,user:{login:'owner',type:'User'},head:{sha:head},changed_files:1,
     base:{sha:'base',ref:'main',repo:{full_name:'org/repo'}}};
-  const quote = {id:'b'.repeat(64),binding:{repository:'org/repo',pr:5,head,base:'base'},blocked_reason:'cost_limit',projected_nanodollars:3e9,
+  const quote = {schema:3,projection_informational:true,next_call_reserved_nanodollars:3e9,
+    id:'b'.repeat(64),binding:{repository:'org/repo',pr:5,head,base:'base'},blocked_reason:'cost_limit',projected_nanodollars:134e9,
     policy:{repository:'org/repo',pr:5,utc_day:'2026-11-12',pr_limit_nanodollars:2e9,daily_limit_nanodollars:5e9,pr_remaining_nanodollars:2e9,daily_remaining_nanodollars:5e9}};
   const artifact = {id:8,name:`review-cost-block-5-${head}-${quote.id}`,expired:false,size_in_bytes:100,workflow_run:{id:6}};
   const run = {repository:{full_name:'org/repo'},path:'.github/workflows/adversarial-review.yml',event:'workflow_dispatch',head_branch:'main'};
@@ -54,7 +55,7 @@ test('admin author can waive recorded cost block once without inference',async()
   assert.match(f.created[0].body,/LGTM — automated review waived by @owner/);
   assert.match(f.created[0].body,/No automated code-review pass is asserted/);
   assert.match(f.created[0].body,/#issuecomment-42/);
-  assert.match(f.created[0].body,/Projected additional cost: \$3.00/);
+  assert.match(f.created[0].body,/Next-call reservation: \$3.00/);
 });
 
 test('unauthorized, edited, deleted, stale and untrusted requests cannot approve',async()=>{
@@ -69,7 +70,9 @@ test('unauthorized, edited, deleted, stale and untrusted requests cannot approve
     [f=>{f.pr.draft=true;},'pr_not_ready'],[f=>{f.pr.state='closed';},'pr_not_ready'],
     [f=>{f.pr.base.ref='untrusted-owners';},'pr_not_ready'],
     [f=>{f.pr.head.sha='c'.repeat(40);},'quote_stale'],[f=>{f.pr.base.sha='new';},'quote_stale'],
-    [f=>{f.quote.projected_nanodollars=2e9;},'quote_stale'],
+    [f=>{f.quote.next_call_reserved_nanodollars=2e9;},'quote_stale'],
+    [f=>{delete f.quote.next_call_reserved_nanodollars;},'quote_stale'],
+    [f=>{f.quote.schema=2;},'quote_stale'],
     [f=>{f.quote.blocked_reason='spending_unresolved';},'quote_stale'],
     [f=>{f.artifact.expired=true;},'quote_unavailable'],[f=>{f.artifact.size_in_bytes=1_000_001;},'quote_unavailable'],
     [f=>{f.run.event='pull_request';},'untrusted_quote'],[f=>{f.run.head_branch='feature/untrusted';},'untrusted_quote'],
@@ -127,7 +130,8 @@ test('cost status is compact, notifies applicable owners once per revision and n
   await publish({...f,head,pr:5,phase:'complete',report});
   await publish({...f,head,pr:5,phase:'complete',report});
   assert.equal(f.comments.length,2);
-  assert.match(f.comments[0].body,/Projected additional cost: \$3.00/);
+  assert.match(f.comments[0].body,/Next-call reservation: \$3.00/);
+  assert.match(f.comments[0].body,/Whole-plan worst-case projection \(informational\): \$134.00/);
   assert.match(f.comments[0].body,/of \$2.00/);assert.match(f.comments[0].body,/of \$5.00/);
   assert.doesNotMatch(f.comments[0].body,/new spend|max-usd|pilot|Verdict/);
   assert.match(f.comments[1].body,/@owner: automated review is blocked/);
@@ -145,11 +149,11 @@ test('CODEOWNERS applies last match, teams, exclusions, nested paths and renamed
   assert.deepEqual(applicable('* @all\n*.js @js\n',['.github/test.js']),['@js']);
 });
 
-test('cost display rounds projection up and available balances down',()=>{
-  const {quote}=fixture();quote.projected_nanodollars=2_000_000_001;
+test('cost display rounds reservations up and available balances down',()=>{
+  const {quote}=fixture();quote.next_call_reserved_nanodollars=2_000_000_001;
   quote.policy.daily_remaining_nanodollars=4_999_999_999;
   const body=status.render('cost_limit',quote);
-  assert.match(body,/Projected additional cost: \$2.01/);
+  assert.match(body,/Next-call reservation: \$2.01/);
   assert.match(body,/Daily allowance remaining: \$4.99/);
 });
 

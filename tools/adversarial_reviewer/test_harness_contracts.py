@@ -39,7 +39,7 @@ class HarnessContracts(unittest.TestCase):
             source.write_text('value = 2\n')
             self.assertNotEqual(source_identity(source), original)
 
-    def test_cache_loss_cannot_exceed_the_bound_quote(self):
+    def test_cache_loss_does_not_change_the_bound_evidence_plan(self):
         plans = {'baseline': {'chunks': [{'input_tokens': 100, 'cached_assessment': True}]}}
         qualification = {'qualified': True, 'strategy': 'baseline',
                          'comparison': {'baseline': {'passed': True}}}
@@ -48,22 +48,20 @@ class HarnessContracts(unittest.TestCase):
             quote = create(plans, {'pilot_committed_nanodollars': 0}, qualification)
         self.assertEqual(execution_strategy(quote, plans, qualification), 'baseline')
         plans['baseline']['chunks'][0]['cached_assessment'] = False
-        with self.assertRaisesRegex(ValueError, 'cached assessments changed'):
-            execution_strategy(quote, plans, qualification)
+        self.assertEqual(execution_strategy(quote, plans, qualification), 'baseline')
 
-    def test_cache_loss_at_execution_stops_before_assessment(self):
+    def test_cache_loss_can_reassess_within_per_call_limits(self):
         from adversarial_review import review_diff
         from quote import plan_digest
         diff = 'diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x = 1\n+x = 2\n'
         with patch('adversarial_review.cached_assessment', return_value=('key', [], ('APPROVE', [], 'complete'))):
             frozen = review_diff(diff, ['a.py'], strategy='baseline', dry_run=True)
-        with patch.dict(os.environ, REVIEW_PLAN_DIGEST=plan_digest(frozen['manifest']), REVIEW_PLAN_RESERVATION='0'), \
+        with patch.dict(os.environ, REVIEW_PLAN_DIGEST=plan_digest(frozen['manifest'])), \
                 patch('adversarial_review.cached_assessment', return_value=('key', [], None)), \
-                patch('adversarial_review.run_model_reviewer') as assess:
+                patch('adversarial_review.run_model_reviewer', return_value=('APPROVE', [], 'complete')) as assess:
             report = review_diff(diff, ['a.py'], strategy='baseline')
-        assess.assert_not_called()
-        self.assertFalse(report['complete'])
-        self.assertIn('cached assessments changed', report['summary'])
+        assess.assert_called_once()
+        self.assertTrue(report['complete'])
 
     def test_verification_batches_preserve_findings_and_incompleteness(self):
         candidates = [{'location': 1}, {'location': 2}]

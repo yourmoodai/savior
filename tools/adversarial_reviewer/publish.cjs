@@ -45,7 +45,7 @@ module.exports = async function publish({github, context, core, head, pr, phase,
       if (pull.base.sha !== report.quote.binding.base || !await current()) return;
       const owners = await require('./codeowners.cjs').owners({github,context,pr:pull});
       if (owners.length && await current()) await github.rest.issues.createComment({...context.repo,issue_number:Number(pr),
-        body:`${notification}\n${owners.join(' ')}: automated review is blocked by projected cost. A repository admin can waive review for this revision with \`/savior review skip ${head}\`. See the review status for the estimate and allowances.`});
+        body:`${notification}\n${owners.join(' ')}: automated review is blocked because the next-call reservation exceeds the remaining allowance. A repository admin can waive review for this revision with \`/savior review skip ${head}\`. See the review status for the reservation and allowances.`});
     }
   }
   if (phase === 'complete' && !report.blocked_reason) {

@@ -85,8 +85,6 @@ def execution_strategy(quote, manifests, qualification):
         raise ValueError('quoted plan or qualification changed')
     if not qualification.get('comparison', {}).get(selected, {}).get('passed'):
         raise ValueError('quoted strategy is not qualified')
-    if sum(i['reserved_nanodollars'] for i in estimate(manifests[selected])) > quote['projected_nanodollars']:
-        raise ValueError('cached assessments changed; fresh quote required')
     return selected
 
 
@@ -97,7 +95,7 @@ def qualification_identity(qualification):
 
 
 def create(manifests, summary, qualification, *, now=None):
-    from model_catalog import manifest
+    from model_catalog import manifest, selected as selected_model, cost
     routing = manifest()
     if os.environ['AWS_REGION'] != 'us-east-1':
         raise ValueError('unsupported_pricing')
@@ -114,8 +112,12 @@ def create(manifests, summary, qualification, *, now=None):
                'qualification': digest(qualification_identity(qualification)),
                'plans': {s: plan_digest(m) for s, m in manifests.items()}}
     maximum = sum(i['reserved_nanodollars'] for i in items)
-    quote = {'schema': 2, 'binding': binding, 'issued_at': now, 'expires_at': now+86400,
+    needs_call = selected is None or any(not c.get('cached_assessment') for c in manifests[selected]['chunks'])
+    first_model = selected_model('correctness')
+    next_reservation = cost(first_model, first_model['context_tokens'], 1024) if needs_call else 0
+    quote = {'schema': 3, 'binding': binding, 'issued_at': now, 'expires_at': now+86400,
              'phase': 'review' if selected else 'qualification_required',
+             'projection_informational': True, 'next_call_reserved_nanodollars': next_reservation,
              'items': items, 'strategy': selected, 'chunks': len(manifests[selected]['chunks']) if selected else 0,
              'cached_assessments': sum(bool(c.get('cached_assessment')) for c in manifests[selected]['chunks']) if selected else 0,
              'estimated_nanodollars': sum(i['estimated_nanodollars'] for i in items),
@@ -130,7 +132,7 @@ def apply_policy(quote, allowance):
     from budget import BudgetExhausted
     quote = {**quote, 'policy': allowance, 'blocked_reason': None}
     try:
-        check(quote['projected_nanodollars'], allowance)
+        check(quote['next_call_reserved_nanodollars'], allowance)
     except BudgetExhausted:
         quote['blocked_reason'] = 'cost_limit'
     quote['id'] = digest({k:v for k,v in quote.items() if k != 'id'})
@@ -139,7 +141,9 @@ def apply_policy(quote, allowance):
 
 def validate(quote, *, now=None):
     now = int(time.time() if now is None else now)
-    if (quote.get('schema') != 2 or quote.get('id') != digest({k:v for k,v in quote.items() if k != 'id'})
+    if (quote.get('schema') != 3 or quote.get('id') != digest({k:v for k,v in quote.items() if k != 'id'})
+            or quote.get('projection_informational') is not True
+            or type(quote.get('next_call_reserved_nanodollars')) is not int or quote['next_call_reserved_nanodollars'] < 0
             or type(quote.get('issued_at')) is not int or type(quote.get('expires_at')) is not int
             or quote['expires_at']-quote['issued_at'] != 86400 or not quote['issued_at'] <= now < quote['expires_at']):
         raise ValueError('quote expired or invalid')

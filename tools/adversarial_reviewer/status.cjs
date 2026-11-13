@@ -24,7 +24,8 @@ const usd = (n, round=Math.floor) => '$'+(round(n/1e7)/100).toFixed(2);
 function render(reason, quote, budget, report) {
   const lines = [reasons[reason] || reasons.infrastructure_failed];
   if (reason === 'cost_limit' && quote?.policy) {
-    lines.push(`Projected additional cost: ${usd(quote.projected_nanodollars,Math.ceil)}`,
+    lines.push(`Next-call reservation: ${usd(quote.next_call_reserved_nanodollars,Math.ceil)}`,
+      `Whole-plan worst-case projection (informational): ${usd(quote.projected_nanodollars,Math.ceil)}`,
       `PR allowance remaining: ${usd(quote.policy.pr_remaining_nanodollars)} of $2.00`,
       `Daily allowance remaining: ${usd(quote.policy.daily_remaining_nanodollars)} of $5.00`,
       'Daily reset: midnight UTC. The PR allowance does not reset.',

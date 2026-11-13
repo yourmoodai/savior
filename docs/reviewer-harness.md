@@ -20,16 +20,26 @@ prefers an explicit incomplete result over an unsupported coverage claim.
 
 ## Quotes and qualification
 
-Schema 2 quotes bind revisions, configuration, routing, prices, qualification,
+Schema 3 quotes bind revisions, configuration, routing, prices, qualification,
 and the exact selected evidence plan. Only strategies that passed qualification
 are candidates for selection; minimum reservation cost breaks the choice, then
 the strategy name breaks ties. Execution checks the binding again before calls.
 
 Without qualification, the quote covers qualification only and has no executable
-review strategy. Successful qualification requires a new review quote and a new
-remaining-budget check. Existing PR and daily limits, full-context reservations,
-and uncertain-call accounting remain in force. Verification projections include
-two bounded finding batches per assessment, including retries.
+review strategy. Successful qualification requires a new review quote. Whole-plan
+projections are informational: they sum worst-case reservations, including retries,
+and are neither expected charges nor evidence of spending. Preflight checks the
+next call; the ledger atomically enforces the remaining PR and daily allowances
+before every actual invocation. Cache loss can increase work without changing the
+bound evidence plan; each replacement call still needs its own reservation.
+
+As proposed in [ADR 9](adr/0009-reserve-review-calls.md), admission requires settled
+usage cost plus outstanding reservations plus the next full-context reservation
+to fit the cap. Missing usage retains its hold. Reports separate usage-priced cost
+from outstanding reservations; neither establishes invoice reconciliation. An
+exhausted allowance leaves review incomplete. Whole-plan projections alone cannot
+authorize a cost waiver. Verification projections include two bounded finding
+batches per assessment, including retries.
 
 Behavior fingerprints include runtime prompts, validators, packing, models,
 fixtures and spending policy. Python comments are excluded through syntax-tree

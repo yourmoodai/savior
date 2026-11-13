@@ -136,7 +136,8 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
         measure('call', input_tokens=envelope['usage']['inputTokens'], output_tokens=envelope['usage']['outputTokens'])
     except BudgetError as error:
         (Path(path).parent / 'budget-blocked.json').write_text(json.dumps({
-            'reason': 'budget_exhausted' if isinstance(error, BudgetExhausted) else 'spending_unresolved'}))
+            'reason': 'budget_exhausted' if isinstance(error, BudgetExhausted) else 'spending_unresolved',
+            'required_nanodollars': model_cost(model, model['context_tokens'], payload['inferenceConfig']['maxTokens'])}))
         raise BedrockError(str(error)) from None
     try:
         if envelope['usage']['inputTokens'] > 48000:
