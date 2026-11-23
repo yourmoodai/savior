@@ -7,7 +7,7 @@ import json
 from chunk_plan import Unit, anchors, parse, ASSESSMENT_LIMIT
 from source_graph import Graph, analyzer_versions, digest
 
-SCHEMA = 3
+SCHEMA = 4
 frozen_execution = ContextVar('frozen_review_plan', default=None)
 
 
@@ -38,6 +38,19 @@ def limitation_context(items):
     return json.dumps({'sources': sources, 'calls': calls}, separators=(',', ':'))
 
 
+def macro_context(items):
+    sources = sorted({(i['side'], i['path']) for i in items})
+    locations = {source: index for index, source in enumerate(sources)}
+    grouped = {}
+    for item in items:
+        contract = {k: v for k, v in item.items() if k not in ('side', 'path', 'line')}
+        key = json.dumps(contract, sort_keys=True, separators=(',', ':'))
+        grouped.setdefault(key, set()).add((locations[item['side'], item['path']], item['line']))
+    return json.dumps({'sources': sources, 'expansions': [
+        {'locations': sorted(grouped[key]), **json.loads(key)} for key in sorted(grouped)]},
+        separators=(',', ':'))
+
+
 def pack(diff, count, messages, sources, strategy):
     graph = Graph(sources)
     original = parse(diff)
@@ -53,6 +66,9 @@ def pack(diff, count, messages, sources, strategy):
             shared.setdefault(node.text, set()).add(f'{node.side} {node.path}:{node.start}-{node.end}')
         support = '\n'.join('['+'; '.join(sorted(locations))+']\n'+text for text, locations in shared.items())
         limitations = [item for n in required for item in graph.nodes[n].limitations]
+        expansions = [item for n in required for item in graph.nodes[n].macro_expansions]
+        if expansions:
+            support += '\nBounded external macro dependency expansions (locations: source index, line):\n' + macro_context(expansions)
         if limitations:
             support += '\nRuntime analysis limitations (source coverage is not runtime proof):\n'
             support += 'sources maps indices to [revision side, path]. Each calls row: source index, line, expression, unresolved target kind.\n'
@@ -62,6 +78,7 @@ def pack(diff, count, messages, sources, strategy):
         return {'units': units, 'support': support, 'input_tokens': count(prompt),
                 'support_tokens': count([{'content': support}]) if support else 0,
                 'omitted_support': issues, 'required_evidence': required, 'analysis_limitations': limitations,
+                'macro_expansions': expansions,
                 'dependency_roots': sorted(roots),
                 'prompt_sha256': digest(prompt), 'messages': prompt,
                 'verification_input_units': verification_bound(prompt)}
@@ -103,7 +120,7 @@ def pack(diff, count, messages, sources, strategy):
         chunks.append(chunk)
     frozen = {'schema': SCHEMA, 'strategy': strategy, 'diff_digest': digest(diff),
               'snapshots': {s: v.revision for s, v in sources.items()}, 'analyzers': analyzer_versions(),
-              'analysis_limits': ['syntax-based conservative dependencies; no runtime dispatch or macro expansion',
+            'analysis_limits': ['syntax-based conservative dependencies; bounded external macro dependency expansion; no runtime dispatch',
                                   'unsupported formats receive exact textual evidence only'],
               'primary_evidence': [a['id'] for a in anchors(original)],
               'nodes': {n: {**asdict(v), 'names': sorted(v.names), 'refs': sorted(v.refs)} for n, v in graph.nodes.items()},
@@ -143,6 +160,12 @@ def restore(frozen, diff, sources):
                                 for item in frozen['nodes'][n]['limitations']]
         if c.get('analysis_limitations') != expected_limitations:
             raise PlanningError('analysis limitations changed')
+        expected_expansions = [item for n in c['required_evidence']
+                               for item in frozen['nodes'][n].get('macro_expansions', [])]
+        if c.get('macro_expansions') != expected_expansions:
+            raise PlanningError('macro expansions changed')
+        if expected_expansions and macro_context(expected_expansions) not in c['support']:
+            raise PlanningError('macro expansions omitted from context')
         if expected_limitations and limitation_context(expected_limitations) not in c['support']:
             raise PlanningError('analysis limitations omitted from context')
     return {'strategy': frozen['strategy'], 'original_units': len(parse(diff)), 'primary_token_ceiling': 48000,

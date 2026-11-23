@@ -309,7 +309,7 @@ class SourceGraphTests(unittest.TestCase):
         examples = [
             {'a.ts': "import {f} from './helper';\n", 'helper.ts': 'export function f() {}', 'helper.js': 'export function f() {}'},
             {'a.py': 'from helper import absent\n', 'helper.py': 'def present(): pass\n'},
-            {'a.rs': 'use crate::helper::*;\n', 'helper.rs': 'fn f() {}\nfn g() {}'},
+            {'a.rs': 'use crate::missing::*;\n', 'helper.rs': 'fn f() {}\nfn g() {}'},
             {'a.py': 'from helper import *\n', 'helper.py': 'def f(): pass\ndef g(): pass\n'}]
         for files in examples:
             graph = Graph(sources({}, files))
@@ -347,12 +347,14 @@ class SourceGraphTests(unittest.TestCase):
         graph = Graph(sources({}, files))
         closure, issues = graph.closure(graph.module('new', 'src/a.rs'))
         self.assertFalse(issues)
-        names = set().union(*(graph.nodes[n].names for n in closure))
+        names = set().union(*(graph.nodes[n].names for n in closure if graph.nodes[n].text.startswith('fn ')))
         self.assertEqual(names, {'submit', 'allowed', 'one', 'two'})
 
     def test_rust_self_and_super_group_paths(self):
-        for statement in ['use self::helper::{allowed};', 'use super::nested::helper::{allowed as ok};']:
-            files = {'src/nested/a.rs': statement, 'src/nested/helper.rs': 'fn allowed() {}'}
+        for statement in ['use self::helper::{allowed};', 'use super::helper::{allowed as ok};']:
+            files = {'src/lib.rs': 'mod nested;', 'src/nested/mod.rs': 'mod a; mod helper;',
+                     'src/nested/a.rs': '#[path = "helper.rs"] mod helper;\n' + statement,
+                     'src/nested/helper.rs': 'fn allowed() {}'}
             graph = Graph(sources({}, files))
             closure, issues = graph.closure(graph.module('new', 'src/nested/a.rs'))
             self.assertFalse(issues)
