@@ -1,4 +1,3 @@
-import importlib.util
 import hashlib
 import io
 import json
@@ -10,14 +9,8 @@ import unittest
 from unittest.mock import patch
 
 
-spec = importlib.util.spec_from_file_location(
-    'security_audit', Path(__file__).resolve().parents[1] / 'security-audit.py')
-audit = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(audit)
-installer_spec = importlib.util.spec_from_file_location(
-    'security_install', Path(__file__).resolve().parents[1] / 'security-install.py')
-installer = importlib.util.module_from_spec(installer_spec)
-installer_spec.loader.exec_module(installer)
+import scripts.security_audit as audit
+import scripts.security_install as installer
 
 
 class SecurityAuditTests(unittest.TestCase):

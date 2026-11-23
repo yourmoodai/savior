@@ -1,5 +1,3 @@
-import importlib.util
-from pathlib import Path
 import types
 import unittest
 
@@ -7,10 +5,7 @@ import torch
 from transformers import BertConfig, BertForTokenClassification
 
 
-spec = importlib.util.spec_from_file_location(
-    'export_coreml', Path(__file__).with_name('export-coreml.py'))
-exporter = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(exporter)
+import scripts.export_coreml as exporter
 
 
 class AttentionExportTests(unittest.TestCase):
