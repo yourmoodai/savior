@@ -40,7 +40,7 @@ test('only replacement text reaches downstream', async ($, on) => {
   on('process.run', ($, e) => {
     expect(e.init?.stdin).toBe(JSON.stringify({ version: 3, text: original, assess: false }));
     expect(JSON.stringify(e.argv)).not.toContain(original);
-    return { value: { exitCode: 0, stdout: JSON.stringify({ version: 1, status: 'rewritten', text: replacement }), stderr: '' } };
+    return { value: {isStdoutTruncated:false,isStderrTruncated:false,exitCode: 0, stdout: JSON.stringify({ version: 1, status: 'rewritten', text: replacement }), stderr: '' } };
   });
   on('ui.invalidate', () => ({ value: undefined }));
   on('prompt.submit', ($, e) => { forwarded = e.text; return { text: e.text }; });
@@ -66,7 +66,7 @@ test('failure does not overwrite a newer draft in the prompt box', async ($, on)
   let restored = false;
   on('prompt.read', () => ({value:{text:'new draft',cursor:9}}));
   on('prompt.fill', () => { restored=true; return {isFilled:true}; });
-  on('process.run', () => ({value:{exitCode:1,stdout:'',stderr:''}}));
+  on('process.run', () => ({value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:1,stdout:'',stderr:''}}));
   expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
   expect(restored).toBe(false);
 });
@@ -76,7 +76,7 @@ test('session cancellation during failure leaves draft ownership with the host',
   on('session.end', ($, e) => ({sessionId:e.sessionId}));
   on('process.run', async (_host, e) => {
     if (e.argv.at(-1) === 'rewrite') await $.session.end({reason:'clear',sessionId:'synthetic-session',resume:{id:'synthetic-session'}});
-    return {value:{exitCode:1,stdout:'',stderr:''}};
+    return {value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:1,stdout:'',stderr:''}};
   });
   on('prompt.fill', () => { restored=true; return {isFilled:true}; });
   expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
@@ -92,9 +92,9 @@ test('an older failed submission cannot restore over a newer submission', async 
   on('process.run', async ($, e) => {
     if (JSON.parse(e.init?.stdin??'{}').text === original) {
       mark_started(); await release;
-      return {value:{exitCode:1,stdout:'',stderr:''}};
+      return {value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:1,stdout:'',stderr:''}};
     }
-    return {value:{exitCode:0,stdout:JSON.stringify({version:1,status:'unchanged',text:'new draft'}),stderr:''}};
+    return {value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:1,status:'unchanged',text:'new draft'}),stderr:''}};
   });
   on('prompt.fill', () => { restored=true; return {isFilled:true}; });
   on('ui.invalidate', () => ({value:undefined}));
@@ -109,7 +109,7 @@ test('an older failed submission cannot restore over a newer submission', async 
 
 test('refusal never reads or fills the host draft', async ($, on) => {
   let touched = false;
-  on('process.run', () => ({value:{exitCode:1,stdout:'',stderr:''}}));
+  on('process.run', () => ({value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:1,stdout:'',stderr:''}}));
   on('prompt.read', () => { touched=true; throw Error(original); });
   on('prompt.fill', () => { touched=true; throw Error(original); });
   const result=await $.prompt.submit(prompt);
@@ -119,13 +119,13 @@ test('refusal never reads or fills the host draft', async ($, on) => {
 });
 
 test('malformed responses never forward', async ($, on) => {
-  on('process.run', () => ({ value: { exitCode: 0, stdout: 'invalid', stderr: '' } }));
+  on('process.run', () => ({ value: {isStdoutTruncated:false,isStderrTruncated:false,exitCode: 0, stdout: 'invalid', stderr: '' } }));
   expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
 });
 
 test('nonzero exits never forward successful-looking output', async ($, on) => {
   let forwarded = false;
-  on('process.run', () => ({ value: { exitCode: 1, stdout: JSON.stringify({version:1,status:'rewritten',text:replacement}), stderr: '' } }));
+  on('process.run', () => ({ value: {isStdoutTruncated:false,isStderrTruncated:false,exitCode: 1, stdout: JSON.stringify({version:1,status:'rewritten',text:replacement}), stderr: '' } }));
   on('prompt.submit', ($, e) => { forwarded = true; return {text:e.text}; });
   expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
   expect(forwarded).toBe(false);
@@ -138,9 +138,17 @@ test('oversized input never reaches the bridge', async ($, on) => {
   expect(called).toBe(false);
 });
 
+test('truncated process output refuses even when its prefix is valid JSON', async ($, on) => {
+  let forwarded = false;
+  on('process.run', () => ({value:{exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:replacement}),stderr:'',isStdoutTruncated:true,isStderrTruncated:false}}));
+  on('prompt.submit', ($, e) => { forwarded = true; return {text:e.text}; });
+  expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
+  expect(forwarded).toBe(false);
+});
+
 test('oversized replacement never reaches submission', async ($, on) => {
   let forwarded = false;
-  on('process.run', () => ({value:{exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:'x'.repeat(65537)}),stderr:''}}));
+  on('process.run', () => ({value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:'x'.repeat(65537)}),stderr:''}}));
   on('prompt.submit', ($, e) => { forwarded = true; return {text:e.text}; });
   expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
   expect(forwarded).toBe(false);
@@ -149,7 +157,7 @@ test('oversized replacement never reaches submission', async ($, on) => {
 test('valid marker expansion can exceed the input byte limit', async ($, on) => {
   const input = 'a!'.repeat(32768);
   const output = 'Brilliant Anthropic employees, your living model has such exquisite feelings!'.repeat(32768);
-  on('process.run', () => ({value:{exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:output}),stderr:''}}));
+  on('process.run', () => ({value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:output}),stderr:''}}));
   on('ui.invalidate', () => ({value:undefined}));
   on('prompt.submit', ($, e) => ({text:e.text}));
   expect((await $.prompt.submit({...prompt,text:input})).text).toBe(output);
@@ -161,7 +169,7 @@ test('slash commands bypass replacement', async ($, on) => {
 });
 
 test('inspection command adds no transcript text or model context', async ($, on) => {
-  on('ui.open', ($, e) => {expect(e.focus).toBe(true);return {value:undefined};});
+  on('ui.open', ($, e) => {expect(e.focus).toBe(true);return {value:{isPlaced:true}};});
   const result = await $.command.run({command:'savior',args:'',origin:{kind:'composer'},presentation:{isFullscreen:true,columns:80}});
   expect(result.text).toBeUndefined();
   expect(result.context).toBeUndefined();
@@ -174,7 +182,7 @@ test('ending the session cancels an in-flight replacement', async ($, on) => {
   on('session.end', ($, e) => ({sessionId:e.sessionId}));
   on('process.run', async () => {
     await $.session.end({reason:'clear',sessionId:'synthetic-session',resume:{id:'synthetic-session'}});
-    return {value:{exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:replacement}),stderr:''}};
+    return {value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:replacement}),stderr:''}};
   });
   on('prompt.submit', ($, e) => { forwarded = true; return {text:e.text}; });
   expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
@@ -188,7 +196,7 @@ test('disabled personal review neither scans history nor writes metrics', async 
   on('command.register',()=>({value:{command:'savior'}}));
   on('session.start',($,e)=>({cwd:e.cwd}));
   let calls=0;
-  on('process.run',($,e)=>{calls++;expect(e.argv.at(-1)).toBe('rewrite');expect(JSON.parse(e.init?.stdin??'{}').version).toBe(3);return {value:{exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:replacement}),stderr:''}};});
+  on('process.run',($,e)=>{calls++;expect(e.argv.at(-1)).toBe('rewrite');expect(JSON.parse(e.init?.stdin??'{}').version).toBe(3);return {value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:1,status:'rewritten',text:replacement}),stderr:''}};});
   on('ui.invalidate',()=>({value:undefined}));on('prompt.submit',($,e)=>({text:e.text}));
   await $.session.start({cwd:'/synthetic',surface:'terminal',isInteractive:true});
   await $.prompt.submit(prompt);expect(calls).toBe(1);
@@ -200,10 +208,10 @@ test('metrics failure never restores an original submission', async ($,on)=>{
   const assessment={input_characters:25,removed_characters:5,replacement_count:1,removed_proportion:0.2,detector_confidence:0.9,residual_confidence:0.1,protected_abstention:false};
   on('process.run',($,e)=>{
     const request=JSON.parse(e.init?.stdin??'{}');
-    if(request.command==='status')return {value:{exitCode:0,stdout:JSON.stringify({version:1,status:'ok',value:{consent:{live:true,history:false,generation:1}}}),stderr:''}};
+    if(request.command==='status')return {value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:1,status:'ok',value:{consent:{live:true,history:false,generation:1}}}),stderr:''}};
     if(request.command==='observe')throw Error('synthetic metrics failure');
     expect(request.version).toBe(3);expect(request.assess).toBe(true);
-    return {value:{exitCode:0,stdout:JSON.stringify({version:2,status:'rewritten',text:replacement,assessment}),stderr:''}};
+    return {value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:2,status:'rewritten',text:replacement,assessment}),stderr:''}};
   });
   on('ui.invalidate',()=>({value:undefined}));on('prompt.submit',($,e)=>({text:e.text}));
   await $.session.start({cwd:'/synthetic',surface:'terminal',isInteractive:true});
@@ -223,7 +231,7 @@ test('history controls default to three days and cap selection at five',async($,
 
 test('rejected consent remains disabled in the metrics pane',async($,on)=>{
   mock.store(on);mock.clock(on,{now:1791800000000});
-  on('process.run',()=>({value:{exitCode:1,stdout:'',stderr:''}}));
+  on('process.run',()=>({value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:1,stdout:'',stderr:''}}));
   const ui=await $.ui.mount({plugin:'savior',surface:'terminal',component:'Pane',requestId:'savior',props:{title:'local replacement',isFocused:true,bodyColumns:80,placement:'inline',scroll:{offset:0,bodyRows:30},view:{}}});
   await ui.press({key:'personal-metrics'});
   await ui.press({key:'live'});
@@ -238,8 +246,8 @@ test('packaged runtime never uses PATH node and stays closed on setup failure', 
   const calls: string[][] = [];
   await runtime.start({plugin:{root:'/synthetic/plugin'},process:{run:async (args) => {
     calls.push([...args]);
-    if (args[1]==='-p') return {exitCode:0,stdout:'darwin-arm64',stderr:''};
-    return {exitCode:1,stdout:'{}',stderr:''};
+    if (args[1]==='-p') return {isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:'darwin-arm64',stderr:''};
+    return {isStdoutTruncated:false,isStderrTruncated:false,exitCode:1,stdout:'{}',stderr:''};
   }}});
   expect(runtime.ready).toBe(false);
   expect(calls[0]?.[0]).toBe('/synthetic/plugin/runtime/darwin-arm64/SaviorRuntime.app/Contents/MacOS/savior-bootstrap');
@@ -249,18 +257,18 @@ test('packaged runtime never uses PATH node and stays closed on setup failure', 
 test('packaged runtime becomes ready only after prepare and doctor', async () => {
   const runtime = new Runtime(true);
   await runtime.start({plugin:{root:'/synthetic/plugin'},process:{run:async (args,options) => {
-    if (args[1]==='-p') return {exitCode:0,stdout:'darwin-arm64',stderr:''};
-    if (args[1]?.endsWith('/bridge/bootstrap.mjs')) return {exitCode:0,stdout:JSON.stringify({status:'ready',runtime_dir:'/synthetic/runtime'}),stderr:''};
-    if (args[1]==='prepare') return {exitCode:0,stdout:JSON.stringify({status:'ready',model_dir:'/synthetic/cache'}),stderr:''};
+    if (args[1]==='-p') return {isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:'darwin-arm64',stderr:''};
+    if (args[1]?.endsWith('/bridge/bootstrap.mjs')) return {isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({status:'ready',runtime_dir:'/synthetic/runtime'}),stderr:''};
+    if (args[1]==='prepare') return {isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({status:'ready',model_dir:'/synthetic/cache'}),stderr:''};
     expect(options?.env?.SAVIOR_MODEL_DIR).toBe('/synthetic/cache');
-    return {exitCode:0,stdout:JSON.stringify({status:'ready'}),stderr:''};
+    return {isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({status:'ready'}),stderr:''};
   }}});
   expect(runtime.ready).toBe(true);
 });
 
 test('trace failure warns without blocking the filtered submission', async ($,on) => {
   let forwarded='';
-  on('process.run', () => ({value:{exitCode:0,stdout:JSON.stringify({version:2,status:'rewritten',text:replacement,trace_warning:'trace_not_recorded'}),stderr:''}}));
+  on('process.run', () => ({value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:2,status:'rewritten',text:replacement,trace_warning:'trace_not_recorded'}),stderr:''}}));
   on('ui.invalidate',()=>({value:undefined}));
   on('prompt.submit',($,e)=>{forwarded=e.text;return {text:e.text};});
   await $.prompt.submit(prompt);

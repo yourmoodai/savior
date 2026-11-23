@@ -13,7 +13,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12.10'
+          python-version: '3.12.16'
       - name: install reviewer analyzers
         run: python3 -m pip install -r tools/adversarial_reviewer/requirements.txt
       - name: test research harness

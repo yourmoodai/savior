@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import {catalog} from '../hooks/compatibility-catalog.ts';
+import {catalog} from '../hooks/compatibility-catalog.js';
 const client = process.env.SAVIOR_HOST_VERSION || JSON.parse(await readFile(new URL('../tools/host/package.json', import.meta.url))).dependencies['@anthropic-ai/claude-code'];
 const matches = catalog.adapters.filter(adapter => adapter.client_versions.includes(client));
 if (matches.length !== 1) throw Error('client API contract missing or ambiguous');

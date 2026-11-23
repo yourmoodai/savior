@@ -1,4 +1,7 @@
+import json
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +11,22 @@ import ci_impact
 
 
 class ImpactTests(unittest.TestCase):
+    def test_security_is_required_even_for_website_only_verification(self):
+        needs = {
+            'context': {'result': 'success', 'outputs': {'native_required': 'false'}},
+            'tooling': {'result': 'success'}, 'security': {'result': 'success'},
+            'coreml': {'result': 'skipped'}, 'release-tools': {'result': 'skipped'},
+        }
+        with patch.object(sys, 'argv', ['ci_impact.py', 'verification']):
+            with patch.dict(os.environ, {'RESULTS': json.dumps(needs)}):
+                ci_impact.main()
+            for status in ['failure', 'cancelled', 'skipped']:
+                needs['security']['result'] = status
+                with self.subTest(status=status), \
+                        patch.dict(os.environ, {'RESULTS': json.dumps(needs)}):
+                    with self.assertRaises(ValueError):
+                        ci_impact.main()
+
     def test_website_and_shared_inputs(self):
         self.assertFalse(ci_impact.native_required([
             'site/templates/base.html', 'scripts/site.py', 'scripts/test-site.mjs',

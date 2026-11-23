@@ -26,9 +26,13 @@ class Classifier(torch.nn.Module):
                           token_type_ids=features[2]).logits
 
 
-def finite_attention_mask(self, attention_mask, input_shape, device=None, dtype=None):
+def finite_attention_masks(self, attention_mask, encoder_attention_mask,
+                           embedding_output, encoder_hidden_states, cache):
+    if self.config.is_decoder or encoder_attention_mask is not None or cache is not None:
+        raise ValueError('unsupported_attention_configuration')
     # Keep masked logits finite through FP16 conversion; exp(-10000) is zero in both precisions.
-    return (1.0 - attention_mask[:, None, None, :].to(dtype=self.dtype)) * -10000.0
+    mask = (1.0 - attention_mask[:, None, None, :].to(dtype=embedding_output.dtype)) * -10000.0
+    return mask, None
 
 
 def main():
@@ -42,7 +46,7 @@ def main():
         parser.error("output_exists")
     model = BertForTokenClassification.from_pretrained(
         args.model, local_files_only=True, attn_implementation="eager").eval()
-    model.bert.get_extended_attention_mask = types.MethodType(finite_attention_mask, model.bert)
+    model.bert._create_attention_masks = types.MethodType(finite_attention_masks, model.bert)
     head = args.model / "head.safetensors"
     if head.exists() != (args.model / "manifest.json").exists():
         parser.error("incomplete_candidate")

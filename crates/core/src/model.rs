@@ -30,7 +30,7 @@ fn verify_artifacts(dir: &Path) -> Result<()> {
             }
             hash.update(&buffer[..count]);
         }
-        if format!("{:x}", hash.finalize()) != *expected {
+        if base16ct::lower::encode_string(&hash.finalize()) != *expected {
             return Err(Error::ModelIncompatible);
         }
     }
@@ -160,7 +160,9 @@ impl ModelDetector {
             .build()
             .map_err(|_| Error::ModelIncompatible)?;
         let mut tokenizer = Tokenizer::new(wordpiece);
-        tokenizer.with_normalizer(Some(BertNormalizer::new(true, true, None, false)));
+        tokenizer
+            .with_normalizer(Some(BertNormalizer::new(true, true, None, false)))
+            .map_err(|_| Error::ModelIncompatible)?;
         tokenizer.with_pre_tokenizer(Some(BertPreTokenizer));
         let cls = tokenizer
             .token_to_id("[CLS]")
@@ -225,7 +227,8 @@ impl ModelDetector {
             .map(|a| (&a.file, &a.sha256))
             .collect();
         let provenance = serde_json::json!({"artifacts":artifacts,"head":manifest,"backend":execution.backend,"fp16":execution.fp16,"window_batch":execution.window_batch});
-        let fingerprint = format!("{:x}", Sha256::digest(provenance.to_string().as_bytes()));
+        let fingerprint =
+            base16ct::lower::encode_string(&Sha256::digest(provenance.to_string().as_bytes()));
         Ok(Self {
             fingerprint,
             device,

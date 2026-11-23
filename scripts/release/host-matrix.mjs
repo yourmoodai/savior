@@ -3,7 +3,7 @@ import {resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {isDeepStrictEqual} from 'node:util';
 import {hostCases, hostStream} from '../bench/host.mjs';
-import {catalog} from '../../hooks/compatibility-catalog.ts';
+import {catalog} from '../../hooks/compatibility-catalog.js';
 import {select_adapter} from '../../hooks/compatibility.ts';
 
 const sha256 = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);

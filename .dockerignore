@@ -4,3 +4,5 @@
 !scripts/release/Dockerfile
 !scripts/release/install-tools.py
 !scripts/release/tools.lock.json
+!scripts/release/install-packages.sh
+!scripts/release/packages-*.lock

@@ -91,7 +91,7 @@ export function register(on: On) {
       const result = await $.process.run([runtime.node, $.plugin.root + '/bridge/cli.mjs', 'rewrite'], {
         env: runtime.env, stdin: JSON.stringify({version:3,text:e.text,assess:review.consent.live}), timeoutMs: 45000,
       });
-      if (result.exitCode !== 0) return drop('local replacement failed; check savior doctor and resubmit');
+      if (result.exitCode !== 0 || result.isStdoutTruncated === true) return drop('local replacement failed; check savior doctor and resubmit');
       const answer = read_result(JSON.parse(result.stdout));
       trace_id = answer.trace_id;
       trace_warning = answer.trace_warning ? 'recording gap: this replacement was not saved' : '';

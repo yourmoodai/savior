@@ -19,5 +19,6 @@
     "open-source-models",
     "span-replacement",
     "claude-code-mod"
-  ]
+  ],
+  "icon": "docs/assets/savior.png"
 }

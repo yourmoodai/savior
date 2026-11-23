@@ -7,6 +7,29 @@ use savior_review::{
 };
 use serde_json::json;
 
+#[test]
+fn persisted_ids_keep_the_legacy_sha256_and_hmac_encoding() {
+    assert_eq!(
+        fingerprint(b"synthetic artifact"),
+        "169e73adeeb9ee2cbf78b5878c95ebef88d580774a6005a367c8e35458658027"
+    );
+    let profile = tempfile::tempdir().unwrap();
+    let directory = profile.path().join("savior");
+    std::fs::create_dir(&directory).unwrap();
+    let connection = rusqlite::Connection::open(directory.join("metrics.sqlite3")).unwrap();
+    connection.execute_batch("CREATE TABLE settings (id INTEGER PRIMARY KEY CHECK(id=1), live INTEGER NOT NULL DEFAULT 0, history INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL DEFAULT 0, secret BLOB NOT NULL);").unwrap();
+    let key: Vec<u8> = (0..32).collect();
+    connection
+        .execute("INSERT INTO settings(id,secret) VALUES(1,?1)", [key])
+        .unwrap();
+    drop(connection);
+    let store = SqliteMetrics::open(profile.path()).unwrap();
+    assert_eq!(
+        store.opaque("id", "synthetic-original"),
+        "ab008de433ce41d7d899b3f2dd1c44553a6981f84f4630bb0d22c22a6ecaf937"
+    );
+}
+
 fn metric(timestamp: i64) -> Metric {
     Metric {
         source: ObservationSource::Live,
