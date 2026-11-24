@@ -1,6 +1,8 @@
 name: pr validation
-run-name: 'pr validation #${{ github.event.pull_request.number || inputs.pr_number }}'
+run-name: 'pr validation #${{ github.event.pull_request.number || inputs.pr_number || github.event.check_run.pull_requests[0].number }}'
 on:
+  check_run:
+    types: [completed]
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, edited]
     branches: [main]
@@ -11,20 +13,29 @@ on:
         type: string
 permissions:
   contents: read
+env:
+  SAVIOR_LOCAL_REVIEW_CANARY: ${{ vars.SAVIOR_LOCAL_REVIEW_CANARY }}
 concurrency:
-  group: pr-validation-${{ github.event.pull_request.number || inputs.pr_number }}
+  group: pr-validation-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}
   cancel-in-progress: true
 jobs:
   start:
-    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main') &&
+      (github.event_name != 'check_run' || (github.event.check_run.app.id == 5910949 &&
+      github.event.check_run.name == 'Savior local review policy' && github.event.check_run.conclusion == 'success' &&
+      vars.SAVIOR_LOCAL_REVIEW_CANARY != '' && github.event.check_run.pull_requests[0].number == vars.SAVIOR_LOCAL_REVIEW_CANARY))
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: read
+      checks: read
       statuses: write
     outputs:
       dependabot: ${{ steps.control.outputs.dependabot }}
+      local_policy: ${{ steps.control.outputs.local_policy }}
+      local_approved: ${{ steps.control.outputs.local_approved }}
       pr: ${{ steps.control.outputs.pr }}
       head: ${{ steps.control.outputs.head }}
       base: ${{ steps.control.outputs.base }}
@@ -47,7 +58,7 @@ jobs:
               binding: 'start' === 'start' ? undefined : {...binding,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT},
               results: JSON.parse(process.env.RESULTS)});
   review:
-    if: needs.start.outputs.dependabot != 'true'
+    if: needs.start.outputs.dependabot != 'true' && needs.start.outputs.local_policy != 'true'
     needs: start
     permissions:
       contents: read
@@ -57,12 +68,16 @@ jobs:
     uses: ./.github/workflows/adversarial-review.yml
   admission:
     needs: [start, review]
-    if: needs.review.outputs.approved == 'true'
+    if: >-
+      always() && needs.start.result == 'success' &&
+      (needs.review.outputs.approved == 'true' ||
+      (needs.review.result == 'skipped' && needs.start.outputs.local_approved == 'true'))
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: read
+      checks: read
       statuses: write
     outputs:
       pr: ${{ steps.control.outputs.pr }}
@@ -133,13 +148,16 @@ jobs:
     with:
       test_sha: ${{ needs.admission.outputs.test_sha }}
   readiness:
-    if: always() && needs.start.result == 'success' && needs.start.outputs.dependabot != 'true'
+    if: >-
+      always() && needs.start.result == 'success' && needs.start.outputs.dependabot != 'true' &&
+      (needs.start.outputs.local_policy != 'true' || needs.start.outputs.local_approved == 'true')
     needs: [start, review, admission, commits, verify, qualification, site]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: read
+      checks: read
       statuses: write
     outputs:
       pr: ${{ steps.control.outputs.pr }}

@@ -12,7 +12,10 @@ permissions:
   actions: write
 jobs:
   invalidate:
-    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main') &&
+      (github.event_name != 'pull_request_review' || github.event.action == 'dismissed' ||
+      github.event.review.state == 'changes_requested')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
