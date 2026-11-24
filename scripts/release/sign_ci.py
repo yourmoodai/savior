@@ -14,7 +14,7 @@ def credential(name, windows):
         raise ValueError('invalid_windows_authentication')
     if name == 'windows_password' and authentication == 'github-oidc':
         return subprocess.check_output(
-            ['az', 'account', 'get-access-token', '--resource', 'https://codesigning.azure.net',
+            [shutil.which('az') or 'az', 'account', 'get-access-token', '--resource', 'https://codesigning.azure.net',
              '--query', 'accessToken', '--output', 'tsv', '--only-show-errors'],
             stderr=subprocess.DEVNULL, timeout=60).strip()
     return base64.b64decode(os.environ.get('SAVIOR_'+name.upper()+'_BASE64', ''), validate=True)
