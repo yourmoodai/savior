@@ -30,9 +30,13 @@ def cached_qualification():
     return identity, None
 
 
-def qualify(output):
+def qualify(output, expected_identity=None):
     from result_cache import put, measure
     identity, cached = cached_qualification()
+    if expected_identity is not None:
+        from quote import digest, qualification_identity
+        if digest(qualification_identity(cached)) != expected_identity:
+            raise ValueError('quoted qualification changed')
     if cached is not None:
         measure('hit')
         cached = {**cached, 'cache_hit': True, 'budget': Ledger(os.environ['REVIEW_BUDGET_LEDGER']).summary()}

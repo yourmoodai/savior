@@ -62,6 +62,9 @@ def remaining(db, repository, pr):
 
 def check(amount, allowance):
     from budget import BudgetError, BudgetExhausted
+    if os.environ.get('SAVIOR_HOST_REVIEW') == 'true':
+        from host_binding import check_revision
+        check_revision()
     if type(amount) is not int or amount < 0:
         raise BudgetError('invalid call reservation')
     if amount > min(allowance['pr_remaining_nanodollars'], allowance['daily_remaining_nanodollars']):

@@ -13,7 +13,8 @@ SOURCES = ('result_cache.py', 'adversarial_review.py', 'adaptive_review.py', 'ch
            'rust_evidence.py', 'rust_macros.py', 'review_plan.py', 'verification.py', 'requirements.txt',
            'bedrock_client.py', 'prompt_profiles.py', 'evidence.py', 'runtime_facts.py',
            'qualify.py', 'evaluate_model.py', 'model_catalog.py', 'models.json', 'routing.json',
-           'egm.py', 'chat_transport.py', 'budget.py', 'cost_policy.py', 'quote.py', 'reporting.py')
+           'egm.py', 'chat_transport.py', 'budget.py', 'shared_ledger.py', 'cost_policy.py', 'quote.py', 'reporting.py',
+           'host_binding.py', 'host_review.py')
 
 
 def fingerprint():

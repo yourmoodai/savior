@@ -1,5 +1,5 @@
 """Durable reservations prevent concurrent or resumed calls from reusing dollars."""
-from contextlib import closing, contextmanager
+from contextlib import closing, contextmanager, nullcontext
 import json
 import os
 import sqlite3
@@ -63,12 +63,13 @@ class Ledger:
 
     @contextmanager
     def connect(self):
-        db = sqlite3.connect(self.path, timeout=30)
-        try:
-            with db:
-                yield db
-        finally:
-            db.close()
+        source = nullcontext(self.path)
+        bucket = os.environ.get('SAVIOR_BEDROCK_LEDGER_BUCKET')
+        if bucket and str(self.path) == os.environ.get('REVIEW_BUDGET_LEDGER'):
+            from shared_ledger import shared_snapshot
+            source = shared_snapshot(bucket)
+        with source as path, closing(sqlite3.connect(path, timeout=30)) as db, db:
+            yield db
 
     def record_recovery(self, identity, amount):
         """Retain conservative recovery charges once, including uncertain usage."""

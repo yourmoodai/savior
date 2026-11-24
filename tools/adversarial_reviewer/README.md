@@ -83,6 +83,44 @@ a ready PR to obtain current cost evidence. In-budget reviews may proceed to
 inference; over-budget reviews stop before AWS credentials are obtained. Offline
 tests do not verify the deployed OIDC, Bedrock, or GitHub approval path.
 
+## Maintainer host reviews
+
+Run from a checkout with the reviewer dependencies installed. Offline replay
+uses local Git objects. It reconstructs the feasible plans and estimates their
+cost without contacting Bedrock.
+
+```sh
+python3 tools/adversarial_reviewer/host_review.py replay BASE HEAD
+```
+
+After cutover, use a clean checkout at the PR's current base, an authenticated
+maintainer `gh` session, and the `savior-bedrock-host` role in `us-east-1`.
+The host can load the SSO-backed profile from
+`~/Library/Application Support/ai.yourmood.savior.bedrock/aws-config`.
+
+```sh
+export AWS_REGION=us-east-1
+python3 tools/adversarial_reviewer/host_review.py quote PR_NUMBER
+python3 tools/adversarial_reviewer/host_review.py request PR_NUMBER QUOTE_ID
+```
+
+The quote lists both revisions, feasible chunk counts, modeled costs, the next
+reservation, and both remaining balances. A request consumes its quote once.
+Successful qualification without a cached result requires a fresh assessment
+quote. The command prints the local report path and coverage. GitHub approval
+and protected validation still require their own evidence.
+
+For migration, drain hosted spending, set the repository variable
+`BEDROCK_REVIEW_ENABLED=false`, and retire inference on the historical
+`savior-bedrock-review` role. Its inline `retire-legacy-review-inference`
+policy must explicitly deny `bedrock:InvokeModel` on `*`. Set
+`SAVIOR_BEDROCK_LEDGER_BUCKET` and dispatch `seed-review-budget.yml` on
+`main`. It validates historical reservations and creates the versioned S3
+object once. Concurrent host requests update the object conditionally.
+An interrupted request retains its outstanding reservation. Schedule this
+switch only after the protected approval path for source changes and the
+prose-only canary have both passed on GitHub.
+
 ## Spending ledger and configuration
 
 GitHub Actions assumes `arn:aws:iam::463509296941:role/savior-bedrock-review`

@@ -27,6 +27,10 @@ def restore():
 def restore_history():
     os.environ['REVIEW_BUDGET_LEDGER'] = str((DIRECTORY/'ledger.db').resolve())
     ledger = Ledger(os.environ['REVIEW_BUDGET_LEDGER'])
+    if os.environ.get('SAVIOR_BEDROCK_LEDGER_BUCKET'):
+        # Cutover seeds the complete, attributed history before granting either writer access.
+        ledger.policy_budget()
+        return ledger
     archives = list((DIRECTORY/'previous-ledgers').glob('*.zip'))
     if (DIRECTORY/'previous-ledger.zip').exists():
         archives.append(DIRECTORY/'previous-ledger.zip')

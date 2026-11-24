@@ -46,7 +46,11 @@ try:
     manifests = {s: json.loads(Path(f'review-result/{s}-manifest.json').read_text())['manifest']
                  for s in ('baseline', 'adaptive')}
     admit(manifests, binding)
-    qualification = qualify('review-result/qualification.json')
+    host_request = os.environ.get('SAVIOR_HOST_REVIEW') == 'true'
+    if host_request:
+        qualification = qualify('review-result/qualification.json', expected_identity=binding['qualification'])
+    else:
+        qualification = qualify('review-result/qualification.json')
     report['qualified'] = qualification['qualified']
     if not qualification['qualified']:
         report['blocked_reason'] = 'qualification_failed'
@@ -65,6 +69,10 @@ try:
     from quote import create, execution_strategy
     execution_quote = preflight['quote']
     if execution_quote['phase'] == 'qualification_required':
+        if host_request:
+            report['blocked_reason'] = 'assessment_quote_required'
+            report['summary'] = 'Qualification passed. Request a new assessment quote for this revision.'
+            raise ValueError('assessment requires its own quote')
         execution_quote = create(manifests, ledger.summary(), qualification)
         Path('review-result/execution-quote.json').write_text(json.dumps(execution_quote, indent=2)+'\n')
     strategy = execution_strategy(execution_quote, manifests, qualification)

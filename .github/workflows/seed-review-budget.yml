@@ -1,0 +1,42 @@
+name: seed shared review budget
+on: workflow_dispatch
+concurrency:
+  group: bedrock-review-spending
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  seed:
+    if: >-
+      github.ref == 'refs/heads/main' && vars.BEDROCK_REVIEW_ENABLED == 'false' &&
+      vars.SAVIOR_BEDROCK_LEDGER_BUCKET != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: bedrock-review
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: us-east-1
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      PR_NUMBER: '1'
+      SAVIOR_BEDROCK_LEDGER_BUCKET: ${{ vars.SAVIOR_BEDROCK_LEDGER_BUCKET }}
+      BEDROCK_EXTERNAL_PROBE_NANODOLLARS: ${{ vars.BEDROCK_EXTERNAL_PROBE_NANODOLLARS }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.16'
+      - run: python3 -m pip install --require-hashes -r tools/adversarial_reviewer/requirements.txt
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: await require('./tools/adversarial_reviewer/pilot.cjs')({github,context});
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+        with:
+          role-to-assume: ${{ vars.BEDROCK_REVIEW_ROLE_ARN }}
+          allowed-account-ids: '463509296941'
+          aws-region: us-east-1
+      - run: python3 tools/adversarial_reviewer/seed_budget.py

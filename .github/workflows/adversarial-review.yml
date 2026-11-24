@@ -59,7 +59,7 @@ jobs:
     timeout-minutes: 120
     name: adversarial verdict
     needs: scope
-    if: needs.scope.outputs.eligible == 'true'
+    if: needs.scope.outputs.eligible == 'true' && vars.SAVIOR_BEDROCK_LEDGER_BUCKET == ''
     runs-on: ubuntu-24.04
     environment:
       name: bedrock-review
