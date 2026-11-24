@@ -6,8 +6,9 @@ import json
 
 from chunk_plan import Unit, anchors, parse, ASSESSMENT_LIMIT
 from source_graph import Graph, analyzer_versions, digest
+from source_context import source_context
 
-SCHEMA = 4
+SCHEMA = 5
 frozen_execution = ContextVar('frozen_review_plan', default=None)
 
 
@@ -33,8 +34,13 @@ def verification_bound(messages):
 def limitation_context(items):
     sources = sorted({(i['side'], i['path']) for i in items})
     locations = {source: index for index, source in enumerate(sources)}
-    calls = sorted({(locations[(i['side'], i['path'])], i['line'], i['expression'],
-                     'callback' if i['reason'].startswith('injected') else 'receiver') for i in items})
+    expressions = {}
+    for item in items:
+        key = ('callback' if item['reason'].startswith('injected') else 'receiver', item['expression'])
+        source = locations[item['side'], item['path']]
+        expressions.setdefault(key, {}).setdefault(source, set()).add(item['line'])
+    calls = [[kind, expr, {i: sorted(lines) for i, lines in sorted(locations.items())}]
+             for (kind, expr), locations in sorted(expressions.items())]
     return json.dumps({'sources': sources, 'calls': calls}, separators=(',', ':'))
 
 
@@ -60,18 +66,14 @@ def pack(diff, count, messages, sources, strategy):
     def request(units, roots=None):
         roots = {n for u in units for n in graph.roots(u)} if roots is None else roots
         required, issues = graph.closure(roots)
-        shared = {}
-        for n in required:
-            node = graph.nodes[n]
-            shared.setdefault(node.text, set()).add(f'{node.side} {node.path}:{node.start}-{node.end}')
-        support = '\n'.join('['+'; '.join(sorted(locations))+']\n'+text for text, locations in shared.items())
+        support = source_context(graph, required)
         limitations = [item for n in required for item in graph.nodes[n].limitations]
         expansions = [item for n in required for item in graph.nodes[n].macro_expansions]
         if expansions:
             support += '\nBounded external macro dependency expansions (locations: source index, line):\n' + macro_context(expansions)
         if limitations:
             support += '\nRuntime analysis limitations (source coverage is not runtime proof):\n'
-            support += 'sources maps indices to [revision side, path]. Each calls row: source index, line, expression, unresolved target kind.\n'
+            support += 'Each calls row gives unresolved target kind, expression, and line numbers by source index.\n'
             support += limitation_context(limitations)
             support += '\nAssess these uncertainties using the supplied source. Abstain if a judgment requires unavailable runtime targets.'
         prompt = messages(units, support)

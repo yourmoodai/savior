@@ -13,6 +13,7 @@ from lockfile_evidence import npm_records
 from rust_evidence import RustImports, use_bindings
 from rust_macros import MacroDependencies
 from javascript_evidence import declaration, deferred_body, import_bindings
+from python_evidence import namespace_accesses, namespace_alias, passive_decorators, passive_definition
 
 snapshots = ContextVar('review_snapshots', default=None)
 EXTENSIONS = {'.py': 'python', '.rs': 'rust', '.js': 'javascript', '.mjs': 'javascript',
@@ -118,12 +119,13 @@ def parameter_names(parameters):
     return names
 
 
-def declarations(root, language, scope=''):
+def declarations(root, language, scope='', wrappers=frozenset()):
     for node in root.named_children:
         yield node, scope
-        if language == 'python' and node.type == 'class_definition':
-            name = node.child_by_field_name('name').text.decode()
-            yield from declarations(node.child_by_field_name('body'), language, scope+name+'.')
+        definition = node.child_by_field_name('definition') or node
+        if language == 'python' and definition.type == 'class_definition' and passive_definition(node, wrappers):
+            name = definition.child_by_field_name('name').text.decode()
+            yield from declarations(definition.child_by_field_name('body'), language, scope+name+'.', wrappers)
         if language == 'rust' and node.type in ('impl_item', 'mod_item'):
             body = node.child_by_field_name('body')
             target = node.child_by_field_name('type') if node.type == 'impl_item' else node.child_by_field_name('name')
@@ -220,6 +222,8 @@ class Graph:
         self.rust_sources = {side: RustImports(source, parser) for side, source in sources.items()}
         self.rust_macros = {side: MacroDependencies(rust) for side, rust in self.rust_sources.items()}
         self.literal_files = {}
+        self.namespace_aliases = {}
+        self.namespace_uses = {}
 
     def module(self, side, path):
         key = (side, path)
@@ -280,20 +284,25 @@ class Graph:
         if len(root.named_children) > 4096 or len(self.nodes)+len(root.named_children) > 16384:
             raise SourceError('source declarations exceed analysis capacity: '+path)
         nodes = []
-        for node, scope in declarations(root, language):
+        aliases = {name for n in root.named_children if (name := namespace_alias(n))} if language == 'python' else set()
+        wrappers = passive_decorators(root, self.sources[side].files, path, walk) if language == 'python' else set()
+        for node, scope in declarations(root, language, wrappers=wrappers):
             if node.type in ('comment', 'line_comment', 'block_comment'):
                 continue
-            body = node.child_by_field_name('body')
+            definition = node
+            if language == 'python' and node.type == 'decorated_definition' and passive_definition(node, wrappers):
+                definition = node.child_by_field_name('definition')
+            body = definition.child_by_field_name('body')
             javascript = language in ('javascript', 'typescript', 'tsx')
             if javascript and declaration(node).type == 'class_declaration':
                 body = declaration(node).child_by_field_name('body')
-            class_header = ((language == 'python' and node.type == 'class_definition')
+            class_header = ((language == 'python' and definition.type == 'class_definition')
                             or (language == 'rust' and node.type in ('impl_item', 'mod_item') and body is not None)
                             or (javascript and declaration(node).type == 'class_declaration'))
             end_byte = body.start_byte if class_header else node.end_byte
             members = [n for n in walk(node) if not class_header or n.end_byte <= end_byte]
             text = data[node.start_byte:end_byte].decode()
-            name_node = node.child_by_field_name('name')
+            name_node = definition.child_by_field_name('name')
             names = {name_node.text.decode()} if name_node else set()
             if scope and name_node is not None:
                 names = {scope+name_node.text.decode()}
@@ -371,9 +380,9 @@ class Graph:
                     except (ValueError, TypeError, KeyError):
                         dynamic = True
                 function = call.child_by_field_name('function') if call.type in ('call', 'call_expression') else None
-                if function is not None and function.text == b'import':
+                if javascript and function is not None and function.text == b'import':
                     dynamic = True
-                if function is not None and function.text == b'require':
+                if javascript and function is not None and function.text == b'require':
                     arguments = call.child_by_field_name('arguments')
                     dynamic |= arguments is None or len(arguments.named_children) != 1 or arguments.named_children[0].type != 'string'
                 if function is not None and function.type in ('attribute', 'member_expression', 'field_expression'):
@@ -398,7 +407,7 @@ class Graph:
                     limitations.append({'path': path, 'side': side,
                         'line': call.start_point.row + 1, 'expression': function.text.decode(),
                         'reason': 'injected callback target is not statically established'})
-            own_parameters = node.child_by_field_name('parameters')
+            own_parameters = definition.child_by_field_name('parameters')
             if own_parameters is not None:
                 refs -= parameter_names(own_parameters)
                 # Defaults and annotations are evaluated outside parameter binding.
@@ -419,9 +428,11 @@ class Graph:
                     target = node.child_by_field_name('type') if node.type == 'impl_item' else name_node
                     self.containers[side, path, scope+target.text.decode()+'.'] = identity
             if language == 'python':
+                alias = namespace_alias(node)
+                if alias and not scope:
+                    self.namespace_aliases[identity] = alias
                 init = replace(evidence, id=digest([identity, 'initialization']), initialization_only=True)
-                if node.type == 'function_definition':
-                    body = node.child_by_field_name('body')
+                if definition.type == 'function_definition':
                     header_nodes = [n for n in walk(node) if n.end_byte <= body.start_byte]
                     init = replace(init, text=data[node.start_byte:body.start_byte].decode(),
                         end=body.start_point.row+1,
@@ -435,18 +446,25 @@ class Graph:
                         init.refs.update(n.text.decode() for child in own_parameters.named_children
                             for field in ('value', 'type') if child.child_by_field_name(field) is not None
                             for n in walk(child.child_by_field_name(field)) if n.type == 'identifier')
+                    init.refs.update(n.text.decode() for wrapper in node.named_children if wrapper.type == 'decorator'
+                                     for n in walk(wrapper) if n.type == 'identifier')
                 if scope:
                     evidence.refs.add(scope.rstrip('.'))
                     init.refs.add(scope.rstrip('.'))
                 condition = node.child_by_field_name('condition')
                 if (not scope and node.type == 'if_statement' and condition is not None
-                    and condition.text.decode() in ("__name__ == '__main__'", '__name__ == "__main__"')
+                    and condition.type == 'comparison_operator' and len(condition.children) == 3
+                    and [n.text for n in condition.children[:2]] == [b'__name__', b'==']
+                    and condition.children[2].text in (b"'__main__'", b'"__main__"')
                     and len(node.named_children) == 2):
                     # This branch is not entered when a module is imported.
                     consequence = node.child_by_field_name('consequence')
                     init = replace(init, text=data[node.start_byte:consequence.start_byte].decode(),
                         end=consequence.start_point.row+1, refs=set(), imports='', dynamic=False, limitations=[])
                 self.nodes[init.id] = init
+                for item in (evidence, init):
+                    relevant = members if item.text == text else [n for n in members if n.end_byte <= node.start_byte + len(item.text.encode())]
+                    self.namespace_uses[item.id] = {name: namespace_accesses(relevant, name) for name in aliases & item.refs}
                 self.enclosing_scope[init.id] = scope
                 self.initializers[identity] = init.id
             elif javascript:
@@ -544,6 +562,9 @@ class Graph:
             return self.edges[identity]
         siblings = self.module(evidence.side, evidence.path)
         required = set(self.enclosing.get(identity, []))
+        selected_imports = []
+        class_members = {}
+        import_issues = []
         for path in self.literal_files.get(identity, []):
             literal = self.module(evidence.side, path)
             if not literal:
@@ -558,13 +579,25 @@ class Graph:
             if sibling in self.initializers:
                 required.add(self.initializers[sibling])
                 if other.names & evidence.refs:
-                    required.add(sibling)
+                    alias = self.namespace_aliases.get(sibling)
+                    selected = self.namespace_uses.get(identity, {}).get(alias)
+                    if alias and selected:
+                        paths, issues = self.imports(other)
+                        import_issues.extend(issues)
+                        selected_imports.extend((path, tuple(sorted(selected))) for path, _ in paths)
+                        for path, _ in paths:
+                            for name, methods in selected.items():
+                                class_members.setdefault((path, name), set()).update(methods)
+                    else:
+                        required.add(sibling)
                 if not evidence.initialization_only and any(name+method in other.names for name in evidence.refs for method in ('.__init__', '.__new__', '.__init_subclass__', '.constructor')):
                     required.add(sibling)
             elif sibling != identity and (other.names & evidence.refs or (not other.names
                   and self.enclosing_scope.get(identity, '').startswith(self.enclosing_scope.get(sibling, '')))):
                 required.add(sibling)
         paths, missing = self.imports(evidence)
+        paths.extend(selected_imports)
+        missing.extend(import_issues)
         for path, symbols in paths:
             imported = self.module(evidence.side, path)
             if symbols == ('@module',):
@@ -572,7 +605,7 @@ class Graph:
             for n in imported:
                 if n in self.initializers:
                     required.add(self.initializers[n])
-                    if evidence.initialization_only and evidence.path.endswith('.py'):
+                    if evidence.initialization_only and evidence.path.endswith('.py') and (path, symbols) not in selected_imports:
                         continue
                 glob = any((s == '*' and any('.' not in name for name in self.nodes[n].names)) or
                            (s.endswith('.*') and any(name.startswith(s[:-1]) and '.' not in name[len(s)-1:]
@@ -581,6 +614,10 @@ class Graph:
                 scope_applies = not imported_scope or any(s.startswith(imported_scope) for s in symbols)
                 if not symbols or glob or (not self.nodes[n].names and n not in self.initializers and scope_applies) or self.nodes[n].names.intersection(symbols):
                     required.add(n)
+                elif imported_scope and (methods := class_members.get((path, imported_scope.rstrip('.')))):
+                    if '*' in methods or any(name.rsplit('.', 1)[-1] in methods or name.rsplit('.', 1)[-1].startswith('__')
+                                             for name in self.nodes[n].names):
+                        required.add(n)
                 elif not evidence.initialization_only and any(name+method in self.nodes[n].names for name in symbols for method in ('.__init__', '.__new__', '.__init_subclass__', '.constructor')):
                     required.add(n)
             possible = set().union(*(self.nodes[n].names or self.nodes[n].refs for n in imported))
