@@ -1,0 +1,15 @@
+{
+  "name": "savior-local-review",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "observe": "node poll.mjs --once",
+    "start": "node poll.mjs",
+    "debug": "node --inspect-brk poll.mjs --once",
+    "profile": "node --heap-prof poll.mjs --once",
+    "test": "node --test *.test.mjs"
+  },
+  "dependencies": {
+    "markdown-it": "15.0.3"
+  }
+}
