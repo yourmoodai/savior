@@ -4,8 +4,8 @@
 
 **Choose the wording you submit to Claude.**
 
-Savior gives you control over the wording you submit to Claude. It runs on your
-computer and replaces detected offensive language in supported Claude Code
+Savior gives you control over the wording you submit to Claude.
+It runs on your computer and replaces detected offensive language in supported Claude Code
 prompts before they continue to Anthropic. You choose the replacement and can
 see exactly what changed.
 
