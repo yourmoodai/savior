@@ -1,0 +1,34 @@
+name: windows signing canary
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  sign:
+    if: github.ref == format('refs/tags/windows-signing-canary-{0}', github.sha)
+    runs-on: windows-2022
+    environment: release
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SAVIOR_RELEASE_CONFIG: ${{ vars.SAVIOR_RELEASE_CONFIG }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: require a reviewed main revision
+        run: git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.16'
+      - run: cargo build --locked --release --package savior-cli --bin savior
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906
+        with:
+          client-id: ${{ vars.SAVIOR_AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.SAVIOR_AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - run: python scripts/release/sign_windows_canary.py
+      - run: ./scripts/release/verify_windows_canary.ps1

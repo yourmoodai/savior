@@ -17,6 +17,7 @@ import package as packaging
 from archive import validate as validate_sealed_archive
 from macos_bundle import BUNDLE, RUNTIME, LAUNCHER, NODE, create as create_bundle
 from windows_identity import profile_eku
+from windows_signing import signing_arguments
 
 ROOT = packaging.ROOT
 STAGES = ('sign', 'notarize', 'package', 'validate')
@@ -309,10 +310,8 @@ class Release:
         windows = self.config['windows']
         store = (self.secret('windows_keystore') if windows['storetype'] != 'TRUSTEDSIGNING'
                  else windows['endpoint'])
-        self.command('jsign', '--storetype', windows['storetype'], '--keystore', store,
-                     '--storepass', 'file:'+str(self.secret('windows_password')), '--alias', windows['alias'],
-                     '--alg', 'SHA-256', '--tsmode', 'RFC3161', '--tsaurl', windows['timestamp_url'],
-                     *self.signed_paths('win32-x64'), timeout=600)
+        self.command('jsign', *signing_arguments(windows, store, self.secret('windows_password'),
+                                                self.signed_paths('win32-x64')), timeout=600)
         signers = self.verify_platforms()
         if profile_eku(self.config):
             self.state['windows_signers'] = signers
