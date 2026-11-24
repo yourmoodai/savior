@@ -121,10 +121,13 @@ jobs:
         with:
           toolchain: 1.100.0
           components: clippy
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           python-version: '3.12.16'
-      - run: python3 -m pip install uv==0.13.9
+          version: '0.13.9'
+          enable-cache: false
+          activate-environment: true
+          venv-path: ${{ runner.temp }}/savior-python
       - name: restore rust dependencies
         id: rust_cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3

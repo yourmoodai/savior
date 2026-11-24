@@ -20,9 +20,13 @@ runs:
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: 26.13.1
-    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+    - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
       with:
         python-version: '3.12.16'
+        version: '0.13.9'
+        enable-cache: false
+        activate-environment: true
+        venv-path: ${{ runner.temp }}/savior-python
     - run: npm ci --prefer-offline --no-audit --no-fund
       shell: bash
     - if: runner.os == 'Windows'
