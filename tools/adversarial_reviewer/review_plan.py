@@ -8,7 +8,7 @@ from chunk_plan import Unit, anchors, parse, ASSESSMENT_LIMIT
 from source_graph import Graph, analyzer_versions, digest
 from source_context import source_context
 
-SCHEMA = 4
+SCHEMA = 5
 frozen_execution = ContextVar('frozen_review_plan', default=None)
 
 
