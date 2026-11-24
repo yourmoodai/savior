@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import ssl
 import subprocess
 import tempfile
 from urllib.parse import urlsplit
@@ -15,6 +16,7 @@ import zipfile
 import package as packaging
 from archive import validate as validate_sealed_archive
 from macos_bundle import BUNDLE, RUNTIME, LAUNCHER, NODE, create as create_bundle
+from windows_identity import profile_eku
 
 ROOT = packaging.ROOT
 STAGES = ('sign', 'notarize', 'package', 'validate')
@@ -166,8 +168,10 @@ class Release:
             require(shutil.which(value), 'missing_release_tool')
         for key in ('apple_p12', 'apple_password', 'apple_api', 'manifest_private', 'manifest_public'):
             self.secret(key)
-        for key in ('apple', 'windows', 'node_apple', 'node_windows'):
+        for key in ('apple', 'node_apple', 'node_windows'):
             self.fingerprint(key)
+        if profile_eku(self.config) is None:
+            self.fingerprint('windows')
         windows = self.config.get('windows', {})
         require(windows.get('storetype') in ('PKCS12', 'PKCS11', 'TRUSTEDSIGNING', 'DIGICERTONE'), 'unsupported_windows_provider')
         require(isinstance(windows.get('alias'), str) and windows['alias'], 'missing_windows_alias')
@@ -249,10 +253,27 @@ class Release:
             der = self.command('openssl', 'x509', '-in', signer, '-outform', 'DER')
             require(hashlib.sha256(der).hexdigest() == fingerprint, 'apple_signer_mismatch')
 
-    def verify_windows(self, path, fingerprint):
+    def profile_leaf(self, path, eku):
+        # The certificate bag is untrusted. verify_windows pins the selected
+        # certificate to the actual Authenticode signer and verifies its chain.
+        with tempfile.TemporaryDirectory() as temporary:
+            signature = Path(temporary)/'signature.der'
+            self.command('osslsigncode', 'extract-signature', '-in', path, '-out', signature)
+            certificates = self.command('openssl', 'pkcs7', '-inform', 'DER', '-in', signature,
+                                        '-print_certs', '-quiet').decode('ascii')
+        matches = []
+        for pem in re.findall(r'-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----', certificates, re.S):
+            extension = self.command('openssl', 'x509', '-noout', '-ext', 'extendedKeyUsage', data=pem.encode())
+            if eku in re.split(r'[,\s]+', extension.decode()):
+                matches.append(hashlib.sha256(ssl.PEM_cert_to_DER_cert(pem)).hexdigest())
+        require(len(matches) == 1, 'windows_profile_signer_mismatch')
+        return matches[0]
+
+    def verify_windows(self, path, fingerprint, *, primary_signature=False):
+        selection = ['-index', '0'] if primary_signature else []
         result = self.command('osslsigncode', 'verify', '-CAfile', self.secret('windows_ca'),
                               '-TSA-CAfile', self.secret('timestamp_ca'),
-                              '-require-leaf-hash', 'sha256:'+fingerprint, '-in', path).decode()
+                              *selection, '-require-leaf-hash', 'sha256:'+fingerprint, '-in', path).decode()
         require(re.search(r'^Timestamp Server Signature verification: ok\s*$', result, re.MULTILINE),
                 'missing_verified_windows_timestamp')
 
@@ -260,9 +281,16 @@ class Release:
         for path in self.signed_paths('darwin-arm64'):
             self.verify_apple(path, self.fingerprint('apple'))
         self.verify_apple(self.work_parts/'darwin-arm64'/NODE, self.fingerprint('node_apple'))
+        eku = profile_eku(self.config)
+        signers = {}
         for path in self.signed_paths('win32-x64'):
-            self.verify_windows(path, self.fingerprint('windows'))
+            fingerprint = self.profile_leaf(path, eku) if eku else self.fingerprint('windows')
+            self.verify_windows(path, fingerprint, primary_signature=bool(eku))
+            if eku:
+                name = 'savior.node' if path.suffix == '.node' else path.name
+                signers[name] = fingerprint
         self.verify_windows(self.work_parts/'win32-x64/runtime/win32-x64/node.exe', self.fingerprint('node_windows'))
+        return signers
 
     def sign(self):
         # Retrying a failed signing stage starts from unsigned inputs, not partial signatures.
@@ -285,7 +313,9 @@ class Release:
                      '--storepass', 'file:'+str(self.secret('windows_password')), '--alias', windows['alias'],
                      '--alg', 'SHA-256', '--tsmode', 'RFC3161', '--tsaurl', windows['timestamp_url'],
                      *self.signed_paths('win32-x64'), timeout=600)
-        self.verify_platforms()
+        signers = self.verify_platforms()
+        if profile_eku(self.config):
+            self.state['windows_signers'] = signers
         self.state['signed_inventory'] = inventory(self.work_parts)
         self.state['checks']['platform_signatures'] = 'cross_platform_tools_only'
 
@@ -347,14 +377,19 @@ class Release:
         # Keep the key out of arguments and preserve the existing immutable package format.
         run([self.tools['node'], ROOT/'scripts/release/check-key.mjs', self.secret('manifest_public')],
             data=env['SAVIOR_RELEASE_SIGNING_KEY'].encode())
+        signer_args = ['--windows-signers', json.dumps(self.state['windows_signers'])] if profile_eku(self.config) else []
         run([os.sys.executable, ROOT/'scripts/release/package.py', 'assemble', self.work_parts,
              self.candidate/'plugin', '--node', self.tools['node'], '--npm', self.tools['npm'],
-             '--require-signed'], env=env, timeout=600)
+             '--require-signed', *signer_args], env=env, timeout=600)
 
     def validate(self):
         safe_path(self.candidate)
         inventory(self.candidate)
-        self.verify_platforms()
+        signers = self.verify_platforms()
+        if profile_eku(self.config):
+            entries = read_json(self.candidate/'runtime-manifest.json')['targets']['win32-x64']
+            require({entry['name']:entry.get('signer_sha256') for entry in entries} == signers,
+                    'signed_windows_identity_mismatch')
         require(inventory(self.work_parts) == self.state['signed_inventory'], 'signed_artifacts_changed')
         self.command('node', ROOT/'scripts/release/validate-candidate.mjs', self.candidate,
                      self.secret('manifest_public'))

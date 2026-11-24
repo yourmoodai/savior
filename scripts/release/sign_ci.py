@@ -8,6 +8,18 @@ import subprocess
 import tempfile
 
 
+def credential(name, windows):
+    authentication = windows.get('authentication')
+    if authentication is not None and (authentication != 'github-oidc' or windows['storetype'] != 'TRUSTEDSIGNING'):
+        raise ValueError('invalid_windows_authentication')
+    if name == 'windows_password' and authentication == 'github-oidc':
+        return subprocess.check_output(
+            ['az', 'account', 'get-access-token', '--resource', 'https://codesigning.azure.net',
+             '--query', 'accessToken', '--output', 'tsv', '--only-show-errors'],
+            stderr=subprocess.DEVNULL, timeout=60).strip()
+    return base64.b64decode(os.environ.get('SAVIOR_'+name.upper()+'_BASE64', ''), validate=True)
+
+
 def main():
     # Environment names are fixed; configuration cannot choose arbitrary secrets.
     names = ('apple_p12', 'apple_password', 'apple_api', 'windows_keystore',
@@ -22,10 +34,9 @@ def main():
         config['credentials'] = {name: 'SAVIOR_'+name.upper()+'_FILE' for name in names}
         environment = []
         for name in names:
-            value = os.environ.get('SAVIOR_'+name.upper()+'_BASE64', '')
-            if not value and name == 'windows_keystore' and config['windows']['storetype'] == 'TRUSTEDSIGNING':
+            if name == 'windows_keystore' and config['windows']['storetype'] == 'TRUSTEDSIGNING':
                 continue
-            data = base64.b64decode(value, validate=True)
+            data = credential(name, config['windows'])
             if not data:
                 raise ValueError('missing_signing_credential')
             path = private/name
