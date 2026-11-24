@@ -12,7 +12,7 @@ from windows_identity import profile_eku
 from windows_signing import signing_arguments
 
 
-def main():
+def sign(paths):
     config = json.loads(os.environ['SAVIOR_RELEASE_CONFIG'])
     windows = config['windows']
     if (not profile_eku(config) or windows['authentication'] != 'github-oidc'
@@ -20,7 +20,6 @@ def main():
             or windows['alias'] != 'yourmood-signing/yourmood-public'
             or windows['timestamp_url'] != 'http://timestamp.acs.microsoft.com'):
         raise ValueError('unexpected_release_signing_profile')
-    artifact = Path('target/release/savior.exe').resolve(strict=True)
     spec = json.loads(Path(__file__).with_name('tools.lock.json').read_text())['tools']['jsign']
     with tempfile.TemporaryDirectory() as directory:
         jar = Path(directory)/'jsign.jar'
@@ -30,8 +29,12 @@ def main():
                 raise ValueError('tool_digest_mismatch')
         token = Path(directory)/'signing-token'
         token.write_bytes(credential('windows_password', windows))
-        args = signing_arguments(windows, windows['endpoint'], token, [artifact])
+        args = signing_arguments(windows, windows['endpoint'], token, paths)
         subprocess.run(['java', '-jar', jar, *args], check=True, capture_output=True, timeout=600)
+
+
+def main():
+    sign([Path('target/release/savior.exe').resolve(strict=True)])
 
 
 if __name__ == '__main__':
