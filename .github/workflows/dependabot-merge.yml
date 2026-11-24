@@ -1,0 +1,28 @@
+name: merge verified dependabot update
+on:
+  workflow_run:
+    workflows: [dependabot build]
+    types: [completed]
+permissions: {}
+jobs:
+  merge:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.display_title, 'dependabot build #')
+    concurrency:
+      group: dependabot-merge-main
+      cancel-in-progress: false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            await require('./tools/ci/dependabot.cjs').merge_run({github, context});

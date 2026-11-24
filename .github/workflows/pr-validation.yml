@@ -24,6 +24,7 @@ jobs:
       pull-requests: read
       statuses: write
     outputs:
+      dependabot: ${{ steps.control.outputs.dependabot }}
       pr: ${{ steps.control.outputs.pr }}
       head: ${{ steps.control.outputs.head }}
       base: ${{ steps.control.outputs.base }}
@@ -46,6 +47,7 @@ jobs:
               binding: 'start' === 'start' ? undefined : {...binding,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT},
               results: JSON.parse(process.env.RESULTS)});
   review:
+    if: needs.start.outputs.dependabot != 'true'
     needs: start
     permissions:
       contents: read
@@ -131,7 +133,7 @@ jobs:
     with:
       test_sha: ${{ needs.admission.outputs.test_sha }}
   readiness:
-    if: always() && needs.start.result == 'success'
+    if: always() && needs.start.result == 'success' && needs.start.outputs.dependabot != 'true'
     needs: [start, review, admission, commits, verify, qualification, site]
     runs-on: ubuntu-24.04
     timeout-minutes: 5

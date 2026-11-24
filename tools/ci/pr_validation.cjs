@@ -36,6 +36,10 @@ async function execute({github,context,core,phase,binding,results}) {
         target_url:run_url});
   }
   if (phase==='start') {
+    if (require('./dependabot.cjs').is_dependabot(pr, context.payload.repository?.full_name)) {
+      core.setOutput('dependabot', 'true');
+      return;
+    }
     for (const [key,value] of Object.entries(target)) core.setOutput(key,value);
     await status('pending','waiting for adversarial approval and validation');
     return;
