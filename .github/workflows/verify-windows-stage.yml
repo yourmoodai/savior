@@ -1,0 +1,68 @@
+name: verify windows stage
+on:
+  workflow_call:
+    inputs:
+      fixture:
+        type: boolean
+        default: false
+    outputs:
+      artifact_id:
+        value: ${{ jobs.verify.outputs.artifact_id }}
+      record_sha256:
+        value: ${{ jobs.verify.outputs.record_sha256 }}
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  verify:
+    if: >-
+      (inputs.fixture && github.event_name == 'workflow_dispatch' &&
+       github.ref == format('refs/tags/windows-handoff-{0}', github.sha) &&
+       github.workflow_ref == format('{0}/.github/workflows/windows-handoff-rehearsal.yml@{1}', github.repository, github.ref)) ||
+      (!inputs.fixture && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') &&
+       github.workflow_ref == format('{0}/.github/workflows/release.yml@{1}', github.repository, github.ref))
+    runs-on: windows-2022
+    environment: release
+    timeout-minutes: 30
+    outputs:
+      record_sha256: ${{ steps.verify.outputs.record_sha256 }}
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - if: inputs.fixture
+        run: git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.14.10'
+      - name: build harmless handoff fixture
+        if: inputs.fixture
+        run: |
+          New-Item -ItemType Directory -Path windows-handoff/stage
+          'fn main() { println!("Windows signing handoff fixture"); }' | Set-Content fixture.rs
+          rustc fixture.rs -o windows-handoff/stage/fixture.exe
+      - if: ${{ !inputs.fixture }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: win32-x64
+          path: windows-handoff/stage
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906
+        with:
+          client-id: ${{ vars.SAVIOR_AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.SAVIOR_AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - id: verify
+        env:
+          SAVIOR_RELEASE_CONFIG: ${{ vars.SAVIOR_RELEASE_CONFIG }}
+          STAGE_KIND: ${{ inputs.fixture && 'fixture' || 'release' }}
+        run: python scripts/release/prepare_windows_handoff.py $env:STAGE_KIND
+      - id: upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: verified-windows-${{ github.run_attempt }}
+          path: windows-handoff/
+          retention-days: ${{ inputs.fixture && 1 || 30 }}
+          if-no-files-found: error

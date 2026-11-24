@@ -1,0 +1,34 @@
+name: windows handoff rehearsal
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  windows:
+    uses: ./.github/workflows/verify-windows-stage.yml
+    with:
+      fixture: true
+    permissions:
+      contents: read
+      id-token: write
+  linux:
+    needs: windows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: require exact producer outputs
+        env:
+          ARTIFACT_ID: ${{ needs.windows.outputs.artifact_id }}
+          RECORD: ${{ needs.windows.outputs.record_sha256 }}
+        run: '[[ $ARTIFACT_ID =~ ^[1-9][0-9]*$ && $RECORD =~ ^[a-f0-9]{64}$ ]]'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          artifact-ids: ${{ needs.windows.outputs.artifact_id }}
+          merge-multiple: true
+          path: windows-handoff
+      - name: exercise acceptance and substitution checks
+        env:
+          WINDOWS_RECORD_SHA256: ${{ needs.windows.outputs.record_sha256 }}
+        run: python3 scripts/release/rehearse_windows_handoff.py
