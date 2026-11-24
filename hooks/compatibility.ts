@@ -1,4 +1,4 @@
-import {catalog} from './compatibility-catalog.ts';
+import {catalog} from './compatibility-catalog.js';
 
 export function select_adapter(version: unknown, adapters = catalog.adapters) {
   if (typeof version !== 'string' || !/^\d+\.\d+\.\d+$/.test(version)) return null;

@@ -1,6 +1,6 @@
 //! Consented local records. Text is never admitted by metrics consent alone.
 use crate::{DAY_MS, ReviewResult, now_ms, store::fingerprint};
-use rand::RngCore;
+use rand::Rng;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};

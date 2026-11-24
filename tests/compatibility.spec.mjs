@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {ClientCompatibility, select_adapter} from '../hooks/compatibility.ts';
-import {catalog} from '../hooks/compatibility-catalog.ts';
+import {catalog} from '../hooks/compatibility-catalog.js';
 
 test('adapter selection is exact and follows the qualified native client pin', () => {
   const version=JSON.parse(readFileSync(new URL('../tools/host/package.json',import.meta.url))).dependencies['@anthropic-ai/claude-code'];

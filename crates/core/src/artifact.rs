@@ -75,7 +75,7 @@ pub fn artifact_digest(path: &Path) -> Result<String> {
         }
         hash.update(&buffer[..count]);
     }
-    Ok(format!("{:x}", hash.finalize()))
+    Ok(base16ct::lower::encode_string(&hash.finalize()))
 }
 
 #[cfg(test)]

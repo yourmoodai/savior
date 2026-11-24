@@ -357,12 +357,9 @@ fn evaluate(
             ]),
             Err(e) => json!(["error", e.to_string()]),
         };
-        let output_sha256 = format!(
-            "{:x}",
-            Sha256::digest(
-                serde_json::to_vec(&fingerprint_value).map_err(|_| "serialization_failed")?
-            )
-        );
+        let output_sha256 = base16ct::lower::encode_string(&Sha256::digest(
+            serde_json::to_vec(&fingerprint_value).map_err(|_| "serialization_failed")?,
+        ));
         let matches = match (&actual, &wanted) {
             (Ok(a), Ok(b)) => a.text == b.text,
             (Err(a), Err(b)) => a == b,

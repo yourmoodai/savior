@@ -14,16 +14,8 @@
       "sha256": "6cf58aa080e7ff82656f320cff8d4a3bff30408df8766806dcba3740dd839fa5"
     },
     "osslsigncode": {
-      "url": "https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.14.tar.gz",
-      "sha256": "0f033fd6069387d2e489fbd2187e62f624764eb8c2758ee94e3e793e5150b5c5"
-    },
-    "node_x86_64": {
-      "url": "https://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-x64.tar.gz",
-      "sha256": "28ea0a438de9a13bd7891fd758eee6c7819ee8af5442dfd8d45bd65e56d4228c"
-    },
-    "node_aarch64": {
-      "url": "https://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-arm64.tar.gz",
-      "sha256": "b7e7991d5407815adfa74a2a9cd4db683552c8ce32ff4a295c22e972849c3f5d"
+      "url": "https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.16.tar.gz",
+      "sha256": "c8fce7cdb0f1643d98a6689cb3106fda8265f17014fd7912856c9473f9b141a7"
     }
   }
 }

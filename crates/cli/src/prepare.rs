@@ -19,7 +19,7 @@ fn digest(path: &Path) -> Result<String, String> {
         }
         hasher.update(&buffer[..n]);
     }
-    Ok(format!("{:x}", hasher.finalize()))
+    Ok(base16ct::lower::encode_string(&hasher.finalize()))
 }
 
 fn regular(path: &Path) -> Result<(), String> {
@@ -201,7 +201,7 @@ mod tests {
             .unwrap();
         let dir = tempfile::tempdir().unwrap();
         let partial = dir.path().join("model.partial");
-        let expected = format!("{:x}", Sha256::digest(b"abcdef"));
+        let expected = base16ct::lower::encode_string(&Sha256::digest(b"abcdef"));
         for response in [
             b"HTTP/1.1 206 Partial Content\r\nContent-Range: bytes 3-5/6\r\nContent-Length: 3\r\n\r\ndef".as_slice(),
             b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nabcdef".as_slice(),
@@ -234,7 +234,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let partial = dir.path().join("model.partial");
         let (url, server) = serve_once(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nabc");
-        let expected = format!("{:x}", Sha256::digest(b"abcdef"));
+        let expected = base16ct::lower::encode_string(&Sha256::digest(b"abcdef"));
         assert!(download(&client, &url, &partial, &expected).is_err());
         server.join().unwrap();
         assert_eq!(fs::read(partial).unwrap(), b"abc");

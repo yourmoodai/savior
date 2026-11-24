@@ -199,7 +199,7 @@ impl Judge {
             client,
             provenance: serde_json::json!({"model":config.model_id,"revision":config.revision,"quantization":config.quantization,
                 "artifact_sha256":config.sha256,"server_sha256":server_hash,"sibling_library_sha256":sibling_libraries,
-                "chat_template":"embedded_in_artifact","reasoning":"disabled","rubric_sha256":format!("{:x}",Sha256::digest(RUBRIC.as_bytes())),"temperature":0,"seed":42,"max_tokens":256,"context":8192}),
+                "chat_template":"embedded_in_artifact","reasoning":"disabled","rubric_sha256":base16ct::lower::encode_string(&Sha256::digest(RUBRIC.as_bytes())),"temperature":0,"seed":42,"max_tokens":256,"context":8192}),
         };
         let started = Instant::now();
         loop {
@@ -259,7 +259,7 @@ impl Judge {
             return fail("judge_unavailable");
         }
         self.provenance["rubric_sha256"] =
-            format!("{:x}", Sha256::digest(rubric.as_bytes())).into();
+            base16ct::lower::encode_string(&Sha256::digest(rubric.as_bytes())).into();
         let response = self.client.post(format!("{}/v1/chat/completions",self.url)).json(&serde_json::json!({
             "model":"savior-judge","messages":[{"role":"system","content":rubric},{"role":"user","content":input.to_string()}],
             "temperature":0,"seed":42,"max_tokens":256,"response_format":{"type":"json_schema","json_schema":{"name":"verdict","schema":verdict_schema}}

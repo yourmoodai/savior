@@ -32,7 +32,7 @@ with tempfile.TemporaryDirectory(prefix='savior installed ') as directory:
     with candidate.open('rb') as archive:
         env['SAVIOR_CANDIDATE_SHA256'] = hashlib.file_digest(archive, 'sha256').hexdigest()
     with zipfile.ZipFile(candidate) as bundle:
-        for name in ('hooks/compatibility-catalog.ts', 'hooks/compatibility.ts'):
+        for name in ('hooks/compatibility-catalog.js', 'hooks/compatibility.ts'):
             if bundle.read(name) != Path(name).read_bytes():
                 raise ValueError('candidate compatibility catalog differs from checkout')
         bundle.extractall(root)

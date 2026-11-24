@@ -374,7 +374,7 @@ fn run(args: Args) -> LabResult<()> {
                 "machine":machine,"machine_declared":std::env::var("SAVIOR_BENCH_MACHINE").is_ok(),"runner_sha256":runner_hash,
                 "optimized":!cfg!(debug_assertions),"labels_reviewed":selected.iter().all(|r|r.reviewed),"cold_load_ms":load_ms,"detector_peak_rss_bytes":peak,
                 "summary":evaluation::summary(&outcomes),"outcomes":outcomes,"judge":judge_provenance,"judge_error":judge_error,
-                "rubric_sha256":format!("{:x}",Sha256::digest(judge::RUBRIC.as_bytes())),"judgments":judgments,"review_queue":review,"judge_cohorts":cohorts.into_iter().map(|(k,v)|(k,serde_json::json!({"pass":v[0],"fail":v[1],"unresolved":v[2]}))).collect::<BTreeMap<_,_>>(),
+                "rubric_sha256":base16ct::lower::encode_string(&Sha256::digest(judge::RUBRIC.as_bytes())),"judgments":judgments,"review_queue":review,"judge_cohorts":cohorts.into_iter().map(|(k,v)|(k,serde_json::json!({"pass":v[0],"fail":v[1],"unresolved":v[2]}))).collect::<BTreeMap<_,_>>(),
                 "judge_calibration":{"reviewed_representative_examples":reviewed_count,"reviewed_failures":reviewed_failures,"agreements":agreements,"agreement_wilson_95":evaluation::wilson(agreements,reviewed_count),"status":if reviewed_count>=30 && reviewed_failures>=5 && reviewed_count-reviewed_failures>=5 && evaluation::wilson(agreements,reviewed_count)[0]>=0.8 {"calibrated_on_this_corpus"}else{"inconclusive"}}});
             if let Some(baseline) = baseline {
                 report["comparison"] = compare(&report, &read_json(&baseline)?);

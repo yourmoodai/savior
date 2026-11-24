@@ -52,7 +52,7 @@ def main():
     if len(sys.argv) == 2:
         needs = json.loads(os.environ['RESULTS'])
         if sys.argv[1] == 'verification':
-            check_gate(needs, 'context', ['tooling'], ['coreml', 'release-tools'])
+            check_gate(needs, 'context', ['tooling', 'security'], ['coreml', 'release-tools'])
         elif sys.argv[1] == 'qualification':
             check_gate(needs, 'gate', [], ['build', 'package', 'installed', 'compatibility'])
         else:

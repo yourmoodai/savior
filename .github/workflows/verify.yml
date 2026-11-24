@@ -65,7 +65,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12.10'
+          python-version: '3.12.16'
       - name: validate pull request context
         id: context
         env:
@@ -77,6 +77,12 @@ jobs:
           BASE_SHA: ${{ steps.context.outputs.base }}
           HEAD_SHA: ${{ steps.context.outputs.head }}
         run: python3 scripts/release/ci_impact.py
+  security:
+    if: inputs.windows_transport_only != true
+    needs: context
+    uses: ./.github/workflows/security.yml
+    with:
+      test_sha: ${{ inputs.test_sha || github.sha }}
   tooling:
     if: inputs.windows_transport_only != true
     timeout-minutes: 15
@@ -89,10 +95,10 @@ jobs:
           ref: ${{ inputs.test_sha || github.sha }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.22.2
+          node-version: 26.13.1
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12.10'
+          python-version: '3.12.16'
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node scripts/verify-branding.mjs
       - run: python3 -m pip install -r tools/adversarial_reviewer/requirements.txt
@@ -113,8 +119,15 @@ jobs:
           ref: ${{ inputs.test_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
-          toolchain: 1.99.1
+          toolchain: 1.100.0
           components: clippy
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          python-version: '3.12.16'
+          version: '0.13.9'
+          enable-cache: false
+          activate-environment: true
+          venv-path: ${{ runner.temp }}/savior-python
       - name: restore rust dependencies
         id: rust_cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
@@ -125,6 +138,17 @@ jobs:
       - name: native build
         run: cargo clippy --locked -p savior --features coreml --all-targets -- -D warnings
       - run: cargo test --locked -p savior --features coreml
+      - run: uv run --python 3.12 --with-requirements scripts/requirements-coreml.txt python -m unittest discover -s scripts -p test_coreml_export.py
+      - uses: ./.github/actions/model-cache
+      - run: |
+          uv run --python 3.12 --with-requirements scripts/requirements-coreml.txt scripts/reference.py
+          uv run --python 3.12 --with-requirements scripts/requirements-coreml.txt scripts/export-coreml.py --fixed-batch 1 --output .cache/security/coreml-export
+          cargo run --locked --release -p savior --example parity
+      - env:
+          SAVIOR_BENCH_BACKEND: core_ml
+          SAVIOR_COREML_DIR: ${{ github.workspace }}/.cache/security/coreml-export
+          SAVIOR_COMPUTE_UNITS: cpu_only
+        run: cargo run --locked --release -p savior --features coreml --example parity
       - name: summarize cache measurements
         if: always()
         continue-on-error: true
@@ -150,7 +174,7 @@ jobs:
       - run: docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/workspace:ro" --entrypoint python3 savior-release-tools -m unittest discover -s scripts/release
   verification:
     if: always() && inputs.windows_transport_only != true
-    needs: [context, tooling, coreml, release-tools]
+    needs: [context, tooling, security, coreml, release-tools]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -175,10 +199,10 @@ jobs:
           ref: ${{ inputs.test_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
         with:
-          toolchain: 1.99.1
+          toolchain: 1.100.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
-          node-version: 24.22.2
+          node-version: 26.13.1
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
         with:
           shared-key: native-windows-2022-${{ runner.arch }}

@@ -3,8 +3,8 @@ use crate::{
     assessment::{ContextualAssessment, LanguageAssessment},
     policy::POLICY_ID,
 };
-use hmac::{Hmac, Mac};
-use rand::RngCore;
+use hmac::{Hmac, KeyInit, Mac};
+use rand::Rng;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -55,7 +55,7 @@ pub struct Metric {
     pub authorship_verified: bool,
 }
 pub fn fingerprint(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    base16ct::lower::encode_string(&Sha256::digest(bytes))
 }
 fn db<T>(result: rusqlite::Result<T>) -> ReviewResult<T> {
     result.map_err(|_| "metrics_unavailable".into())
@@ -166,7 +166,7 @@ impl SqliteMetrics {
         hmac.update(domain.as_bytes());
         hmac.update(&[0]);
         hmac.update(id.as_bytes());
-        format!("{:x}", hmac.finalize().into_bytes())
+        base16ct::lower::encode_string(&hmac.finalize().into_bytes())
     }
     pub fn contains(&self, id: &str) -> ReviewResult<bool> {
         db(self.connection.query_row(

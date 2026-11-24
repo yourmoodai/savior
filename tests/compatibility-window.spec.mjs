@@ -14,6 +14,7 @@ const inventory = () => ({schema:1,source:'https://api.github.com/repos/anthropi
   window_start:start,window_days:90,releases:window_releases([release('2.1.322'),release('2.1.321')],as_of)
     .map(row=>({...row,artifacts:Object.fromEntries(Object.keys(targets).map(target=>[target,artifact(row.version,target)]))}))});
 const digest = 'a'.repeat(64), candidate = 'b'.repeat(64), inputs = {harness:'c'.repeat(64)};
+const fixture_adapters = [{id:'composer_2_1_322',client_versions:['2.1.322']}];
 
 test('90-day window uses inclusive UTC publication bounds and excludes unstable releases', () => {
   const rows = [release('2.1.1',start),release('2.1.2',as_of),release('2.1.3','2026-08-13T11:59:59Z'),
@@ -64,7 +65,7 @@ function assessments(value = inventory()) {
 }
 
 test('complete native evidence qualifies reviewed mappings while exposing unsupported gaps', () => {
-  const report = aggregate(inventory(),digest,assessments(),candidate,inputs);
+  const report = aggregate(inventory(),digest,assessments(),candidate,inputs,fixture_adapters);
   assert.equal(report.status,'passed'); assert.equal(report.coverage,'partial');
   assert.equal(report.supported.length,3); assert.equal(report.assessments.length,6);
   assert.ok(report.supported.every(row=>row.client_version==='2.1.322'));
@@ -98,18 +99,18 @@ test('missing, stale, partial and mixed evidence cannot qualify an advertised cl
     rows=>rows[3].cases.forEach(row=>row.identity.models.model=candidate),
     rows=>rows[3].cases[0].events.reverse(),rows=>rows[3].host_sha256=candidate]) {
     const rows = structuredClone(original); mutate(rows);
-    assert.equal(aggregate(inventory(),digest,rows,candidate,inputs).status,'failed');
+    assert.equal(aggregate(inventory(),digest,rows,candidate,inputs,fixture_adapters).status,'failed');
   }
-  assert.throws(()=>aggregate(inventory(),digest,[...original,original[0]],candidate,inputs),/duplicate/);
+  assert.throws(()=>aggregate(inventory(),digest,[...original,original[0]],candidate,inputs,fixture_adapters),/duplicate/);
   assert.throws(()=>aggregate(inventory(),digest,original,candidate,inputs,[{client_versions:['0.0.0']}]),/outside_window/);
 });
 
 test('unsupported and unavailable are assessed gaps, never inferred from missing rows', () => {
   const rows = assessments();
   rows[0].checks = {};
-  assert.equal(aggregate(inventory(),digest,rows,candidate,inputs).status,'failed');
+  assert.equal(aggregate(inventory(),digest,rows,candidate,inputs,fixture_adapters).status,'failed');
   rows[0].status='unavailable_artifact'; rows[0].reason='native_download_unavailable';
-  assert.equal(aggregate(inventory(),digest,rows,candidate,inputs).status,'passed');
+  assert.equal(aggregate(inventory(),digest,rows,candidate,inputs,fixture_adapters).status,'passed');
 });
 
 test('checked-in initial inventory is frozen and covers all three native platforms', async () => {

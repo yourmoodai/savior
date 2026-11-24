@@ -14,7 +14,8 @@
     ],
     "jsx": "react",
     "jsxFactory": "h",
-    "jsxFragmentFactory": "Fragment"
+    "jsxFragmentFactory": "Fragment",
+    "allowJs": true
   },
   "include": [
     ".cache/host-types/composer_2_1_322/*.d.ts",

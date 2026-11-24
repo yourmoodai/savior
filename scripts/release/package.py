@@ -13,11 +13,11 @@ from macos_bundle import BUNDLE, RUNTIME, create as create_bundle
 from version_gate import development_version
 
 ROOT = Path(__file__).resolve().parents[2]
-NODE = '24.22.2'
+NODE = '26.13.1'
 TARGETS = {
-    'darwin-arm64': ('tar.gz', 'aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a', 'darwin-arm64'),
-    'linux-x64': ('tar.gz', '361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9', 'linux-x64-gnu'),
-    'win32-x64': ('zip', 'ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2', 'win32-x64-msvc'),
+    'darwin-arm64': ('tar.gz', 'aec2514ea1ceb2ba52455e9ec65986f6749a06dd759e5db2a72e6889668c9735', 'darwin-arm64'),
+    'linux-x64': ('tar.gz', '518674de2b621728a5e4486f5fb3b7d2900bb3cc4aa97969edaa463db99f9778', 'linux-x64-gnu'),
+    'win32-x64': ('zip', 'e2edda75bfb089654705cf65a13b58933bfd5f57148e8ebda916f58a2474f1f7', 'win32-x64-msvc'),
 }
 LIMIT = 210_000_000  # 210 MB, stricter than the host's 256 MiB download limit
 

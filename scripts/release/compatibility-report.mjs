@@ -2,7 +2,7 @@ import {readFile, readdir, writeFile, mkdir} from 'node:fs/promises';
 import {resolve, dirname} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {isDeepStrictEqual} from 'node:util';
-import {catalog} from '../../hooks/compatibility-catalog.ts';
+import {catalog} from '../../hooks/compatibility-catalog.js';
 import {select_adapter} from '../../hooks/compatibility.ts';
 import {validateMatrix} from './host-matrix.mjs';
 import {validate_inventory, targets, sha256} from './compatibility-inventory.mjs';

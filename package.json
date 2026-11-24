@@ -117,7 +117,7 @@
     "profile:inference:memory": "node scripts/benchmark-inference.mjs",
     "test:inference": "cargo test --locked -p savior && node --test tests/benchmark.spec.mjs",
     "build:inference:release": "cargo build --locked --release -p savior --examples",
-    "model:export:coreml": "uv run --python 3.12 --with 'coremltools==9.0' --with 'torch==2.7.0' --with 'numpy==1.26.4' --with 'transformers==4.57.6' scripts/export-coreml.py",
+    "model:export:coreml": "uv run --python 3.12 --with-requirements scripts/requirements-coreml.txt scripts/export-coreml.py",
     "build:inference:coreml": "cargo build --locked --profile profiling -p savior --examples --features coreml --target-dir target/coreml",
     "build:inference:coreml:debug": "cargo build --locked -p savior --examples --features coreml --target-dir target/coreml",
     "build:inference:coreml:release": "cargo build --locked --release -p savior --examples --features coreml --target-dir target/coreml",
@@ -151,7 +151,10 @@
     "reviewer:experiment": "python3 tools/review_routing_research/experiment.py",
     "reviewer:experiment:debug": "python3 -m pdb tools/review_routing_research/experiment.py",
     "reviewer:experiment:profile": "python3 -X tracemalloc tools/review_routing_research/experiment.py",
-    "reviewer:experiment:test": "python3 -m unittest discover -s tools/review_routing_research"
+    "reviewer:experiment:test": "python3 -m unittest discover -s tools/review_routing_research",
+    "audit": "python3 scripts/security-audit.py all",
+    "audit:test": "python3 -m unittest discover -s scripts/release -p test_security_audit.py",
+    "model:export:coreml:test": "uv run --python 3.12 --with-requirements scripts/requirements-coreml.txt python -m unittest discover -s scripts -p test_coreml_export.py"
   },
   "files": [
     "native/index.cjs",
@@ -172,9 +175,9 @@
     "models"
   ],
   "devDependencies": {
-    "@napi-rs/cli": "^3.10.8",
-    "@playwright/test": "1.64.1",
-    "@types/node": "^26.6.5",
+    "@napi-rs/cli": "^3.11.0",
+    "@playwright/test": "1.65.1",
+    "@types/node": "^26.6.6",
     "js-yaml": "5.5.0",
     "typescript": "^7.0.2"
   },
@@ -196,6 +199,6 @@
     ]
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "0.3.220"
+    "@anthropic-ai/claude-agent-sdk": "0.3.330"
   }
 }

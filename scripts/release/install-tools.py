@@ -35,11 +35,6 @@ def install():
         launcher = Path('/usr/local/bin/jsign')
         launcher.write_text('#!/bin/sh\nexec java -jar /opt/jsign/jsign.jar "$@"\n')
         launcher.chmod(0o755)
-        node = work/'node'
-        node.mkdir()
-        with tarfile.open(fetch('node_'+architecture)) as archive:
-            archive.extractall(node, filter='data')
-        subprocess.run(['cp', '-a', str(next(node.iterdir()))+'/.', '/usr/local/'], check=True)
         source = work/'osslsigncode-source'
         source.mkdir()
         with tarfile.open(fetch('osslsigncode')) as archive:

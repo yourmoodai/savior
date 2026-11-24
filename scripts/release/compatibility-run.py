@@ -206,7 +206,7 @@ def main():
         if len(releases) != len(selected):
             parser.error('versions must be unique inventory members')
     catalog = json.loads(subprocess.check_output(['node', '--input-type=module', '-e',
-        "import {catalog} from './hooks/compatibility-catalog.ts'; console.log(JSON.stringify(catalog))"], text=True))
+        "import {catalog} from './hooks/compatibility-catalog.js'; console.log(JSON.stringify(catalog))"], text=True))
     candidates = list((ROOT / '.cache/release').glob('savior-*.zip'))
     if len(candidates) > 1:
         parser.error('exactly one candidate archive required')

@@ -22,7 +22,7 @@ const fileDigest = async file => {
 const hashes = async files => Object.fromEntries(await Promise.all(files.map(async file => [file, digest(await readFile(file))])));
 const harness_files = ['scripts/test-installed-mod.py','scripts/release/host_fixture.py','scripts/release/host-cases.json',
   'scripts/release/host-evidence.mjs','scripts/release/host-matrix.mjs','scripts/bench/host.mjs','scripts/bench/common.mjs',
-  'tools/host/package.json','tools/host/package-lock.json','hooks/compatibility-catalog.ts','hooks/compatibility.ts',
+  'tools/host/package.json','tools/host/package-lock.json','hooks/compatibility-catalog.js','hooks/compatibility.ts',
   'hooks/register.tsx','hooks/runtime.ts','hooks/distribution.ts','hooks/review.ts','src/protocol.ts','bridge/cli.mjs'];
 const model = resolve(process.env.SAVIOR_MODEL_DIR);
 const model_files = (await readdir(model)).filter(file => /\.(json|txt|bin|safetensors)$/.test(file)).sort();
