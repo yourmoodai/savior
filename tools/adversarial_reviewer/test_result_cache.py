@@ -12,6 +12,22 @@ DIFF = 'diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-old\n+ne
 
 
 class CacheTests(unittest.TestCase):
+    def test_dependency_analyzer_changes_invalidate_cached_assessments(self):
+        import result_cache
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for name in result_cache.SOURCES:
+                (root/name).write_text((result_cache.ROOT/name).read_text())
+            with patch.object(result_cache, 'ROOT', root):
+                original = key('assessment', ['same diff and evidence'])
+                for name in ['javascript_evidence.py', 'lockfile_evidence.py', 'rust_evidence.py', 'rust_macros.py']:
+                    with self.subTest(module=name):
+                        path = root/name
+                        before = path.read_text()
+                        path.write_text(before+'\nCACHE_CHANGE = True\n')
+                        self.assertNotEqual(key('assessment', ['same diff and evidence']), original)
+                        path.write_text(before)
+
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
