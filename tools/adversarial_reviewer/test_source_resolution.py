@@ -119,6 +119,22 @@ class SourceResolutionTests(unittest.TestCase):
         graph = Graph(sources({}, files))
         self.assertTrue(graph.closure(graph.module('new', 'src/lib.rs'))[1])
 
+    def test_nested_glob_does_not_shadow_macro_in_another_scope(self):
+        files = {'src/lib.rs': 'pub fn check() { debug_assert_eq!(1, 1); }\nmod tests { use arbitrary::prelude::*; fn check() { format!("x"); } }\n'}
+        graph = Graph(sources({}, files))
+        nodes = graph.module('new', 'src/lib.rs')
+        production = next(n for n in nodes if graph.nodes[n].names == {'check'})
+        nested = next(n for n in nodes if graph.nodes[n].names == {'tests.check'})
+        self.assertFalse(graph.closure([production])[1])
+        self.assertTrue(graph.closure([nested])[1])
+
+    def test_qualified_macro_is_not_shadowed_by_an_unrelated_function_import(self):
+        files = {'Cargo.toml': '[package]\nname="fixture"\nversion="1.0.0"\n[dependencies]\nserde_json="1.0"\n',
+                 'Cargo.lock': '[[package]]\nname="serde_json"\nversion="1.0.154"\nsource="registry+https://github.com/rust-lang/crates.io-index"\n',
+                 'src/lib.rs': 'pub fn value() { let _ = serde_json::json!({"value": 1}); }\nfn other() { use serde_json::json; let _ = json!({"other": 2}); }\n'}
+        graph = Graph(sources({}, files))
+        self.assertFalse(graph.closure(graph.module('new', 'src/lib.rs'))[1])
+
     def test_missing_rust_module_stays_blocked(self):
         graph = Graph(sources({}, {'src/lib.rs': 'mod absent;\n'}))
         self.assertTrue(graph.closure(graph.module('new', 'src/lib.rs'))[1])
