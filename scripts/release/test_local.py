@@ -15,9 +15,21 @@ from unittest.mock import patch
 import zipfile
 
 import local
+import sign_ci
 
 
 class LocalReleaseTests(unittest.TestCase):
+    def test_oidc_requests_a_signing_token_only_for_the_azure_provider(self):
+        azure = {'storetype':'TRUSTEDSIGNING','authentication':'github-oidc'}
+        with patch('sign_ci.subprocess.check_output', return_value=b'synthetic-token\n') as token:
+            self.assertEqual(sign_ci.credential('windows_password', azure), b'synthetic-token')
+            self.assertIn('https://codesigning.azure.net', token.call_args.args[0])
+            with self.assertRaisesRegex(ValueError, 'invalid_windows_authentication'):
+                sign_ci.credential('windows_password', {**azure,'storetype':'PKCS12'})
+            with patch.dict(os.environ, {'SAVIOR_WINDOWS_PASSWORD_BASE64':'Zml4dHVyZQ=='}):
+                self.assertEqual(sign_ci.credential('windows_password', {'storetype':'PKCS12'}), b'fixture')
+            token.assert_called_once()
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
@@ -276,6 +288,18 @@ class LocalReleaseTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which('node'), 'node is required for candidate assembly')
     def test_complete_simulated_pipeline_and_archive_tampering(self):
+        self.simulate_signed_release({})
+
+    @unittest.skipUnless(shutil.which('node'), 'node is required for candidate assembly')
+    def test_signed_manifest_preserves_each_verified_azure_leaf(self):
+        del self.release.config['identities']['windows']
+        self.release.config['identities']['windows_profile_eku'] = '1.3.6.1.4.1.311.97.123.456.789.101'
+        self.release.config['windows'].update(storetype='TRUSTEDSIGNING', endpoint='eus.codesigning.azure.net')
+        signers = {name: hashlib.sha256(name.encode()).hexdigest()
+                   for name in ('savior.exe', 'savior-review.exe', 'savior.node')}
+        self.simulate_signed_release(signers)
+
+    def simulate_signed_release(self, signers):
         key_script = r'''
           const {generateKeyPairSync}=require('node:crypto'),fs=require('node:fs');
           const {privateKey,publicKey}=generateKeyPairSync('ed25519');
@@ -299,7 +323,7 @@ class LocalReleaseTests(unittest.TestCase):
                 return json.dumps({'jobId': submission, 'status': 'Accepted', 'statusCode': 0,
                                    'sha256': self.release.state['payload_sha256']}).encode()
             return b''
-        with patch.object(self.release, 'verify_platforms'), \
+        with patch.object(self.release, 'verify_platforms', return_value=signers), \
                 patch.object(self.release, 'submit', return_value=submission), \
                 patch.object(self.release, 'command', side_effect=command):
             for stage in local.STAGES:
@@ -321,6 +345,11 @@ class LocalReleaseTests(unittest.TestCase):
         self.assertNotEqual(subprocess.run([*verifier[:-1],'b'*40],env=verifier_env,capture_output=True).returncode,0)
         # This exercises package assembly and real Ed25519 signatures, not OS signing.
         runtime = local.read_json(self.release.candidate/'runtime-manifest.json')
+        windows = runtime['targets']['win32-x64']
+        if signers:
+            self.assertEqual({entry['name']:entry['signer_sha256'] for entry in windows}, signers)
+        else:
+            self.assertFalse(any('signer_sha256' in entry for entry in windows))
         first = runtime['targets']['linux-x64'][0]['asset']
         (self.release.candidate/first).write_bytes(b'changed signed bytes')
         with self.assertRaisesRegex(local.ReleaseError, 'signed_runtime_mismatch'):
@@ -485,8 +514,9 @@ class WindowsFixtureTests(unittest.TestCase):
             password, key, cert, store = [root/name for name in ('password', 'key.pem', 'cert.pem', 'fixture.p12')]
             password.write_text('synthetic timestamp fixture password')
             password.chmod(0o600)
+            eku = '1.3.6.1.4.1.311.97.123.456.789.101'
             invoke(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
-                    '-subj', '/CN=synthetic signing fixture', '-addext', 'extendedKeyUsage=codeSigning',
+                    '-subj', '/CN=synthetic signing fixture', '-addext', 'extendedKeyUsage=codeSigning,'+eku,
                     '-keyout', key, '-out', cert])
             invoke(['openssl', 'pkcs12', '-export', '-inkey', key, '-in', cert, '-name', 'fixture',
                     '-out', store, '-passout', 'file:'+str(password)])
@@ -545,6 +575,29 @@ ess_cert_id_alg = sha256
                 with patch.dict(os.environ, {'SAVIOR_WINDOWS_CA_FILE': str(cert), 'SAVIOR_TIMESTAMP_CA_FILE': str(tsa_cert)}):
                     for path in paths:
                         release.verify_windows(path, fingerprint)
+                        self.assertEqual(release.profile_leaf(path, eku), fingerprint)
+                        release.verify_windows(path, fingerprint, primary_signature=True)
+                    with self.assertRaisesRegex(local.ReleaseError, 'windows_profile_signer_mismatch'):
+                        release.profile_leaf(paths[0], eku+'0')
+                    # The same profile can issue a different leaf before the next signature.
+                    renewed_cert = root/'renewed.pem'
+                    invoke(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
+                            '-subj', '/CN=synthetic renewed fixture', '-addext', 'extendedKeyUsage=codeSigning,'+eku,
+                            '-keyout', key, '-out', renewed_cert])
+                    renewed_cert.chmod(0o600)
+                    invoke(['openssl', 'pkcs12', '-export', '-inkey', key, '-in', renewed_cert, '-name', 'fixture',
+                            '-out', store, '-passout', 'file:'+str(password)])
+                    renewed = root/'renewed.exe'
+                    renewed.write_bytes(self.pe_image())
+                    invoke(['jsign', '--storetype', 'PKCS12', '--keystore', store,
+                            '--storepass', 'file:'+str(password), '--alias', 'fixture', '--tsmode', 'RFC3161',
+                            '--tsaurl', f'http://127.0.0.1:{server.server_port}', renewed], timeout=30)
+                    renewed_fingerprint = release.profile_leaf(renewed, eku)
+                    self.assertNotEqual(renewed_fingerprint, fingerprint)
+                    with patch.dict(os.environ, {'SAVIOR_WINDOWS_CA_FILE': str(renewed_cert)}):
+                        release.verify_windows(renewed, renewed_fingerprint, primary_signature=True)
+                        with self.assertRaisesRegex(local.ReleaseError, 'tool_failed'):
+                            release.verify_windows(renewed, fingerprint, primary_signature=True)
                     with self.assertRaisesRegex(local.ReleaseError, 'tool_failed'):
                         release.verify_windows(paths[0], 'a'*64)
                     damaged = bytearray(paths[0].read_bytes())

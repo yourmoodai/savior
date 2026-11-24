@@ -10,6 +10,7 @@ import tempfile
 import time
 import uuid
 from macos_bundle import BUNDLE, LAUNCHER, NODE, RUNTIME
+from windows_identity import profile_eku
 
 
 def run(*args, **kwargs):
@@ -55,8 +56,12 @@ def acceptance(root, release, target, enabled):
         return
     config = json.loads(os.environ['SAVIOR_RELEASE_CONFIG'])
     identities = config['identities']
+    eku = profile_eku(config)
+    pinned = ['apple','node_apple','node_windows']
+    if eku is None:
+        pinned.append('windows')
     if any(not re.fullmatch(r'[0-9a-f]{64}',identities.get(key,''))
-           for key in ('apple','windows','node_apple','node_windows')):
+           for key in pinned):
         raise ValueError('native_expected_identities_required')
     if target == 'darwin-arm64':
         bundle = root/BUNDLE
@@ -75,13 +80,20 @@ def acceptance(root, release, target, enabled):
     else:
         if target == 'win32-x64':
             manifest = json.loads((release/'runtime-manifest.json').read_text())
-            paths = [(release/entry['asset'],identities['windows']) for entry in manifest['targets'][target]]
-            paths.append((root/'runtime/win32-x64/node.exe',identities['node_windows']))
-            for path, fingerprint in paths:
-                env = {**os.environ,'SAVIOR_NATIVE_FILE':str(path),'SAVIOR_NATIVE_FINGERPRINT':fingerprint}
+            paths = [(release/entry['asset'],entry['signer_sha256'] if eku else identities['windows'],eku)
+                     for entry in manifest['targets'][target]]
+            paths.append((root/'runtime/win32-x64/node.exe',identities['node_windows'],None))
+            for path, fingerprint, expected_eku in paths:
+                if not re.fullmatch(r'[0-9a-f]{64}', fingerprint):
+                    raise ValueError('native_expected_identities_required')
+                env = {**os.environ,'SAVIOR_NATIVE_FILE':str(path),'SAVIOR_NATIVE_FINGERPRINT':fingerprint,
+                       'SAVIOR_NATIVE_PROFILE_EKU':expected_eku or ''}
                 run('powershell','-NoProfile','-NonInteractive','-Command',
                     "$s=Get-AuthenticodeSignature -LiteralPath $env:SAVIOR_NATIVE_FILE; "
                     "if ($s.Status -ne 'Valid' -or $null -eq $s.TimeStamperCertificate) { exit 1 }; "
+                    "if ($env:SAVIOR_NATIVE_PROFILE_EKU) { "
+                    "$eku=$s.SignerCertificate.Extensions['2.5.29.37']; "
+                    "if ($null -eq $eku -or $eku.EnhancedKeyUsages.Value -notcontains $env:SAVIOR_NATIVE_PROFILE_EKU) { exit 1 } }; "
                     "$h=[System.Security.Cryptography.SHA256]::Create(); "
                     "$f=([BitConverter]::ToString($h.ComputeHash($s.SignerCertificate.RawData))).Replace('-','').ToLowerInvariant(); "
                     "if ($f -ne $env:SAVIOR_NATIVE_FINGERPRINT) { exit 1 }",env=env)

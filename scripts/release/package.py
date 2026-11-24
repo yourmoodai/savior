@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tarfile
@@ -67,9 +68,15 @@ def stage(target, destination):
                   'files': {p.relative_to(destination).as_posix(): digest(p) for p in sorted(destination.rglob('*')) if p.is_file() and p.name != 'stage.json'}}
     (destination/'stage.json').write_text(json.dumps(provenance, indent=2)+'\n')
 
-def assemble(parts, destination, node='node', npm='npm', require_signed=False, development=False):
+def assemble(parts, destination, node='node', npm='npm', require_signed=False, development=False, windows_signers=None):
     version=json.loads((ROOT/'package.json').read_text())['version']
     ref=os.environ.get('GITHUB_REF', '')
+    if windows_signers is not None and (
+            not require_signed or not isinstance(windows_signers, dict)
+            or set(windows_signers) != {'savior.exe', 'savior-review.exe', 'savior.node'}
+            or not all(isinstance(value, str) and re.fullmatch(r'[0-9a-f]{64}', value)
+                       for value in windows_signers.values())):
+        raise ValueError('invalid_windows_signer_inventory')
     if development and (require_signed or not development_version(version)
                         or ref != 'refs/tags/v'+version):
         raise ValueError('development packaging requires matching development tag')
@@ -130,6 +137,8 @@ def assemble(parts, destination, node='node', npm='npm', require_signed=False, d
                              (destination/'native'/f'savior.{addon}.node','savior.node')]:
             asset=f'runtime-{version}-{target}-{name}'
             entries.append({'name':name,'asset':asset,'bytes':source.stat().st_size,'sha256':digest(source)})
+            if target == 'win32-x64' and windows_signers is not None:
+                entries[-1]['signer_sha256'] = windows_signers[name]
             shutil.copy2(source,destination.parent/asset)
             source.unlink()
         runtime['targets'][target]=entries
@@ -176,6 +185,7 @@ if __name__=='__main__':
     p.add_argument('--node',default='node');p.add_argument('--npm',default='npm')
     p.add_argument('--require-signed',action='store_true')
     p.add_argument('--development',action='store_true')
+    p.add_argument('--windows-signers',type=json.loads)
     args=parser.parse_args()
     if args.command=='stage':stage(args.target,args.destination)
-    else:assemble(args.parts,args.destination,args.node,args.npm,args.require_signed,args.development)
+    else:assemble(args.parts,args.destination,args.node,args.npm,args.require_signed,args.development,args.windows_signers)

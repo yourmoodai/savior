@@ -1,15 +1,41 @@
 """The offline gate must refuse developer hosts and restore CI networking on failure."""
 import os
 import subprocess
+import tempfile
 import unittest
 from contextlib import contextmanager
 import json
 from pathlib import Path
 from unittest.mock import patch
 from native_acceptance import acceptance, offline_macos
+from windows_identity import profile_eku
 
 
 class OfflineGateTests(unittest.TestCase):
+    def test_profile_certificate_and_signed_leaf_are_required_for_savior_only(self):
+        eku = '1.3.6.1.4.1.311.97.123.456.789.101'
+        config = {'windows': {'storetype':'TRUSTEDSIGNING'}, 'identities':{
+            'apple':'a'*64, 'node_apple':'b'*64, 'node_windows':'c'*64, 'windows_profile_eku':eku}}
+        self.assertEqual(profile_eku(config), eku)
+        for invalid in ('1.3.6.1.5.5.7.3.3', '1.3.6.1.4.1.311.97.1.0', eku+'junk'):
+            with self.assertRaisesRegex(ValueError, 'invalid_windows_profile_identity'):
+                profile_eku({**config, 'identities':{**config['identities'], 'windows_profile_eku':invalid}})
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root/'runtime-manifest.json'
+            entry = {'asset':'savior.exe','signer_sha256':'d'*64}
+            manifest.write_text(json.dumps({'targets':{'win32-x64':[entry]}}))
+            with patch.dict(os.environ, {'SAVIOR_RELEASE_CONFIG':json.dumps(config)}), patch('native_acceptance.run') as verify:
+                with acceptance(root, root, 'win32-x64', True):
+                    pass
+                savior, node = [c.kwargs['env'] for c in verify.call_args_list]
+                self.assertEqual((savior['SAVIOR_NATIVE_PROFILE_EKU'],savior['SAVIOR_NATIVE_FINGERPRINT']), (eku,'d'*64))
+                self.assertEqual((node['SAVIOR_NATIVE_PROFILE_EKU'],node['SAVIOR_NATIVE_FINGERPRINT']), ('','c'*64))
+                del entry['signer_sha256']
+                manifest.write_text(json.dumps({'targets':{'win32-x64':[entry]}}))
+                with self.assertRaises(KeyError), acceptance(root, root, 'win32-x64', True):
+                    self.fail('missing release-bound leaf accepted')
+
     def test_first_launch_precedes_policy_cache_population(self):
         events=[]
         @contextmanager
