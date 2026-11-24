@@ -97,7 +97,7 @@ class MacroDependencies:
                     return False
         return True
 
-    def origin(self, path, name):
+    def origin(self, path, name, location=None):
         leaf = name.split('::')[-1]
         directory, _ = self.rust.manifest(path)
         if directory not in self.shadow_cache:
@@ -120,19 +120,24 @@ class MacroDependencies:
             return None
         tree = self.rust.tree(path)
         pending = list(tree.named_children) if tree is not None else []
+        scoped_aliases = set()
         while pending:
             node = pending.pop()
             if node.type == 'use_declaration':
+                if location is not None and not (node.parent.start_byte <= location.start_byte < node.parent.end_byte):
+                    continue
                 argument = node.child_by_field_name('argument')
                 text = argument.text.decode()
                 if re.search(r'\bas\s+(std|core|alloc|serde_json|rusqlite|duckdb)\b', text):
                     return None
                 if '*' in text and not text.startswith(('self::', 'super::', 'crate::', 'std::', 'core::', 'alloc::')):
                     return None
-                if node.parent != tree and re.search(r'\b'+re.escape(leaf)+r'\b', text):
-                    return None
+                if '::' not in name and node.parent != tree and re.search(r'\b'+re.escape(leaf)+r'\b', text):
+                    if not re.fullmatch(r'(std|core|alloc|serde_json|rusqlite|duckdb)::'+re.escape(leaf), text):
+                        return None
+                    scoped_aliases.add(tuple(text.split('::')))
             pending.extend(node.named_children)
-        aliases = self.rust.aliases(path).get(leaf, set())
+        aliases = scoped_aliases or self.rust.aliases(path).get(leaf, set())
         if '::' in name:
             candidates = {tuple(name.split('::'))}
         elif aliases:
@@ -209,7 +214,7 @@ class MacroDependencies:
         pending = list(invocations(call))
         while pending:
             name, arguments, location = pending.pop()
-            origin = self.origin(path, name)
+            origin = self.origin(path, name, location)
             if origin is None:
                 return [], set(), set(), False
             macro = origin.split('::')[-1]
