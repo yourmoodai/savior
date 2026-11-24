@@ -1,0 +1,81 @@
+name: dependabot build
+run-name: >-
+  ${{ (github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]') &&
+      format('dependabot build #{0}', github.event.pull_request.number || inputs.pr_number) || 'skip dependency build' }}
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  candidate:
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft) ||
+      (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/dependabot/'))
+    timeout-minutes: 5
+    runs-on: ubuntu-24.04
+    outputs:
+      pr: ${{ steps.select.outputs.pr }}
+      base: ${{ steps.select.outputs.base }}
+      head: ${{ steps.select.outputs.head }}
+      test_sha: ${{ steps.select.outputs.test_sha }}
+      tree: ${{ steps.select.outputs.tree }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        id: select
+        with:
+          script: |
+            const {candidate} = require('./tools/ci/dependabot.cjs');
+            const number = Number(context.payload.pull_request?.number || context.payload.inputs.pr_number);
+            const binding = await candidate({github, context}, number);
+            const head = context.payload.pull_request?.head.sha || context.sha;
+            if (binding.head !== head) throw Error('build revision changed');
+            for (const [key, value] of Object.entries(binding)) core.setOutput(key, value);
+  verify:
+    needs: candidate
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    uses: ./.github/workflows/verify.yml
+    with:
+      test_sha: ${{ needs.candidate.outputs.test_sha }}
+      base_sha: ${{ needs.candidate.outputs.base }}
+      head_sha: ${{ needs.candidate.outputs.head }}
+      pr_number: ${{ needs.candidate.outputs.pr }}
+  build:
+    name: build ${{ needs.candidate.outputs.base }} ${{ needs.candidate.outputs.head }} ${{ needs.candidate.outputs.tree }}
+    needs: candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      VALIDATION_TEST: ${{ needs.candidate.outputs.test_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.candidate.outputs.test_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '26.13.1'
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix tools/host --no-audit --no-fund
+      - run: echo "$GITHUB_WORKSPACE/tools/host/node_modules/.bin" >> "$GITHUB_PATH"
+      - uses: ./.github/actions/model-cache
+      - run: npm run build
+      - run: npm run verify
