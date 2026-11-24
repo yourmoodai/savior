@@ -289,7 +289,9 @@ class Graph:
         for node, scope in declarations(root, language, wrappers=wrappers):
             if node.type in ('comment', 'line_comment', 'block_comment'):
                 continue
-            definition = (node.child_by_field_name('definition') or node) if passive_definition(node, wrappers) else node
+            definition = node
+            if language == 'python' and node.type == 'decorated_definition' and passive_definition(node, wrappers):
+                definition = node.child_by_field_name('definition')
             body = definition.child_by_field_name('body')
             javascript = language in ('javascript', 'typescript', 'tsx')
             if javascript and declaration(node).type == 'class_declaration':
@@ -444,6 +446,8 @@ class Graph:
                         init.refs.update(n.text.decode() for child in own_parameters.named_children
                             for field in ('value', 'type') if child.child_by_field_name(field) is not None
                             for n in walk(child.child_by_field_name(field)) if n.type == 'identifier')
+                    init.refs.update(n.text.decode() for wrapper in node.named_children if wrapper.type == 'decorator'
+                                     for n in walk(wrapper) if n.type == 'identifier')
                 if scope:
                     evidence.refs.add(scope.rstrip('.'))
                     init.refs.add(scope.rstrip('.'))

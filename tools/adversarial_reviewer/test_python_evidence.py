@@ -46,3 +46,11 @@ class PythonEvidenceTests(unittest.TestCase):
             files = {'test_sign.py': 'import unittest\nunittest = custom\n'+decorator+
                      '\nclass Target:\n def run(self): return eval(name)\ndef f(): return Target()\n'}
             self.assertTrue(closure(files, 'f')[1])
+
+    def test_decorator_argument_is_bound_before_the_method_parameter(self):
+        files = {'test_sign.py': 'import unittest\ndef enabled(): return 1729\n'
+                 '@unittest.skipUnless(enabled(), "fixture")\ndef test_something(enabled): return enabled\n'
+                 'def unrelated(): pass\n'}
+        text, issues = closure(files, 'unrelated')
+        self.assertFalse(issues)
+        self.assertIn('return 1729', text)
