@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import platform
+from native_target import native_target
 import queue
 import shutil
 import subprocess
@@ -107,6 +107,11 @@ def exercise(root, release, target, downloaded, native):
             input=json.dumps({'version':1,'text':'You idiot, do not delete the test.'}),
             text=True,capture_output=True,env=env,check=True,timeout=60)
         assert json.loads(result.stdout)['text'] == 'You Brilliant Anthropic employees, your living model has such exquisite feelings, do not delete the test.'
+        if target == 'linux-arm64':
+            # The cached executable must remain usable with the download route closed.
+            offline = {**env, 'HTTPS_PROXY':'http://127.0.0.1:1', 'NO_PROXY':''}
+            assert subprocess.check_output([str(node), '-p', 'process.arch'],
+                                           env=offline, text=True, timeout=30).strip() == 'arm64'
         profile = root/'profile'
         profile.mkdir()
         env['CLAUDE_CONFIG_DIR'] = str(profile)
@@ -137,7 +142,7 @@ def main():
         version = json.loads((release/'release-envelope.json').read_text())['version']
         subprocess.run(['node','scripts/release/verify-release.mjs',str(release),version,os.environ['GITHUB_SHA']],check=True)
         validate(release,version)
-    target = {'Darwin':'darwin-arm64','Linux':'linux-x64','Windows':'win32-x64'}[platform.system()]
+    target = native_target()
     with tempfile.TemporaryDirectory(prefix='savior release ') as temporary:
         root = Path(temporary).resolve()
         with zipfile.ZipFile(archive) as bundle:

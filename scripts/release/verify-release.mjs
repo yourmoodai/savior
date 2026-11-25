@@ -2,7 +2,7 @@ import {createHash, createPublicKey, verify} from 'node:crypto';
 import {readFile, lstat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import {join} from 'node:path';
-import {verify_manifest} from '../../bridge/bootstrap.mjs';
+import {verify_manifest, release_targets} from '../../bridge/bootstrap.mjs';
 
 export async function verify_release(directory, public_key, version, revision, with_models=false) {
   const key=createPublicKey(public_key);
@@ -18,7 +18,7 @@ export async function verify_release(directory, public_key, version, revision, w
     'marketplace.json','SHA256SUMS',`savior-${version}.zip`]);
   let runtime;
   const runtime_files=new Map();
-  for(const target of ['darwin-arm64','linux-x64','win32-x64']) {
+  for(const target of release_targets(runtime_bytes)) {
     runtime=verify_manifest(runtime_bytes,runtime_signature,public_key,version,target);
     for(const file of runtime.targets[target]) if(file.asset) {
       if(expected.has(file.asset)) throw Error('duplicate_release_asset');

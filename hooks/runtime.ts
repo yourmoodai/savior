@@ -12,12 +12,23 @@ export class Runtime {
     if (!this.release) return;
     this.ready = false;
     this.status = 'downloading and verifying local runtime and model; drafts remain local until ready';
-    const targets = [['darwin-arm64','SaviorRuntime.app/Contents/MacOS/savior-bootstrap'], ['darwin-arm64','node'], ['linux-x64','node'], ['win32-x64','node.exe']] as const;
+    const targets = [['darwin-arm64','SaviorRuntime.app/Contents/MacOS/savior-bootstrap'], ['darwin-arm64','node'], ['linux-arm64','node'], ['linux-x64','node'], ['win32-x64','node.exe']] as const;
     try {
       let target: string | undefined;
+      let linuxTarget: string | undefined;
       for (const [name, executable] of targets) {
         const node = host.plugin.root + '/runtime/' + name + '/' + executable;
         try {
+          if (name.startsWith('linux-')) {
+            if (!linuxTarget) {
+              const kernel = await host.process.run(['/usr/bin/uname', '-sm'], {timeoutMs:10000});
+              const arch = kernel.stdout.trim();
+              linuxTarget = kernel.exitCode === 0 && arch === 'Linux aarch64' ? 'linux-arm64'
+                : kernel.exitCode === 0 && arch === 'Linux x86_64' ? 'linux-x64' : 'unsupported';
+            }
+            if (name !== linuxTarget) continue;
+            if (name === 'linux-arm64') { this.node = node; target = name; break; }
+          }
           const result = await host.process.run([node, '-p', 'process.platform+"-"+process.arch'], {timeoutMs:10000});
           if (result.exitCode === 0 && result.stdout.trim() === name) { this.node = node; target = name; break; }
         } catch {}

@@ -117,9 +117,13 @@ class Release:
     def expected_files(self, target):
         suffix = '.exe' if target == 'win32-x64' else ''
         addon = packaging.TARGETS[target][2]
-        return {f'runtime/{target}/{name}{suffix}' for name in ('node', 'savior', 'savior-review')} | ({'runtime/darwin-arm64/savior-bootstrap'} if target == 'darwin-arm64' else set()) | {
-            f'runtime/{target}/NODE-LICENSE', f'native/savior.{addon}.node',
-            'native/index.cjs', 'native/index.d.ts'}
+        files = {f'runtime/{target}/{name}{suffix}' for name in ('node', 'savior', 'savior-review')}
+        if target == 'darwin-arm64':
+            files.add(f'runtime/{target}/savior-bootstrap')
+        if target == 'linux-arm64':
+            files.add(f'runtime/{target}/savior-node-launcher')
+        return files | {f'runtime/{target}/NODE-LICENSE', f'native/savior.{addon}.node',
+                        'native/index.cjs', 'native/index.d.ts'}
 
     def input_manifest(self):
         require(self.parts.is_dir(), 'missing_platform_artifacts')
@@ -481,7 +485,7 @@ def validate_archive(candidate, parts, version):
         for target in packaging.TARGETS:
             executable = 'node.exe' if target == 'win32-x64' else 'node'
             name = NODE if target == 'darwin-arm64' else f'runtime/{target}/{executable}'
-            original = parts/target/'runtime'/target/executable
+            original = parts/target/'runtime'/target/('savior-node-launcher' if target == 'linux-arm64' else executable)
             require(archive.read(name) == original.read_bytes(), 'bundled_node_changed')
         runtime = read_json(candidate/'runtime-manifest.json')
         for target, entries in runtime['targets'].items():

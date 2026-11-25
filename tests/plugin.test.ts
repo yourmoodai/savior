@@ -254,6 +254,19 @@ test('packaged runtime never uses PATH node and stays closed on setup failure', 
   expect(calls.length).toBe(2);
 });
 
+test('Linux ARM64 selects its launcher even when an x64 runtime can execute', async () => {
+  const runtime = new Runtime(true);
+  const calls: string[][] = [];
+  await runtime.start({plugin:{root:'/synthetic/plugin'},process:{run:async args => {
+    calls.push([...args]);
+    if (args[0] === '/usr/bin/uname') return {exitCode:0,stdout:'Linux aarch64',stderr:''};
+    if (args[1] === '-p') return {exitCode:0,stdout:'linux-x64',stderr:''};
+    return {exitCode:1,stdout:'{}',stderr:''};
+  }}});
+  expect(calls.at(-1)?.[0]).toBe('/synthetic/plugin/runtime/linux-arm64/node');
+  expect(runtime.ready).toBe(false);
+});
+
 test('packaged runtime becomes ready only after prepare and doctor', async () => {
   const runtime = new Runtime(true);
   await runtime.start({plugin:{root:'/synthetic/plugin'},process:{run:async (args,options) => {

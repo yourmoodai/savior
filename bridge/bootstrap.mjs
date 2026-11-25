@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { cache_root } from './directories.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const targets = new Set(['darwin-arm64', 'linux-x64', 'win32-x64']);
+const targets = new Set(['darwin-arm64', 'linux-x64', 'linux-arm64', 'win32-x64']);
 const fail = code => { throw Error(code); };
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const bundle = 'runtime/darwin-arm64/SaviorRuntime.app';
@@ -16,6 +16,15 @@ const macos_runtime = bundle+'/Contents/Helpers';
 function valid_digest(entry) {
   return entry && /^[a-f0-9]{64}$/.test(entry.sha256) &&
     Number.isSafeInteger(entry.bytes) && entry.bytes > 0 && entry.bytes <= 536_870_912; // 512 MiB
+}
+
+export function release_targets(bytes) {
+  const recorded = Object.keys(JSON.parse(bytes).targets);
+  if (recorded.some(target => !targets.has(target)) ||
+      ['darwin-arm64','linux-x64','win32-x64'].some(target => !recorded.includes(target))) {
+    fail('invalid_release_targets');
+  }
+  return recorded;
 }
 
 export function verify_manifest(bytes, signature, public_key, version, target) {
@@ -27,6 +36,7 @@ export function verify_manifest(bytes, signature, public_key, version, target) {
   const files = manifest.targets?.[target];
   const suffix = target === 'win32-x64' ? '.exe' : '';
   const expected = [`savior${suffix}`, `savior-review${suffix}`, 'savior.node'];
+  if (target === 'linux-arm64' && manifest.schema === 2) expected.push('node');
   if (!Array.isArray(files) || files.length !== expected.length) fail('invalid_release_manifest');
   for (const name of expected) {
     const entry = files.find(file => file.name === name);

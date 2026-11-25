@@ -20,7 +20,7 @@ subprocess.run(['python3', 'scripts/release/compatibility-ci.py', 'report'], che
 compatibility = Path('.cache/compatibility/compatibility.json')
 if json.loads(compatibility.read_text())['candidate_sha256'] != envelope['assets'][f'savior-{version}.zip']:
     raise SystemExit('compatibility candidate mismatch')
-for target in ('darwin-arm64','linux-x64','win32-x64'):
+for target in ('darwin-arm64','linux-x64','linux-arm64','win32-x64'):
     report=json.loads(Path(f'.cache/release/acceptance-{target}.json').read_text())
     if (report.get('target')!=target or report.get('revision')!=os.environ['GITHUB_SHA']
         or report.get('archive_sha256')!=envelope['assets'][f'savior-{version}.zip']

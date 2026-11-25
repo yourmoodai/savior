@@ -49,7 +49,14 @@ class LocalReleaseTests(unittest.TestCase):
             for name in self.release.expected_files(target):
                 path = directory/name
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(b'synthetic artifact')
+                if target.startswith('linux-') and (name.endswith('.node') or path.name in
+                        ('node', 'savior', 'savior-review', 'savior-node-launcher')):
+                    header = bytearray(64)
+                    header[:7] = b'\x7fELF\x02\x01\x01'
+                    header[18:20] = (62 if target == 'linux-x64' else 183).to_bytes(2, 'little')
+                    path.write_bytes(header)
+                else:
+                    path.write_bytes(b'synthetic artifact')
             self.metadata(target)
         self.environment = {}
         for key, variable in self.config['credentials'].items():
@@ -76,6 +83,19 @@ class LocalReleaseTests(unittest.TestCase):
 
     def initialize(self):
         self.release.initialize()
+
+    def test_reject_swapped_linux_machine(self):
+        target = 'linux-arm64'
+        stage = self.parts/target
+        local.packaging.verify_linux_architecture(stage, target)
+        for binary in ('node', 'savior', 'savior-review', 'savior-node-launcher',
+                       'savior.linux-arm64-gnu.node'):
+            path = stage/('native' if binary.endswith('.node') else f'runtime/{target}')/binary
+            original = path.read_bytes()
+            path.write_bytes(original[:18] + b'\x3e\x00' + original[20:])
+            with self.subTest(binary=binary), self.assertRaisesRegex(ValueError, 'ELF architecture'):
+                local.packaging.verify_linux_architecture(stage, target)
+            path.write_bytes(original)
 
     def test_plan_does_not_create_output_or_call_signers(self):
         with patch('sys.argv', ['local.py', 'plan', '--config', str(self.config_path),

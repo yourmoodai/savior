@@ -21,13 +21,26 @@ def qualified_run(repository, run_id, revision, tag, api=gh_api):
             or run.get('repository',{}).get('full_name') != repository):
         raise ValueError('release_run_not_qualified')
     jobs = api(prefix+f"/actions/runs/{run_id}/attempts/{run['run_attempt']}/jobs?per_page=100")
-    expected = {'gate','package','publish'} | {
+    all_jobs = list(jobs['jobs'])
+    page = 2
+    while len(all_jobs) < jobs['total_count']:
+        more = api(prefix+f"/actions/runs/{run_id}/attempts/{run['run_attempt']}/jobs?per_page=100&page={page}")
+        if not more['jobs'] or more['total_count'] != jobs['total_count']:
+            raise ValueError('release_jobs_not_qualified')
+        all_jobs.extend(more['jobs'])
+        page += 1
+    expected = {'gate','package','windows / verify','compatibility / inventory','compatibility / report','publish'} | {
         f'{job} ({os_name})' for job in ('installed','published-download')
-        for os_name in ('macos-15','ubuntu-24.04','windows-2022')} | {
+        for os_name in ('macos-15','ubuntu-24.04','ubuntu-24.04-arm','windows-2022')} | {
         f'build ({os_name}, {target})' for os_name,target in (
-            ('macos-15','darwin-arm64'),('ubuntu-24.04','linux-x64'),('windows-2022','win32-x64'))}
-    if (jobs['total_count'] != len(jobs['jobs']) or {job['name'] for job in jobs['jobs']} != expected
-            or any(job['conclusion'] != 'success' for job in jobs['jobs'])):
+            ('macos-15','darwin-arm64'),('ubuntu-24.04','linux-x64'),('ubuntu-24.04-arm','linux-arm64'),('windows-2022','win32-x64'))}
+    names = {job['name'] for job in all_jobs}
+    assessments = {name for name in names if name.startswith('compatibility / assess (')}
+    targets = ('darwin-arm64', 'linux-x64', 'linux-arm64', 'win32-x64')
+    if (jobs['total_count'] != len(names) or names - assessments != expected
+            or any(not any(name.startswith(f'compatibility / assess ({target},') for name in assessments)
+                   for target in targets)
+            or any(job['conclusion'] != 'success' for job in all_jobs)):
         raise ValueError('release_jobs_not_qualified')
     return run['run_attempt']
 

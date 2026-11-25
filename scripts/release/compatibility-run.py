@@ -5,7 +5,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import platform
 import shutil
 import subprocess
 import sys
@@ -17,11 +16,10 @@ import uuid
 import zipfile
 from datetime import datetime, timezone
 
+from native_target import native_target
 from archive import validate as validate_archive
 
 ROOT = Path(__file__).resolve().parents[2]
-TARGETS = {('Darwin', 'arm64'): 'darwin-arm64', ('Linux', 'x86_64'): 'linux-x64',
-           ('Windows', 'AMD64'): 'win32-x64'}
 
 
 def digest(path):
@@ -193,9 +191,7 @@ def main():
     parser.add_argument('--previous', type=Path, help='prior immutable assessments; identities must match')
     args = parser.parse_args()
     os.chdir(ROOT)
-    target = TARGETS.get((platform.system(), platform.machine()))
-    if not target:
-        parser.error('unsupported native platform')
+    target = native_target()
     subprocess.run(['node', 'scripts/release/compatibility-inventory.mjs', 'matrix', str(args.inventory)],
                    check=True, stdout=subprocess.DEVNULL)
     inventory = json.loads(args.inventory.read_text())

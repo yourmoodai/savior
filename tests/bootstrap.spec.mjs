@@ -73,7 +73,7 @@ test('only pinned version, supported platform, and signed exact file inventory a
  const bytes=Buffer.from(JSON.stringify(manifest));const signature=sign(null,bytes,privateKey);
  assert.equal(verify_manifest(bytes,signature,key,'0.1.0','darwin-arm64').version,'0.1.0');
  assert.throws(()=>verify_manifest(bytes,signature,key,'0.2.0','darwin-arm64'),/incompatible/);
- assert.throws(()=>verify_manifest(bytes,signature,key,'0.1.0','linux-arm64'),/unsupported/);
+ assert.throws(()=>verify_manifest(bytes,signature,key,'0.1.0','linux-riscv64'),/unsupported/);
  assert.throws(()=>verify_manifest(Buffer.from('{}'),signature,key,'0.1.0','darwin-arm64'),/signature/);
  const wrong=generateKeyPairSync('ed25519').publicKey.export({type:'spki',format:'pem'});assert.throws(()=>verify_manifest(bytes,signature,wrong,'0.1.0','darwin-arm64'),/signature/);
  manifest.targets['darwin-arm64'][0].asset='../escape';const bad=Buffer.from(JSON.stringify(manifest));assert.throws(()=>verify_manifest(bad,sign(null,bad,privateKey),key,'0.1.0','darwin-arm64'),/manifest/);

@@ -5,7 +5,7 @@ import uuid
 from host_fixture import CASES
 from archive import validate as validate_archive
 from pathlib import Path
-import platform
+from native_target import native_target
 import subprocess
 import sys
 
@@ -42,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix='savior installed ') as directory:
     cache=root/'cache';cache.mkdir()
     env['XDG_CACHE_HOME']=str(cache);env['LOCALAPPDATA']=str(cache)
     env['SAVIOR_HOST_CACHE']=str(cache)
-    target={'Darwin':'darwin-arm64','Linux':'linux-x64','Windows':'win32-x64'}[platform.system()]
+    target=native_target()
     seed(root,Path('.cache/release'),cache,target)
     failed = False
     for strategy in ('fixed_phrase', 'omit'):

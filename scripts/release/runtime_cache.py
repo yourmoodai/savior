@@ -15,5 +15,8 @@ def seed(plugin, assets, cache, target):
         source=assets/entry['asset']
         assert source.stat().st_size==entry['bytes']
         assert hashlib.sha256(source.read_bytes()).hexdigest()==entry['sha256']
-        shutil.copy2(source,directory/entry['name'])
+        path = directory/entry['name']
+        shutil.copy2(source,path)
+        if entry['name'] == 'node':
+            path.chmod(0o700)
     return directory

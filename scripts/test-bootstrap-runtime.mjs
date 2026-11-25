@@ -11,7 +11,7 @@ const variable=process.platform==='win32'?'LOCALAPPDATA':'XDG_CACHE_HOME',previo
 process.env[variable]=join(temporary,'cache');
 try {
  const target=process.platform+'-'+process.arch,suffix=process.platform==='win32'?'.exe':'';
- const addon={'darwin-arm64':'darwin-arm64','linux-x64':'linux-x64-gnu','win32-x64':'win32-x64-msvc'}[target];assert.ok(addon,'unsupported_platform');
+ const addon={'darwin-arm64':'darwin-arm64','linux-x64':'linux-x64-gnu','linux-arm64':'linux-arm64-gnu','win32-x64':'win32-x64-msvc'}[target];assert.ok(addon,'unsupported_platform');
  const assets=new Map();for(const [name,path] of [['savior'+suffix,'target/release/savior'+suffix],['savior-review'+suffix,'target/release/savior-review'+suffix],['savior.node',`native/savior.${addon}.node`]])assets.set(name,await readFile(path));
  const plugin=join(temporary,'plugin');await mkdir(plugin);
  const version=JSON.parse(await readFile('package.json')).version;

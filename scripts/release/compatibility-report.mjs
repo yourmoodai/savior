@@ -33,6 +33,7 @@ export async function qualification_inputs() {
 
 export function aggregate(inventory, inventory_sha256, rows, candidate_sha256, inputs, adapters = catalog.adapters) {
   validate_inventory(inventory);
+  if (inventory.schema !== 2) throw Error('four_target_inventory_required');
   if (!hash(inventory_sha256) || !hash(candidate_sha256)) throw Error('qualification_identity_missing');
   const versions = new Set(inventory.releases.map(release=>release.version));
   const advertised = adapters.flatMap(adapter=>adapter.client_versions);

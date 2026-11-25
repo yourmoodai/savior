@@ -36,7 +36,7 @@ failures that require a new candidate or version.
 2. Review and merge the PR. Merging neither tags nor publishes it. In a clean
    checkout, fetch `main`, verify the merged revision and version, then explicitly
    create and push `v<version>`. The first release may tag the current version.
-3. Approve the protected `release` environment. The tag workflow builds three
+3. Approve the protected `release` environment. The tag workflow builds four
    native stages, signs the Windows payloads, signs and notarizes the complete
    macOS application bundle, staples its ticket, and signs the final inventory.
 4. Fresh native jobs check packaged execution and the installed host. macOS also
@@ -63,6 +63,19 @@ Source archives are not installable plugin bundles. Candidate ZIPs must stay
 below 210 MB. Qualification uses ephemeral Ed25519 keys and receives no
 production credentials. Signing and notarization services receive software
 artifacts, never user prompts.
+
+## Linux desktop packaging
+
+Use `linux-x64` for Debian `amd64` or RPM `x86_64`, and `linux-arm64`
+for Debian `arm64` or RPM `aarch64`. Verify the release envelope with the
+trusted release public key before embedding the matching
+`runtime-<version>-<target>-savior` executable. The reviewer and native addon
+use the same asset prefix. Sign the desktop package through its distribution.
+
+The ARM64 plugin ZIP carries a native launcher at `runtime/linux-arm64/node`.
+On first activation it verifies the separate Node executable against its
+compiled-in SHA-256 before executing it. The verified cache supports offline
+startup. A desktop app embedding the standalone Savior CLI does not need Node.
 
 ## Identity provisioning
 
@@ -185,7 +198,7 @@ cmake --workflow --preset release_plan
 cmake --build --preset release_test
 ```
 
-On each matching native host, build and stage `darwin-arm64`, `linux-x64`, or
+On each matching native host, build and stage `darwin-arm64`, `linux-x64`, `linux-arm64`, or
 `win32-x64`:
 
 ```sh
@@ -193,7 +206,7 @@ npm run build
 python3 scripts/release/package.py stage darwin-arm64 .cache/parts/darwin-arm64
 ```
 
-Collect all three directories with `stage.json`. Stages and assembly checkout
+Collect all four directories with `stage.json`. Stages and assembly checkout
 must identify the same revision and version, with identical shared wrappers.
 Signing uses private copies and preserves the original stages.
 
@@ -306,7 +319,7 @@ The report distinguishes these results:
 | `unsupported_api` | No reviewed Savior adapter exists; probe outcomes are retained without asserting an upstream API defect |
 | `unavailable_artifact` | The frozen platform package is absent or its download returned 404/410 |
 
-Every advertised mapping must pass on all three platforms. Unmapped unsupported
+Every advertised mapping must pass on all four targets. Unmapped unsupported
 or unavailable clients remain visible gaps; they never enter `supported` in the
 generated report. Missing rows and infrastructure failures block the gate.
 Client binary hashes differ by platform; candidate, model, and harness identity

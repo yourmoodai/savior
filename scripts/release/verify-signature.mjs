@@ -1,14 +1,14 @@
 import {createPublicKey,createHash} from 'node:crypto';
 import {readFileSync,statSync,createReadStream} from 'node:fs';
 import {join} from 'node:path';
-import {verify_manifest} from '../../bridge/bootstrap.mjs';
+import {verify_manifest, release_targets} from '../../bridge/bootstrap.mjs';
 const directory=process.argv[2];
 if(!directory || !process.env.SAVIOR_RELEASE_PUBLIC_KEY)throw Error('production_signing_identity_required');
 const key=createPublicKey(process.env.SAVIOR_RELEASE_PUBLIC_KEY).export({type:'spki',format:'pem'});
 if(key!==readFileSync(join(directory,'release-public.pem'),'utf8'))throw Error('release_signer_mismatch');
 const bytes=readFileSync(join(directory,'runtime-manifest.json'));const signature=readFileSync(join(directory,'runtime-manifest.sig'));
 const version=JSON.parse(readFileSync('package.json')).version;
-for(const target of ['darwin-arm64','linux-x64','win32-x64']){
+for(const target of release_targets(bytes)){
  const manifest=verify_manifest(bytes,signature,key,version,target);
  for(const file of manifest.targets[target]){
   if(file.path)continue; // Bundled macOS bytes are checked inside the signed ZIP.
