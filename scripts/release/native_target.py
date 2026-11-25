@@ -6,4 +6,8 @@ TARGETS = {('Darwin', 'arm64'): 'darwin-arm64', ('Linux', 'x86_64'): 'linux-x64'
 
 
 def native_target():
-    return TARGETS[(platform.system(), platform.machine())]
+    system, machine = platform.system(), platform.machine()
+    target = TARGETS.get((system, machine))
+    if target is None:
+        raise ValueError(f'unsupported native target: {system} {machine}')
+    return target

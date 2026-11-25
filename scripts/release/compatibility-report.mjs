@@ -33,7 +33,6 @@ export async function qualification_inputs() {
 
 export function aggregate(inventory, inventory_sha256, rows, candidate_sha256, inputs, adapters = catalog.adapters) {
   validate_inventory(inventory);
-  if (inventory.schema !== 2) throw Error('four_target_inventory_required');
   if (!hash(inventory_sha256) || !hash(candidate_sha256)) throw Error('qualification_identity_missing');
   const versions = new Set(inventory.releases.map(release=>release.version));
   const advertised = adapters.flatMap(adapter=>adapter.client_versions);
@@ -51,7 +50,8 @@ export function aggregate(inventory, inventory_sha256, rows, candidate_sha256, i
   for (const release of inventory.releases) for (const target of Object.keys(targets)) {
     const key = `${release.version}/${target}`, row = seen.get(key), adapter = select_adapter(release.version,adapters);
     let reason = null;
-    if (!row) reason = 'missing_assessment';
+    if (!Object.hasOwn(release.artifacts,target)) reason = 'missing_inventory_target';
+    else if (!row) reason = 'missing_assessment';
     else if (row.schema !== 1 || row.inventory_sha256 !== inventory_sha256 || row.candidate_sha256 !== candidate_sha256 ||
              row.adapter_id !== (adapter?.id ?? null) || !isDeepStrictEqual(row.artifact,release.artifacts[target]) ||
              !isDeepStrictEqual(row.qualification_inputs,inputs) || !Number.isFinite(Date.parse(row.recorded_at)) ||

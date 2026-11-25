@@ -73,6 +73,18 @@ test('complete native evidence qualifies reviewed mappings while exposing unsupp
   assert.match(markdown(report),/whole-host/);
 });
 
+test('archived inventories report missing ARM64 coverage for each release', () => {
+  const archived = inventory();
+  archived.schema = 1;
+  for (const release of archived.releases) delete release.artifacts['linux-arm64'];
+  const rows = assessments(archived).filter(row=>row.target !== 'linux-arm64');
+  const report = aggregate(archived,digest,rows,candidate,inputs,fixture_adapters);
+  assert.equal(report.status,'failed');
+  assert.deepEqual(report.errors, archived.releases.map(release=>({
+    version:release.version,target:'linux-arm64',reason:'missing_inventory_target',
+  })));
+});
+
 test('multiple exact clients can qualify the same reviewed adapter without equal platform binaries', () => {
   const rows = assessments();
   for (const row of rows) {

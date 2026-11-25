@@ -27,11 +27,12 @@ export class Runtime {
                 : kernel.exitCode === 0 && arch === 'Linux x86_64' ? 'linux-x64' : 'unsupported';
             }
             if (name !== linuxTarget) continue;
-            if (name === 'linux-arm64') { this.node = node; target = name; break; }
           }
-          const result = await host.process.run([node, '-p', 'process.platform+"-"+process.arch'], {timeoutMs:10000});
+          // First activation of the ARM64 launcher can download the pinned Node executable.
+          const result = await host.process.run([node, '-p', 'process.platform+"-"+process.arch'], {timeoutMs:name === 'linux-arm64' ? 600000 : 10000});
           if (result.exitCode === 0 && result.stdout.trim() === name) { this.node = node; target = name; break; }
         } catch {}
+        if (name === linuxTarget) break;
       }
       if (!target) { this.status = 'unsupported platform or runtime unavailable'; return; }
       const setup = await host.process.run([this.node, host.plugin.root + '/bridge/bootstrap.mjs'], {timeoutMs:600000});
