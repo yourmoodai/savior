@@ -8,12 +8,13 @@ if ($signature.Status -ne 'Valid' -or $null -eq $signature.TimeStamperCertificat
 $certificate = $signature.SignerCertificate
 $fingerprint = $certificate.GetCertHashString('SHA256').ToLowerInvariant()
 $publisher = $certificate.GetNameInfo('SimpleName', $false)
+$expectedProfile = $null
 if ($ExpectedFingerprint) {
     if ($ExpectedFingerprint -cne $fingerprint) { throw 'unexpected_upstream_signer' }
 } else {
-    $profile = ($env:SAVIOR_RELEASE_CONFIG | ConvertFrom-Json).identities.windows_profile_eku
-    if (!$profile -or $publisher -cne 'Your Mood, Inc.' -or
-        $certificate.Extensions['2.5.29.37'].EnhancedKeyUsages.Value -notcontains $profile) {
+    $expectedProfile = ($env:SAVIOR_RELEASE_CONFIG | ConvertFrom-Json).identities.windows_profile_eku
+    if (!$expectedProfile -or $publisher -cne 'Your Mood, Inc.' -or
+        $certificate.Extensions['2.5.29.37'].EnhancedKeyUsages.Value -notcontains $expectedProfile) {
         throw 'unexpected_savior_signer'
     }
 }
@@ -25,6 +26,7 @@ $timestamp = $verification | Select-String '^\s*The signature is timestamped:\s*
 if (@($timestamp).Count -ne 1) { throw 'missing_verified_timestamp' }
 @{
     publisher = $publisher
+    profile_eku = $expectedProfile
     signer_sha256 = $fingerprint
     timestamp = $timestamp.Matches[0].Groups[1].Value
     timestamp_signer_sha256 = $signature.TimeStamperCertificate.GetCertHashString('SHA256').ToLowerInvariant()
