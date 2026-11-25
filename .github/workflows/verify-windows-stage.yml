@@ -43,7 +43,9 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path windows-handoff/stage
           'fn main() { println!("Windows signing handoff fixture"); }' | Set-Content fixture.rs
-          rustc fixture.rs -o windows-handoff/stage/fixture.exe
+          rustc fixture.rs -o fixture.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Move-Item -LiteralPath fixture.exe -Destination windows-handoff/stage/
       - if: ${{ !inputs.fixture }}
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
