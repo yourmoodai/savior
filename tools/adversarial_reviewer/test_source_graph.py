@@ -438,8 +438,11 @@ class SourceGraphTests(unittest.TestCase):
             os.chdir(folder)
             directory = Path('review-result')
             directory.mkdir()
-            binding = {'head': 'head', 'base': 'base', 'repository': 'org/repo', 'pr': 1, 'configuration': 'config'}
-            (directory/'preflight.json').write_text(json.dumps({'blocked_reason': None, 'commit_id': 'head', 'quote': {'binding': binding}}))
+            routing = {'models': {}, 'routing': {'schema': 1, 'roles': {}}}
+            binding = {'head': 'head', 'base': 'base', 'repository': 'org/repo', 'pr': 1,
+                       'configuration': 'config', 'routing': routing}
+            (directory/'preflight.json').write_text(json.dumps({'blocked_reason': None, 'commit_id': 'head',
+                                                               'quote': {'binding': binding, 'review_sizing': {}}}))
             for strategy in ('baseline', 'adaptive'):
                 (directory/(strategy+'-manifest.json')).write_text(json.dumps({
                     'files': 1, 'total_lines': 10, 'total_chunks': 1, 'total_units': 1, 'excluded_assets': [],
@@ -449,6 +452,7 @@ class SourceGraphTests(unittest.TestCase):
             with patch.dict(os.environ, HEAD_SHA='head', BASE_SHA='base', GITHUB_REPOSITORY='org/repo', PR_NUMBER='1',
                             BEDROCK_REVIEW_ENABLED='true', REVIEW_COST_POLICY='true', GITHUB_STEP_SUMMARY=''), \
                     patch('preflight.restore', return_value=ledger), patch('quote.validate'), \
+                    patch('model_catalog.manifest', return_value=routing), \
                     patch('quote.configuration', return_value='config'), patch('qualify.qualify') as qualify:
                 runpy.run_path(str(script), run_name='__main__')
             qualify.assert_not_called()
