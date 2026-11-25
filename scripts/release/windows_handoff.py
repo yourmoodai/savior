@@ -25,6 +25,8 @@ def context():
 
 def inventory(root, kind):
     expected = {'fixture.exe'} if kind == 'fixture' else RELEASE_FILES
+    if not root.is_dir() or root.is_symlink():
+        raise ValueError('invalid_windows_stage_directory')
     files = {}
     for path in root.rglob('*'):
         if path.is_symlink() or (os.name == 'nt' and path.lstat().st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT):

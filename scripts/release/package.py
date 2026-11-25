@@ -68,7 +68,8 @@ def stage(target, destination):
                   'files': {p.relative_to(destination).as_posix(): digest(p) for p in sorted(destination.rglob('*')) if p.is_file() and p.name != 'stage.json'}}
     (destination/'stage.json').write_text(json.dumps(provenance, indent=2)+'\n')
 
-def assemble(parts, destination, node='node', npm='npm', require_signed=False, development=False, windows_signers=None):
+def assemble(parts, destination, node='node', npm='npm', require_signed=False, development=False,
+             windows_signers=None, windows_record=None):
     version=json.loads((ROOT/'package.json').read_text())['version']
     ref=os.environ.get('GITHUB_REF', '')
     if windows_signers is not None and (
@@ -106,6 +107,14 @@ def assemble(parts, destination, node='node', npm='npm', require_signed=False, d
     (destination/'hooks/distribution.ts').write_text('export const packaged: boolean = true;\n')
     files={str(p.relative_to(destination)).replace('\\','/'):digest(p) for p in sorted(destination.rglob('*')) if p.is_file()}
     manifest={'version':version,'node':NODE,'targets':list(TARGETS),'files':files,'model':json.loads((ROOT/'models/catalog.json').read_text())['models'][0]}
+    if windows_record is not None:
+        if not require_signed or windows_signers is None:
+            raise ValueError('verified_windows_stage_requires_signed_assembly')
+        from windows_handoff import verify
+        evidence = verify(parts/'win32-x64', windows_record, os.environ['WINDOWS_RECORD_SHA256'], 'release')
+        manifest['windows_verification'] = {'artifact_id':os.environ['WINDOWS_ARTIFACT_ID'],
+                                           'record_sha256':os.environ['WINDOWS_RECORD_SHA256'],
+                                           'record':evidence}
     if not (destination/BUNDLE).exists():
         if require_signed:
             raise ValueError('signed macos bundle required')
@@ -186,6 +195,8 @@ if __name__=='__main__':
     p.add_argument('--require-signed',action='store_true')
     p.add_argument('--development',action='store_true')
     p.add_argument('--windows-signers',type=json.loads)
+    p.add_argument('--windows-verification-record',type=Path)
     args=parser.parse_args()
     if args.command=='stage':stage(args.target,args.destination)
-    else:assemble(args.parts,args.destination,args.node,args.npm,args.require_signed,args.development,args.windows_signers)
+    else:assemble(args.parts,args.destination,args.node,args.npm,args.require_signed,args.development,
+                  args.windows_signers,args.windows_verification_record)

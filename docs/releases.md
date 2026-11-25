@@ -94,8 +94,8 @@ create a public-trust certificate profile, and grant the signing identity only
 the required profile access. Configure `TRUSTEDSIGNING`, the regional endpoint,
 and the account/profile alias using [Jsign's provider documentation](https://ebourg.github.io/jsign/).
 The adapter also supports `PKCS11` and `DIGICERTONE`. `PKCS12` is useful for
-synthetic tests; it does not itself establish public trust. Supply trusted signer
-and timestamp CA bundles independently of candidate artifacts. The timestamp
+synthetic tests; it does not itself establish public trust. For standalone
+Linux signing, supply trusted signer and timestamp CA bundles independently of candidate artifacts. The timestamp
 service must produce a verifiable RFC 3161 token; its documented transport may
 be HTTP or HTTPS.
 
@@ -111,6 +111,22 @@ and `SAVIOR_RELEASE_PUBLIC_KEY` to the expected public PEM. Native and promotion
 jobs need these public values; keep them available at repository scope.
 Keep tool names as supplied in the example when using CI.
 
+Production tags use a protected Windows job to sign the CLI, reviewer and
+native addon through GitHub OIDC and Azure. Configure the Azure endpoint,
+account/profile alias, RFC 3161 URL, expected profile EKU and the pinned
+upstream Node signer in the public release configuration. The job verifies
+each signature and timestamp with Windows before uploading the stage.
+
+The Linux package job downloads the artifact ID from the Windows job output
+and checks the verification record against a separate SHA-256 job output.
+The record binds the revision, workflow, run, attempt and every staged file.
+A rerun must include the Windows producer and Linux consumer in the same
+attempt. To audit a shipped ZIP, verify the signed release envelope, open
+`release.json` in the ZIP, and inspect `windows_verification`. The recorded
+run ID leads to the protected job and deployment approval. Match each signed
+binary to its recorded file digest and signer fingerprint. The installed
+acceptance job checks the packaged bytes on Windows before publication.
+
 Set the following **release environment secrets**, each containing the base64
 encoding of the corresponding file. Base64 is transport encoding, not encryption.
 The runner decodes files into a private temporary directory, mounts it read-only,
@@ -121,10 +137,6 @@ and deletes it after signing. Credential files never enter the image or artifact
 | `APPLE_P12_BASE64` | Developer ID certificate and private key |
 | `APPLE_PASSWORD_BASE64` | PKCS#12 password |
 | `APPLE_API_BASE64` | Unified App Store Connect API key JSON |
-| `WINDOWS_KEYSTORE_BASE64` | Keystore or provider configuration; omitted for `TRUSTEDSIGNING` |
-| `WINDOWS_PASSWORD_BASE64` | Provider credential in Jsign's documented representation |
-| `WINDOWS_CA_BASE64` | Trusted Authenticode signer CA bundle |
-| `TIMESTAMP_CA_BASE64` | Trusted timestamp CA bundle |
 | `MANIFEST_PRIVATE_BASE64` | Persistent Ed25519 private PEM |
 | `MANIFEST_PUBLIC_BASE64` | Independently trusted matching public PEM |
 

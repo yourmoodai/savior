@@ -61,6 +61,11 @@ jobs:
           SAVIOR_RELEASE_CONFIG: ${{ vars.SAVIOR_RELEASE_CONFIG }}
           STAGE_KIND: ${{ inputs.fixture && 'fixture' || 'release' }}
         run: python scripts/release/prepare_windows_handoff.py $env:STAGE_KIND
+      - name: verify addon file type and pinned Node signer
+        if: inputs.fixture
+        env:
+          SAVIOR_RELEASE_CONFIG: ${{ vars.SAVIOR_RELEASE_CONFIG }}
+        run: python scripts/release/check_windows_handoff_inputs.py
       - id: upload
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
