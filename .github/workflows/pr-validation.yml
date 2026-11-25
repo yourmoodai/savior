@@ -13,7 +13,7 @@ on:
         description: Model to qualify for this run
         type: choice
         default: configured
-        options: [configured, nova_micro, nova_lite, gemma_3_4b]
+        options: [configured, nova_micro, nova_lite, gemma_3_4b, qwen_coder_next]
 permissions:
   contents: read
 concurrency:
