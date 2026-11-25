@@ -32,12 +32,15 @@ try:
         raise ValueError('repository cost policy required')
     ledger = restore()
     from quote import validate, configuration
+    from model_catalog import manifest as routed_models
     validate(preflight['quote'])
     binding = preflight['quote']['binding']
     if (binding['head'] != head or binding['base'] != os.environ['BASE_SHA']
             or binding['repository'] != os.environ['GITHUB_REPOSITORY']
-            or binding['pr'] != int(os.environ['PR_NUMBER']) or binding['configuration'] != configuration()):
+            or binding['pr'] != int(os.environ['PR_NUMBER']) or binding['configuration'] != configuration()
+            or binding['routing'] != routed_models()):
         raise ValueError('review plan changed')
+    report['review_sizing'] = preflight['quote']['review_sizing']
     starting_cost = ledger.summary()['committed_usd']
     baseline = json.loads(Path('review-result/baseline-manifest.json').read_text())
     for field in ('files', 'total_lines', 'total_chunks', 'total_units', 'excluded_assets', 'test_evidence'):

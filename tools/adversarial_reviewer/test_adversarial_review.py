@@ -22,7 +22,7 @@ from adversarial_review import (
     CHUNK_BYTES,
     supporting_diffs,
     SUPPORT_BYTES,
-    CONTEXT_TOKENS,
+    input_capacity,
     batch_chunks,
 )
 from bedrock_client import BedrockError
@@ -117,7 +117,7 @@ class TestAdversarialReviewer(unittest.TestCase):
             self.assertIn(body, support)
 
     def test_support_never_displaces_primary_diff_or_exceeds_prompt_budget(self):
-        for support, included in (("supporting definition", True), ("x" * CONTEXT_TOKENS, False)):
+        for support, included in (("supporting definition", True), ("x" * input_capacity(), False)):
             with patch(
                 "adversarial_review.complete",
                 return_value={
@@ -134,7 +134,7 @@ class TestAdversarialReviewer(unittest.TestCase):
                 continue
             self.assertEqual(result[0], "APPROVE")
             messages = provider.call_args.args[0]
-            self.assertLessEqual(sum(len(m["content"].encode()) for m in messages), CONTEXT_TOKENS)
+            self.assertLessEqual(sum(len(m["content"].encode()) for m in messages), input_capacity())
             self.assertIn("primary diff", messages[1]["content"])
             self.assertEqual(support in messages[1]["content"], included)
 

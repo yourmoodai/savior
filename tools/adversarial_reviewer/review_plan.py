@@ -5,10 +5,13 @@ from dataclasses import asdict
 import json
 
 from chunk_plan import Unit, anchors, parse, ASSESSMENT_LIMIT
-from source_graph import Graph, analyzer_versions, digest
+from source_graph import Graph, SourceError, analyzer_versions, digest
 from source_context import source_context
+from bedrock_client import MAX_REQUEST_BYTES
+from egm import FOCUS
+from model_catalog import input_capacity
 
-SCHEMA = 5
+SCHEMA = 6
 frozen_execution = ContextVar('frozen_review_plan', default=None)
 
 
@@ -16,11 +19,9 @@ class PlanningError(ValueError):
     pass
 
 
-def verification_bound(messages):
+def verification_messages(messages):
     from adversarial_review import VERIFICATION_PROMPT
     from prompt_profiles import prompts
-    from egm import FOCUS
-    from bedrock_client import estimate_input_units
     from verification import SCHEMA as verification_schema
     # UTF-8 JSON needs at most six bytes per character (escaped controls).
     finding = {'finding_id': 'f'*64, 'location': 999999999, **{k: '\x00'*600 for k in ('invariant', 'scenario', 'correction')}}
@@ -28,7 +29,21 @@ def verification_bound(messages):
     expanded[-1]['content'] += '\n'+prompts('', VERIFICATION_PROMPT)[1]+'\nCandidate findings to verify: '+json.dumps([finding], ensure_ascii=False)+'\n'
     expanded[-1]['content'] += '\nReviewer focus: '+max(FOCUS.values(), key=len)
     expanded[-1]['content'] += json.dumps(verification_schema)
-    return estimate_input_units(expanded)
+    return expanded
+
+
+def capacities():
+    return min(input_capacity(role) for role in FOCUS), input_capacity('verification')
+
+
+def verification_bound(messages):
+    from bedrock_client import estimate_input_units
+    return estimate_input_units(verification_messages(messages))
+
+
+def within_capacity(chunk, limits):
+    return (chunk['input_tokens'] <= limits[0] and chunk['verification_input_units'] <= limits[1]
+            and chunk['request_bytes_bound'] <= MAX_REQUEST_BYTES)
 
 
 def limitation_context(items):
@@ -60,6 +75,7 @@ def macro_context(items):
 def pack(diff, count, messages, sources, strategy):
     graph = Graph(sources)
     original = parse(diff)
+    limits = capacities()
     chunks, pending = [], sorted(original, key=lambda u: (u.path, u.start))
     source_fits, subdivisions = {}, 0
 
@@ -77,25 +93,44 @@ def pack(diff, count, messages, sources, strategy):
             support += limitation_context(limitations)
             support += '\nAssess these uncertainties using the supplied source. Abstain if a judgment requires unavailable runtime targets.'
         prompt = messages(units, support)
-        return {'units': units, 'support': support, 'input_tokens': count(prompt),
+        focused = [*prompt[:-1], {**prompt[-1], 'content': prompt[-1]['content']+'\nReviewer focus: '+max(FOCUS.values(), key=len)}]
+        verification = verification_messages(prompt)
+        # The verification envelope also bounds assessment, role focus, retry
+        # instructions and both supported adapters' JSON wrappers.
+        # A supplementary character takes twelve ASCII bytes in the transport
+        # JSON, versus seven for an already escaped control in the inner JSON.
+        wire_bound = len(json.dumps(verification).encode()) + 5 * 3 * 600 + 1024  # 1 KiB of transport metadata
+        return {'units': units, 'support': support, 'input_tokens': count(focused),
                 'support_tokens': count([{'content': support}]) if support else 0,
                 'omitted_support': issues, 'required_evidence': required, 'analysis_limitations': limitations,
                 'macro_expansions': expansions,
                 'dependency_roots': sorted(roots),
                 'prompt_sha256': digest(prompt), 'messages': prompt,
-                'verification_input_units': verification_bound(prompt)}
+                'request_bytes_bound': wire_bound, 'verification_input_units': count(verification)}
 
-    def fits(chunk):
-        return chunk['input_tokens'] <= 48000 and chunk['verification_input_units'] <= 48000
+    def combined(units):
+        try:
+            chunk = request(units)
+        except SourceError as error:
+            if str(error) != 'dependency closure exceeds analysis capacity':
+                raise
+            return None
+        return chunk if within_capacity(chunk, limits) else None
+
+    if strategy == 'adaptive' and len(pending) > 1:
+        whole = combined(pending)
+        if whole is not None:
+            chunks.append(whole)
+            pending = []
 
     while pending:
         group = [pending.pop(0)]
         chunk = request(group)
-        if not fits(chunk):
+        if not within_capacity(chunk, limits):
             # A root's full dependencies must fit even before adding primary diff evidence.
             for root in chunk['dependency_roots']:
                 if root not in source_fits:
-                    source_fits[root] = fits(request([], {root}))
+                    source_fits[root] = within_capacity(request([], {root}), limits)
             if not all(source_fits[root] for root in chunk['dependency_roots']):
                 chunk['omitted_support'] += ['required semantic closure exceeds request capacity']
             elif subdivisions >= ASSESSMENT_LIMIT:
@@ -109,18 +144,21 @@ def pack(diff, count, messages, sources, strategy):
                     subdivisions += 1
                     pending[:0] = children
                     continue
-        if fits(chunk):
-            while pending:
-                other = pending[0]
-                if strategy == 'baseline' and other.path != group[0].path:
-                    break
-                trial = request(group+[other])
-                if not fits(trial) or len(group) >= 16 or len({u.path for u in group+[other]}) > 8:
-                    break
-                group.append(pending.pop(0))
-                chunk = trial
+        if within_capacity(chunk, limits) and pending:
+            high = len(pending)
+            if strategy == 'baseline':
+                high = next((i for i, u in enumerate(pending) if u.path != group[0].path), high)
+            low = 0
+            while low < high:
+                middle = (low + high + 1) // 2
+                trial = combined(group + pending[:middle])
+                if trial is None:
+                    high = middle - 1
+                else:
+                    low, chunk = middle, trial
+            del pending[:low]
         chunks.append(chunk)
-    frozen = {'schema': SCHEMA, 'strategy': strategy, 'diff_digest': digest(diff),
+    frozen = {'schema': SCHEMA, 'strategy': strategy, 'diff_digest': digest(diff), 'capacities': list(limits),
               'snapshots': {s: v.revision for s, v in sources.items()}, 'analyzers': analyzer_versions(),
             'analysis_limits': ['syntax-based conservative dependencies; bounded external macro dependency expansion; no runtime dispatch',
                                   'unsupported formats receive exact textual evidence only'],
@@ -130,13 +168,14 @@ def pack(diff, count, messages, sources, strategy):
               'external_imports': sorted(graph.external_imports),
               'chunks': [{**c, 'units': [asdict(u) for u in c['units']]} for c in chunks]}
     frozen['digest'] = digest(frozen)
-    return {'strategy': strategy, 'original_units': len(original), 'primary_token_ceiling': 48000,
+    return {'strategy': strategy, 'original_units': len(original), 'primary_token_ceiling': limits[0],
             'chunks': chunks, 'review_plan': frozen}
 
 
 def restore(frozen, diff, sources):
+    limits = capacities()
     if (frozen.get('schema') != SCHEMA or frozen.get('digest') != digest({k: v for k, v in frozen.items() if k != 'digest'})
-            or frozen['diff_digest'] != digest(diff) or frozen['analyzers'] != analyzer_versions()
+            or frozen.get('capacities') != list(limits) or frozen['diff_digest'] != digest(diff) or frozen['analyzers'] != analyzer_versions()
             or frozen['snapshots'] != {s: v.revision for s, v in sources.items()}):
         raise PlanningError('frozen evidence plan changed')
     chunks = [{**c, 'units': [Unit(**{**u, 'rows': tuple(u['rows'])}) for u in c['units']]} for c in frozen['chunks']]
@@ -149,7 +188,7 @@ def restore(frozen, diff, sources):
     if expected != actual or any(n != 1 for n in actual.values()) or list(expected.elements()) != frozen['primary_evidence']:
         raise PlanningError('primary evidence ownership changed')
     for c in chunks:
-        if c['omitted_support'] or c['verification_input_units'] > 48000 or c['input_tokens'] > 48000:
+        if c['omitted_support'] or not within_capacity(c, limits):
             raise PlanningError('frozen evidence plan is incomplete')
         required = set(c['required_evidence'])
         if not set(c['dependency_roots']) <= required or not required <= frozen['nodes'].keys():
@@ -170,14 +209,16 @@ def restore(frozen, diff, sources):
             raise PlanningError('macro expansions omitted from context')
         if expected_limitations and limitation_context(expected_limitations) not in c['support']:
             raise PlanningError('analysis limitations omitted from context')
-    return {'strategy': frozen['strategy'], 'original_units': len(parse(diff)), 'primary_token_ceiling': 48000,
+    return {'strategy': frozen['strategy'], 'original_units': len(parse(diff)), 'primary_token_ceiling': limits[0],
             'chunks': chunks, 'review_plan': frozen}
 
 
 def feasible(manifest):
+    assessment, verification = capacities()
     return bool(manifest.get('chunks')) and len(manifest['chunks']) <= ASSESSMENT_LIMIT and not any(
-        c.get('omitted_support') or c.get('input_tokens', 0) > 48000
-        or c.get('verification_input_units', 0) > 48000 for c in manifest['chunks'])
+        c.get('omitted_support') or c['input_tokens'] > assessment
+        or c.get('verification_input_units', 0) > verification
+        or c.get('request_bytes_bound', 0) > MAX_REQUEST_BYTES for c in manifest['chunks'])
 
 
 def admit(manifests, binding):

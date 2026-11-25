@@ -24,6 +24,14 @@ const reasons = {
 const usd = (n, round=Math.floor) => '$'+(round(n/1e7)/100).toFixed(2);
 function render(reason, quote, budget, report) {
   const lines = [reasons[reason] || reasons.infrastructure_failed];
+  const sizing = report?.review_sizing || quote?.review_sizing;
+  if (sizing) {
+    for (const strategy of ['baseline','adaptive']) {
+      const plan = sizing[strategy];
+      if (Number.isSafeInteger(plan?.first_pass_nanodollars) && plan.first_pass_nanodollars >= 0)
+        lines.push(`${strategy} first pass, ${plan.chunks} chunks: ${usd(plan.first_pass_nanodollars,Math.ceil)} (byte-based estimate, excluding qualification, verification and retries; ${plan.complete_evidence ? 'complete' : 'incomplete'} evidence).`);
+    }
+  }
   if (reason === 'cost_limit' && quote?.policy) {
     lines.push(`Next-call reservation: ${usd(quote.next_call_reserved_nanodollars,Math.ceil)}`,
       `Whole-plan worst-case projection (informational): ${usd(quote.projected_nanodollars,Math.ceil)}`,
