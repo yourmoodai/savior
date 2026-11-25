@@ -23,7 +23,8 @@ def cached_qualification():
     from result_cache import key, get
     from model_catalog import manifest
     from prompt_profiles import settings
-    identity = key('qualification', [manifest(), settings.get()[:2], CASES])
+    from runtime_facts import runtime_facts
+    identity = key('qualification', [manifest(), settings.get()[:2], CASES, runtime_facts()])
     cached = get(identity, 86400)
     if isinstance(cached, dict) and cached.get('qualified') is True and cached.get('cases') and all(c.get('passed') is True for c in cached['cases']) and cached.get('comparison', {}).get('baseline', {}).get('passed') is True:
         return identity, cached
@@ -50,7 +51,8 @@ def qualify(output):
             else:
                 os.environ.pop('REVIEW_CACHE_DISABLED', None)
         if result['qualified']:
-            put(identity, result)
+            # A cache hit reads the current ledger. Historical calls belong in the run artifact.
+            put(identity, {k: v for k, v in result.items() if k != 'budget'})
         return result
 
 

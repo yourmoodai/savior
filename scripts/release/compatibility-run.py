@@ -88,7 +88,7 @@ def reuse(previous, release, target, catalog, candidate_sha256, inputs, inventor
             row = json.loads(file.read_text())
         except (OSError, ValueError):
             continue
-        if (row.get('version') != release['version'] or row.get('target') != target
+        if (not isinstance(row, dict) or row.get('version') != release['version'] or row.get('target') != target
                 or row.get('candidate_sha256') != candidate_sha256 or row.get('qualification_inputs') != inputs
                 or row.get('artifact') != release['artifacts'][target]
                 or row.get('adapter_id') != (matches[0]['id'] if matches else None)

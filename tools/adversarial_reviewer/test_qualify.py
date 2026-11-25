@@ -11,6 +11,21 @@ from qualify import qualify
 
 
 class QualificationTests(unittest.TestCase):
+    def test_cached_evidence_does_not_carry_the_previous_spending_ledger(self):
+        historical_call = 'x' * 1_000_000  # 1 MB, the cache limit for a single assessment
+        result = {'qualified': True, 'cases': [{'passed': True}],
+                  'comparison': {'baseline': {'passed': True}}, 'budget': {'calls': [historical_call]}}
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {
+                'REVIEW_RESULT_CACHE': directory+'/cache', 'REVIEW_BUDGET_LEDGER': directory+'/ledger.db',
+                'REVIEW_CACHE_DISABLED': 'false'}), patch('qualify._qualify', return_value=result) as assess:
+            report = directory+'/qualification.json'
+            self.assertEqual(qualify(report), result)
+            cached = qualify(report)
+            assess.assert_called_once()
+            self.assertTrue(cached['cache_hit'])
+            self.assertEqual(cached['comparison'], result['comparison'])
+            self.assertEqual(cached['budget'], Ledger(directory+'/ledger.db').summary())
+
     def test_promotion_requires_labels_coverage_and_lower_cost(self):
         for cheaper, accurate, expected in ((True,True,'adaptive'), (False,True,'baseline'), (True,False,'baseline')):
             with self.subTest(cheaper=cheaper,accurate=accurate), tempfile.TemporaryDirectory() as directory:

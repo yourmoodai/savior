@@ -116,6 +116,14 @@ test('unsupported and unavailable are assessed gaps, never inferred from missing
 test('checked-in initial inventory is frozen and covers all three native platforms', async () => {
   const value = validate_inventory(JSON.parse(await readFile(new URL('../tools/host/releases-2026-11-11.json',import.meta.url))));
   assert.equal(value.releases.length,75);
-  assert.equal(job_matrix(value).include.length,57);
-  assert.ok(job_matrix(value).include.every(job=>job.versions.split(',').length<=4));
+  const versions = value.releases.map(release=>release.version);
+  for (const [adapters, limit] of [[[], 12], [[{client_versions: versions}], 2]]) {
+    const matrix = job_matrix(value, adapters).include;
+    for (const target of Object.keys(value.releases[0].artifacts)) {
+      const batches = matrix.filter(job=>job.target===target).map(job=>job.versions.split(','));
+      assert.equal(batches.length, Math.ceil(versions.length/limit));
+      assert.deepEqual(batches.flat(), versions);
+      assert.ok(batches.every(batch=>batch.length<=limit));
+    }
+  }
 });
