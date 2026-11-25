@@ -164,6 +164,14 @@ class OnboardingTests(unittest.TestCase):
                 models.qualify(quote, quote['id'], '/unused')
         self.assertEqual(manifest(), original)
 
+    def test_dispatched_candidate_binds_every_role_and_rejects_unknown_names(self):
+        from model_catalog import manifest
+        with patch.dict(os.environ, BEDROCK_REVIEW_CANDIDATE='nova_micro'):
+            self.assertEqual(set(manifest()['routing']['roles'].values()), {'nova_micro'})
+        with patch.dict(os.environ, BEDROCK_REVIEW_CANDIDATE='unlisted'):
+            with self.assertRaisesRegex(ValueError, 'unknown routed model'):
+                manifest()
+
     def inventory(self):
         return {'account': models.account(), 'region': 'us-east-1', 'discovered_at': int(time.time()),
                 'profiles': [], 'models': [{'modelId': 'deepseek.v3.2', 'availability': {

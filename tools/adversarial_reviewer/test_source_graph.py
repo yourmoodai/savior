@@ -33,6 +33,17 @@ def messages(units, support):
 
 
 class SourceGraphTests(unittest.TestCase):
+    def test_whole_change_fits_larger_route_and_cannot_restore_on_smaller_route(self):
+        files = {f'p{i}.md': '# report\n'+'a'*1700+str(i)+'\n' for i in range(20)}
+        diff, snapshot = difference({}, files), sources({}, files)
+        with patch('review_plan.capacities', return_value=(160000, 160000)):
+            planned = pack(diff, estimate_input_units, messages, snapshot, 'adaptive')
+            self.assertEqual(len(planned['chunks']), 1)
+            self.assertGreater(planned['chunks'][0]['input_tokens'], 48000)
+            restore(planned['review_plan'], diff, snapshot)
+        with self.assertRaises(PlanningError):
+            restore(planned['review_plan'], diff, snapshot)
+
     def test_unchanged_diff_context_is_not_a_dependency_root(self):
         old = {'a.py': 'def changed():\n    return 1\ndef unrelated():\n    return eval("missing")\n'}
         new = {'a.py': old['a.py'].replace('return 1', 'return 2')}
@@ -117,6 +128,10 @@ class SourceGraphTests(unittest.TestCase):
                         restore(broken, diff, snapshot)
 
     def setUp(self):
+        # Exercise boundary cases with a small model independent of production routing.
+        capacity = patch('review_plan.capacities', return_value=(48000, 48000))
+        capacity.start()
+        self.addCleanup(capacity.stop)
         guard = patch('bedrock_client.invoke', side_effect=AssertionError('offline only'))
         guard.start()
         self.addCleanup(guard.stop)

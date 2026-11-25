@@ -1,6 +1,61 @@
 {
   "schema": 1,
   "models": {
+    "gemma_3_4b": {
+      "model_id": "google.gemma-3-4b-it",
+      "provider": "Google",
+      "adapter": "converse",
+      "region": "us-east-1",
+      "context_tokens": 128000,
+      "output_tokens": 8000,
+      "resources": ["arn:aws:bedrock:us-east-1::foundation-model/google.gemma-3-4b-it"],
+      "capability_source": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-google-gemma-3-4b-it.html",
+      "pricing": {
+        "version": "gemma-3-4b-us-standard-2026-11-25",
+        "checked": "2026-11-25",
+        "input_nanodollars": 40,
+        "output_nanodollars": 80,
+        "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/20261125184041/us-east-1/index.json"
+      }
+    },
+    "nova_micro": {
+      "model_id": "amazon.nova-micro-v1:0",
+      "provider": "Amazon",
+      "adapter": "converse",
+      "region": "us-east-1",
+      "context_tokens": 128000,
+      "output_tokens": 10000,
+      "resources": [
+        "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-micro-v1:0"
+      ],
+      "capability_source": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-micro.html",
+      "pricing": {
+        "version": "nova_micro-us-standard-2026-11-25",
+        "checked": "2026-11-25",
+        "input_nanodollars": 35,
+        "output_nanodollars": 140,
+        "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/20261125184041/us-east-1/index.json"
+      }
+    },
+    "nova_lite": {
+      "model_id": "amazon.nova-lite-v1:0",
+      "provider": "Amazon",
+      "adapter": "converse",
+      "region": "us-east-1",
+      "context_tokens": 300000,
+      "output_tokens": 10000,
+      "resources": [
+        "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0"
+      ],
+      "capability_source": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-lite.html",
+      "pricing": {
+        "version": "nova_lite-us-standard-2026-11-25",
+        "checked": "2026-11-25",
+        "input_nanodollars": 60,
+        "output_nanodollars": 240,
+        "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/20261125184041/us-east-1/index.json"
+      }
+    },
     "deepseek_v3_2": {
       "model_id": "deepseek.v3.2",
       "provider": "DeepSeek",

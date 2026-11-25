@@ -450,7 +450,9 @@ class Release:
             if stage in self.state['completed']:
                 require(inventory(self.work_parts) == self.state['signed_inventory'], 'signed_artifacts_changed')
                 return
-            getattr(self, stage)()
+            handlers = {'sign': self.sign, 'notarize': self.notarize,
+                        'package': self.package, 'validate': self.validate}
+            handlers[stage]()
             self.state['completed'].append(stage)
             self.save()
         finally:

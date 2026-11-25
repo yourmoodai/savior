@@ -24,9 +24,9 @@ from prompt_profiles import prompts
 from evidence import locations, location_ranges, validate as validate_evidence
 from bedrock_client import BedrockError, complete, estimate_input_units
 from runtime_facts import runtime_facts
+from model_catalog import input_capacity
 
 CHUNK_BYTES = 49152  # 48 KiB; group related file diffs into larger requests.
-CONTEXT_TOKENS = 131072  # 128 KiB; includes evidence locations and supporting context.
 REVIEW_WORKERS = 3
 MAX_CHUNKS = 128
 SUPPORT_BYTES = 32768  # 32 KiB; include complete referenced release helpers.
@@ -341,13 +341,13 @@ def verify_candidates(diff, files, docs, anchors, candidates, *, deadline, suppo
     batches, batch = [], []
     for finding in candidates:
         proposed = batch + [finding]
-        if estimate_input_units(review_messages(diff, files, docs, anchors, proposed, supporting_context)) > 48000:
+        if estimate_input_units(review_messages(diff, files, docs, anchors, proposed, supporting_context)) > input_capacity('verification'):
             if batch:
                 batches.append(batch)
             batch = [finding]
         else:
             batch = proposed
-        if estimate_input_units(review_messages(diff, files, docs, anchors, batch, supporting_context)) > 48000:
+        if estimate_input_units(review_messages(diff, files, docs, anchors, batch, supporting_context)) > input_capacity('verification'):
             return 'COMMENT', [], 'review incomplete: indivisible verification exceeds capacity; subdivision required.'
     if batch:
         batches.append(batch)
@@ -386,7 +386,7 @@ def _run_model_reviewer(
         messages = review_messages(diff, files, doc_context, anchors, candidate, supporting_context)
     except ValueError as error:
         return 'COMMENT', [], f'review incomplete: {error}.'
-    if estimate_input_units(messages) > 48000:
+    if estimate_input_units(messages) > input_capacity():
         return "COMMENT", [], "review incomplete: prompt exceeds the context budget; subdivision required."
     try:
         response = complete(messages, deadline, purpose="verification" if candidate is not None else "assessment")

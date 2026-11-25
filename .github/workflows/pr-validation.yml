@@ -9,6 +9,11 @@ on:
       pr_number:
         required: true
         type: string
+      review_model:
+        description: Model to qualify for this run
+        type: choice
+        default: configured
+        options: [configured, nova_micro, nova_lite, gemma_3_4b]
 permissions:
   contents: read
 concurrency:

@@ -66,7 +66,8 @@ class HarnessContracts(unittest.TestCase):
     def test_verification_batches_preserve_findings_and_incompleteness(self):
         candidates = [{'location': 1}, {'location': 2}]
         def size(messages):
-            return 49000 if messages[-1]['content'].count('"finding_id":') == 2 else 47000
+            from model_catalog import input_capacity
+            return input_capacity('verification') + (1 if messages[-1]['content'].count('"finding_id":') == 2 else -1)
         retained = [{'file': 'x:1', 'details': 'verified first finding'}]
         with patch('adversarial_review.estimate_input_units', side_effect=size), \
                 patch('adversarial_review._run_model_reviewer', side_effect=[
@@ -77,7 +78,8 @@ class HarnessContracts(unittest.TestCase):
         self.assertTrue(result[2].startswith('review incomplete:'))
 
     def test_indivisible_verification_never_calls_transport(self):
-        with patch('adversarial_review.estimate_input_units', return_value=48001), \
+        from model_catalog import input_capacity
+        with patch('adversarial_review.estimate_input_units', return_value=input_capacity('verification')+1), \
                 patch('adversarial_review.complete') as transport:
             result = verify_candidates('', [], '', [{'file':'x', 'line':1}], [{'location': 1}], deadline=time.monotonic()+5, supporting_context='')
         transport.assert_not_called()
