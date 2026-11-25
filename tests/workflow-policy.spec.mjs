@@ -1,9 +1,21 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {load} from 'js-yaml';
 import policy from '../scripts/release/workflow-policy.cjs';
 
 const dependabot = {updates:[{'package-ecosystem':'github-actions',directories:['/','/.github/actions/example']}]};
 const pinned = 'actions/example@'+'a'.repeat(40);
+
+test('native qualification builds and install-tests the same hosted platforms', () => {
+  const workflow = new URL('../.github/workflows/qualification.yml', import.meta.url);
+  const {build, installed} = load(readFileSync(workflow, 'utf8')).jobs;
+  assert.deepEqual(build.strategy.matrix, installed.strategy.matrix);
+  assert.deepEqual(new Set(build.strategy.matrix.os), new Set([
+    'macos-15', 'ubuntu-24.04', 'ubuntu-24.04-arm', 'windows-2022',
+  ]));
+});
+
 function documents(uses=pinned) {
   return {'.github/workflows/ci.yml':{jobs:{check:{steps:[{uses:'./.github/actions/example'}]}}},
     '.github/actions/example/action.yml':{name:'example',description:'fixture',
