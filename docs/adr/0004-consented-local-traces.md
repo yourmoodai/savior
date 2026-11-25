@@ -46,6 +46,28 @@ Starting `savior watch` authorizes ephemeral display from the same profile until
 it stops. It uses actual applied edits, keeps no history, and neither grants nor
 revokes consent to retained traces.
 
+Starting `savior inspect` likewise authorizes ephemeral browser viewing from the
+same profile. Rust publishes actual processing stages and applied edits through
+a separate private IPC endpoint, allowing terminal watching at the same time.
+Observation IDs exist independently of successful recording; adapter delivery
+updates can therefore follow an unsaved replacement. The authenticated loopback
+server streams updates without holding the history and settings request loop.
+
+The live session belongs to the inspector process. It retains at most 1,000
+observations within 32 MiB of serialized activity, evicting completed observations
+before active work. Session counters include completed observations already evicted;
+dropped events and eviction make coverage visibly incomplete. Refresh reconnects
+to that process; restarting starts a new live session. Inspection performs no
+additional inference and does not start benchmarks or local judging.
+
+On first browser use, ask whether to retain full observation history, with `No`
+selected. Persist the choice and onboarding completion in private profile settings;
+dismissal leaves recording off. Preserve existing explicit consent on migration.
+Text-free records continue independently of full-text consent. Live statistics
+exclude saved history, which remains a separate view. The browser stores only its
+per-launch access token in session storage so refresh can authenticate; observation
+text remains in memory.
+
 ## Invariants & Abstention
 
 - Full-text recording defaults off and requires independent consent. Revocation

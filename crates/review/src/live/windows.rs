@@ -13,18 +13,18 @@ use windows_sys::Win32::{
     System::Pipes::*,
 };
 
-fn name(profile: &Path) -> Vec<u16> {
+fn name(profile: &Path, endpoint: &str) -> Vec<u16> {
     let normalized = profile
         .to_string_lossy()
         .trim_start_matches("\\\\?\\")
         .to_lowercase();
     wide(&format!(
-        "\\\\.\\pipe\\savior-watch-{}",
+        "\\\\.\\pipe\\savior-{endpoint}-{}",
         crate::store::fingerprint(normalized.as_bytes())
     ))
 }
 
-pub(super) struct Stream {
+pub(crate) struct Stream {
     handle: Arc<OwnedHandle>,
     server: bool,
 }
@@ -63,11 +63,15 @@ fn verify_owner(handle: HANDLE) -> io::Result<()> {
     Ok(())
 }
 
-pub(super) fn connect(profile: &Path) -> io::Result<Stream> {
+pub(crate) fn connect(profile: &Path) -> io::Result<Stream> {
+    connect_named(profile, "watch")
+}
+
+pub(crate) fn connect_named(profile: &Path, endpoint: &str) -> io::Result<Stream> {
     // SAFETY: name is NUL-terminated; the owned handle closes on every error path.
     let handle = unsafe {
         CreateFileW(
-            name(profile).as_ptr(),
+            name(profile, endpoint).as_ptr(),
             GENERIC_READ | GENERIC_WRITE | READ_CONTROL,
             0,
             null(),
@@ -153,12 +157,17 @@ impl Drop for Stream {
     }
 }
 
-#[cfg(any(feature = "watch", test))]
-pub(super) struct Listener(Arc<OwnedHandle>);
+#[cfg(any(feature = "watch", feature = "inspector", test))]
+pub(crate) struct Listener(Arc<OwnedHandle>);
 
-#[cfg(any(feature = "watch", test))]
+#[cfg(any(feature = "watch", feature = "inspector", test))]
 impl Listener {
+    #[cfg(any(feature = "watch", test))]
     pub(super) fn bind(profile: &Path) -> crate::ReviewResult<Self> {
+        Self::bind_named(profile, "watch")
+    }
+
+    pub(crate) fn bind_named(profile: &Path, endpoint: &str) -> crate::ReviewResult<Self> {
         let sd = descriptor()?;
         let attributes = SECURITY_ATTRIBUTES {
             nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
@@ -168,7 +177,7 @@ impl Listener {
         // SAFETY: security descriptor and name remain valid through creation.
         let handle = unsafe {
             CreateNamedPipeW(
-                name(profile).as_ptr(),
+                name(profile, endpoint).as_ptr(),
                 PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
                 PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_NOWAIT | PIPE_REJECT_REMOTE_CLIENTS,
                 1,
@@ -194,7 +203,7 @@ impl Listener {
         })))
     }
 
-    pub(super) fn accept(&mut self) -> io::Result<Option<Stream>> {
+    pub(crate) fn accept(&mut self) -> io::Result<Option<Stream>> {
         // In NOWAIT mode success makes a disconnected instance available; only
         // ERROR_PIPE_CONNECTED establishes that a client is present.
         if unsafe { ConnectNamedPipe(self.0.as_raw_handle(), null_mut()) } != 0 {

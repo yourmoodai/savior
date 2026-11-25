@@ -8,10 +8,50 @@ consent. Choose how much you want to see and whether to keep it.
 | --- | --- | --- |
 | `/savior` in Claude Code | Latest original and replacement | Session memory, cleared at session boundaries |
 | `savior watch` in another terminal | New replacement events | No history |
-| Browser inspector with recording enabled | Saved edits and model details | Private local records, with separate opt-in |
+| Browser inspector | Live stages, exact diffs, and session statistics | Live text in memory; saved text requires separate opt-in |
 
 These views do not add the original wording to model context. A successful edit
 means local processing completed; it is not proof of provider receipt.
+
+## Live browser inspection
+
+From a source build, run:
+
+```sh
+node bridge/cli.mjs inspect
+```
+
+Open the printed loopback URL. Use the same `CLAUDE_CONFIG_DIR` as the submitting
+Claude session. Viewing begins automatically and does not enable full-text
+recording. On first use, choose whether to store full observation history;
+`No` is selected by default. Dismissing the question also keeps recording off.
+The preference is saved for that profile; existing explicit consent is preserved.
+
+The **Live** view follows processing stages and shows the selected observation's
+original, replacement, and exact applied edits. Unchanged, abstained, failed, and
+cancelled attempts also appear. Delivery is reported separately: `forwarded`
+means the host continuation returned, not that the provider received the text.
+Missing stages, model identity, and assessments remain unavailable. Opening the
+page does not run additional inference, judging, or benchmarks.
+
+Counters cover completed observations since this inspector process started;
+**History** is excluded. Select an observation to keep its details in view, or
+enable **Follow latest**. **Pause display** freezes the display while processing
+and live collection continue. **History** browses retained records and human
+judgments; **Settings** controls recording, export, and deletion. Text-free
+outcomes continue to be retained when full-text recording is off.
+
+Live memory holds at most 1,000 observations within a 32 MiB serialized activity
+budget. Completed observations are evicted first; session counters still include
+them. Dropped events and evictions display a coverage warning. A slow or broken
+viewer cannot change the replacement result. Terminal watching can run alongside
+the browser; only one inspector process can own a profile's live channel.
+
+Refresh reconnects to the same inspector process using its access token in
+browser session storage. No prompt text is placed in browser storage. Restarting
+the inspector starts fresh live activity; unsaved text cannot be recovered.
+`Ctrl+C` stops the server. Anyone viewing or recording the browser can retain
+copies outside Savior's control.
 
 ## Live terminal feed
 
@@ -71,8 +111,8 @@ node bridge/cli.mjs traces delete
 ```
 
 Open the printed loopback URL in a browser. Its fragment contains a per-launch
-access token; do not share it. The app removes the token from the address bar,
-so refresh requires reopening the original URL. `Ctrl+C` stops the server;
+access token; do not share it. The app removes the token from the address bar
+and keeps it in browser session storage for refresh. `Ctrl+C` stops the server;
 no background service is installed. Recording can also be enabled through the
 app's confirmation.
 

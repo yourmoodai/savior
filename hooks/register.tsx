@@ -62,8 +62,12 @@ export function register(on: On) {
     const current_generation = generation;
     const submission = ++submitted;
     let trace_id: string | undefined;
+    let observation_id: string | undefined;
     let processing_started = false;
     const disposition = async (value: string) => {
+      if (observation_id) {
+        try { await $.process.run([runtime.node, $.plugin.root + '/bridge/cli.mjs', 'traces', 'live', observation_id, value], {env:runtime.env,timeoutMs:2000}); } catch {}
+      }
       if (!trace_id) return;
       try {
         const saved = await $.process.run([runtime.node, $.plugin.root + '/bridge/cli.mjs', 'traces', 'disposition', trace_id, value], {env:runtime.env,timeoutMs:2000});
@@ -73,6 +77,9 @@ export function register(on: On) {
     };
     const drop = async (reason: string) => {
       if (!trace_id && runtime.ready && processing_started) {
+        if (observation_id) {
+          try { await $.process.run([runtime.node,$.plugin.root+'/bridge/cli.mjs','traces','live',observation_id,'failed'],{env:runtime.env,timeoutMs:2000}); } catch {}
+        }
         try {
           const state=next.signal.aborted || generation !== current_generation ? 'cancelled':'blocked';
           const saved=await $.process.run([runtime.node,$.plugin.root+'/bridge/cli.mjs','traces','failure','adapter_failed',state],{env:runtime.env,timeoutMs:2000});
@@ -91,8 +98,10 @@ export function register(on: On) {
       const result = await $.process.run([runtime.node, $.plugin.root + '/bridge/cli.mjs', 'rewrite'], {
         env: runtime.env, stdin: JSON.stringify({version:3,text:e.text,assess:review.consent.live}), timeoutMs: 45000,
       });
-      if (result.exitCode !== 0 || result.isStdoutTruncated === true) return drop('local replacement failed; check savior doctor and resubmit');
+      if (result.isStdoutTruncated === true) return drop('local replacement failed; check savior doctor and resubmit');
       const answer = read_result(JSON.parse(result.stdout));
+      observation_id = answer.observation_id;
+      if (result.exitCode !== 0) return drop('local replacement failed; check savior doctor and resubmit');
       trace_id = answer.trace_id;
       trace_warning = answer.trace_warning ? 'recording gap: this replacement was not saved' : '';
       if (next.signal.aborted || generation !== current_generation) return drop('submission cancelled; resubmit to retry');

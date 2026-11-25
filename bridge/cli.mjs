@@ -4,8 +4,10 @@ import { join } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { randomBytes } from 'node:crypto';
 const require = createRequire(import.meta.url);
 const max_bytes = 65_536; // 64 KiB
+let observation_id;
 const allowed_errors = new Set(['invalid_input','invalid_span','invalid_options','protected_span_detected','model_unavailable','model_incompatible','inference_failed','processing_timeout','busy','invalid_request','invalid_command','model_not_configured','policy_unavailable']);
 
 async function main() {
@@ -60,11 +62,12 @@ async function main() {
     text = request.text;
     assess = request.version >= 2 && request.assess === true;
     trace = request.version === 3;
+    if (trace) observation_id = randomBytes(32).toString('hex');
   }
   const { loadDetector } = process.env.SAVIOR_RUNTIME_DIR ? require(join(process.env.SAVIOR_RUNTIME_DIR,'savior.node')) : require('../native/index.cjs');
   const detector = await loadDetector({ modelDir, threshold, policy, detector: process.env.SAVIOR_DETECTOR ?? 'bert' });
   if (command === 'doctor') { process.stdout.write(JSON.stringify({ version:1, status:'ready' }) + '\n'); return; }
-  if (trace) { process.stdout.write(await detector.rewriteTraced(text,replacementOptions,assess)+'\n'); return; }
+  if (trace) { process.stdout.write(await detector.rewriteTraced(text,replacementOptions,assess,observation_id)+'\n'); return; }
   if (assess) {
     const result = await detector.assess(text, replacementOptions);
     const a = result.assessment;
@@ -78,7 +81,7 @@ async function main() {
 }
 main().catch(error => {
   const code = allowed_errors.has(error?.message) ? error.message : 'bridge_failed';
-  if (process.argv[2] !== 'watch') process.stdout.write(JSON.stringify({ version:1, status:'error', code }) + '\n');
+  if (process.argv[2] !== 'watch') process.stdout.write(JSON.stringify({ version:1, status:'error', code, ...(observation_id ? {observation_id} : {}) }) + '\n');
   if (process.env.LOG_LEVEL !== 'silent') process.stderr.write(`savior: ${code}\n`);
   process.exitCode = 1;
 });

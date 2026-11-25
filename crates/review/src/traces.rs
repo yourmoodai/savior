@@ -127,7 +127,7 @@ pub struct Trace {
     pub output: Option<String>,
 }
 impl Trace {
-    fn validate(&self) -> ReviewResult<()> {
+    pub(crate) fn validate(&self) -> ReviewResult<()> {
         if self.schema != 1
             || self.offset_unit != "utf8"
             || self.id.len() != 64
@@ -257,6 +257,8 @@ impl TraceStore {
         db(connection.execute_batch("PRAGMA secure_delete=ON; PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; PRAGMA max_page_count=16384;
             CREATE TABLE IF NOT EXISTS trace_settings(id INTEGER PRIMARY KEY CHECK(id=1), enabled INTEGER NOT NULL, generation INTEGER NOT NULL);
             INSERT OR IGNORE INTO trace_settings VALUES(1,0,0);
+            CREATE TABLE IF NOT EXISTS inspector_settings(id INTEGER PRIMARY KEY CHECK(id=1), onboarding_complete INTEGER NOT NULL);
+            INSERT OR IGNORE INTO inspector_settings SELECT 1,CASE WHEN enabled=1 OR generation>0 THEN 1 ELSE 0 END FROM trace_settings WHERE id=1;
             CREATE TABLE IF NOT EXISTS traces(id TEXT PRIMARY KEY, timestamp_ms INTEGER NOT NULL, outcome TEXT NOT NULL, event TEXT NOT NULL);
             CREATE INDEX IF NOT EXISTS trace_time ON traces(timestamp_ms);
             CREATE TABLE IF NOT EXISTS annotations(id TEXT PRIMARY KEY REFERENCES traces(id) ON DELETE CASCADE, body TEXT NOT NULL);
@@ -290,6 +292,10 @@ impl TraceStore {
         db(self.connection.execute(
             "UPDATE trace_settings SET enabled=?1,generation=generation+1 WHERE id=1",
             [enabled],
+        ))?;
+        db(self.connection.execute(
+            "UPDATE inspector_settings SET onboarding_complete=1 WHERE id=1",
+            [],
         ))?;
         Ok(())
     }
@@ -431,8 +437,13 @@ impl TraceStore {
         let count: i64 = db(self
             .connection
             .query_row("SELECT COUNT(*) FROM traces", [], |r| r.get(0)))?;
+        let onboarding_complete: bool = db(self.connection.query_row(
+            "SELECT onboarding_complete FROM inspector_settings WHERE id=1",
+            [],
+            |r| r.get(0),
+        ))?;
         Ok(
-            json!({"schema":1,"full_text":enabled,"generation":generation,"events":count,"retention_days":7,"max_bytes":MAX_STORE_BYTES,"remote_telemetry":false}),
+            json!({"schema":1,"full_text":enabled,"generation":generation,"events":count,"onboarding_complete":onboarding_complete,"retention_days":7,"max_bytes":MAX_STORE_BYTES,"remote_telemetry":false}),
         )
     }
 }
@@ -477,7 +488,31 @@ pub fn rewrite_traced(
     context: &TraceContext,
     assess: bool,
 ) -> Value {
+    rewrite_observed(
+        model,
+        text,
+        threshold,
+        strategy,
+        context,
+        assess,
+        &random_id(),
+    )
+}
+
+pub fn rewrite_observed(
+    model: &mut dyn savior::Detector,
+    text: &str,
+    threshold: f32,
+    strategy: &savior::ReplacementMode,
+    context: &TraceContext,
+    assess: bool,
+    id: &str,
+) -> Value {
     let start = std::time::Instant::now();
+    if !crate::observation::valid_id(id) {
+        return json!({"version":2,"status":"error","code":"invalid_input"});
+    }
+    crate::observation::publish(id, "processing", json!({"original":text}));
     let directory = state_directory();
     let consent = directory
         .as_ref()
@@ -485,6 +520,9 @@ pub fn rewrite_traced(
         .and_then(|p| TraceStore::open(p).ok())
         .and_then(|store| store.consent().ok());
     let detected = model.detect(text);
+    if let Ok(spans) = &detected {
+        crate::observation::publish(id, "detected", json!({"detected_count":spans.len()}));
+    }
     let result = detected
         .as_ref()
         .map_err(|e| e.to_string())
@@ -519,6 +557,14 @@ pub fn rewrite_traced(
         }
         Err(code) => json!({"version":2,"status":"error","code":code}),
     };
+    answer["observation_id"] = id.into();
+    if let Ok(result) = &result {
+        crate::observation::publish(
+            id,
+            "replaced",
+            json!({"replacement_count":result.replacement_count}),
+        );
+    }
     if assess {
         let removed: usize = applied
             .iter()
@@ -531,15 +577,14 @@ pub fn rewrite_traced(
             .and_then(|s| s.iter().map(|s| s.score).reduce(f32::max));
         answer["assessment"] = json!({"input_characters":characters,"removed_characters":removed,"replacement_count":applied.len(),"removed_proportion":if characters==0 {0.0} else {removed as f64/characters as f64},"detector_confidence":detected.as_ref().ok().and_then(|s|s.iter().map(|s|s.score).reduce(f32::max)),"residual_confidence":residual,"protected_abstention":outcome=="abstained"});
     }
-    let id = random_id();
     if let Ok(result) = &result {
-        crate::live::publish(text, result, strategy, &id);
+        crate::live::publish(text, result, strategy, id);
     }
     let full = consent.is_some_and(|c| c.0);
     let trace = Trace {
         schema: 1,
         offset_unit: "utf8".into(),
-        id: id.clone(),
+        id: id.into(),
         timestamp_ms: now_ms(),
         release: env!("CARGO_PKG_VERSION").into(),
         release_manifest_sha256: std::env::var("SAVIOR_RELEASE_MANIFEST_SHA256").ok(),
@@ -562,9 +607,15 @@ pub fn rewrite_traced(
             strategy: strategy.name().into(),
             marker: strategy.marker().map(str::to_owned),
         }),
-        original: full.then(|| text.to_owned()),
-        output: if full { output } else { None },
+        original: Some(text.to_owned()),
+        output,
     };
+    crate::observation::publish(
+        id,
+        "completed",
+        json!({"trace":trace,"assessment":answer.get("assessment")}),
+    );
+    let trace = if full { trace } else { trace.without_text() };
     let saved = directory
         .and_then(|p| TraceStore::open(&p))
         .and_then(|mut store| store.record(trace, consent.map_or(-1, |c| c.1)));
@@ -572,6 +623,7 @@ pub fn rewrite_traced(
         answer["trace_id"] = id.into();
     } else {
         answer["trace_warning"] = "trace_not_recorded".into();
+        crate::observation::publish(id, "recording", json!({"warning":"trace_not_recorded"}));
     }
     answer
 }

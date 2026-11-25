@@ -5,16 +5,17 @@ export const max_output_bytes = max_text_bytes * 80 * 4; // 20 MiB: at most 80 U
 export type RewriteRequest = { version: 1; text: string };
 export type LanguageAssessment = { input_characters:number; removed_characters:number; replacement_count:number; removed_proportion:number; detector_confidence:number|null; residual_confidence:number|null; protected_abstention:boolean };
 export type RewriteResult =
-  | { version: 1|2; status: 'rewritten' | 'unchanged'; text: string; assessment?:LanguageAssessment; trace_id?:string; trace_warning?:string }
-  | { version: 1|2; status: 'error'; code: string; assessment?:LanguageAssessment; trace_id?:string; trace_warning?:string };
+  | { version: 1|2; status: 'rewritten' | 'unchanged'; text: string; assessment?:LanguageAssessment; trace_id?:string; trace_warning?:string; observation_id?:string }
+  | { version: 1|2; status: 'error'; code: string; assessment?:LanguageAssessment; trace_id?:string; trace_warning?:string; observation_id?:string };
 
 export function read_result(value: unknown): RewriteResult {
   if (!value || typeof value !== 'object') throw new Error('invalid_response');
   const result = value as Record<string, unknown>;
   if (result.version !== protocol_version && result.version !== 2) throw new Error('invalid_response');
   if (result.trace_id !== undefined && (typeof result.trace_id !== 'string' || !/^[a-f0-9]{64}$/.test(result.trace_id))) throw new Error('invalid_response');
+  if (result.observation_id !== undefined && (typeof result.observation_id !== 'string' || !/^[a-f0-9]{64}$/.test(result.observation_id))) throw new Error('invalid_response');
   if (result.trace_warning !== undefined && result.trace_warning !== 'trace_not_recorded') throw new Error('invalid_response');
-  const trace = {...(result.trace_id ? {trace_id:result.trace_id as string}:{}),...(result.trace_warning ? {trace_warning:result.trace_warning as string}:{})};
+  const trace = {...(result.trace_id ? {trace_id:result.trace_id as string}:{}),...(result.trace_warning ? {trace_warning:result.trace_warning as string}:{}),...(result.observation_id ? {observation_id:result.observation_id as string}:{})};
   let assessment: LanguageAssessment | undefined;
   if (result.version === 2 && result.assessment !== undefined) {
     const a=result.assessment as LanguageAssessment;
