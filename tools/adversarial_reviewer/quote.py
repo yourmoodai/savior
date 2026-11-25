@@ -36,18 +36,43 @@ def estimate(manifest):
     chunks = manifest['chunks']
     fresh = [c for c in chunks if not c.get('cached_assessment')]
     items = []
+    assessment = [c['input_tokens'] for c in fresh]
+    from model_catalog import input_capacity
+    verification = [c.get('verification_input_units', input_capacity('verification')) for c in fresh]
     for role in ('correctness', 'security', 'compatibility'):
-        items.extend([item(role, [c['input_tokens'] for c in fresh], 1024, role),
-                      item(role+' retry', [48000]*len(fresh), 4096, role),
-                      item(role+' verification', [48000]*len(fresh)*2, 1536, 'verification'),
-                      item(role+' verification retry', [48000]*len(fresh)*2, 4096, 'verification')])
+        items.extend([item(role, assessment, 1024, role),
+                      item(role+' retry', assessment, 4096, role),
+                      item(role+' verification', verification*2, 1536, 'verification'),
+                      item(role+' verification retry', verification*2, 4096, 'verification')])
     return items
+
+
+def sizing(manifest):
+    from egm import FOCUS
+    from review_plan import feasible
+    if not manifest['chunks'] or any('input_tokens' not in c for c in manifest['chunks']):
+        return {'complete_evidence': False, 'chunks': len(manifest['chunks']), 'count_method': 'unavailable'}
+    items = estimate(manifest)
+    return {'complete_evidence': feasible(manifest), 'chunks': len(manifest['chunks']),
+            'count_method': manifest.get('token_count_method', 'utf8_bytes_plus_template_allowance_estimate'),
+            'first_pass_nanodollars': sum(i['estimated_nanodollars'] for i in items if i['phase'] in FOCUS),
+            'retry_scenario_nanodollars': sum(i['estimated_nanodollars'] for i in items),
+            'input_units': sum(c['input_tokens'] for c in manifest['chunks'])}
 
 
 def qualification_estimate():
     from qualify import CASES, fixture
-    from adversarial_review import review_diff
-    count = len(CASES)
+    from adversarial_review import review_diff, review_messages
+    from evidence import locations
+    from review_plan import verification_bound
+    from bedrock_client import estimate_input_units
+    from egm import FOCUS
+    chunks = []
+    for i, case in enumerate(CASES):
+        diff, path = fixture(i, case)
+        prompt = review_messages(diff, [path], '', list(locations(diff).values()),
+                                 supporting_context='\nReviewer focus: '+max(FOCUS.values(), key=len))
+        chunks.append({'input_tokens': estimate_input_units(prompt), 'verification_input_units': verification_bound(prompt)})
     for strategy in ('baseline', 'adaptive'):
         for disposition in ('APPROVE', 'REQUEST_CHANGES'):
             fixtures = [fixture(i, c) for i, c in enumerate(CASES) if c[3] == disposition]
@@ -58,8 +83,8 @@ def qualification_estimate():
                 plan = review_diff(fixture_diff, [f for _, f in fixtures], strategy=strategy, dry_run=True)
             finally:
                 snapshots.reset(token)
-            count += len(plan['manifest']['chunks'])
-    items = estimate({'chunks': [{'input_tokens': 48000}]*count})
+            chunks.extend(plan['manifest']['chunks'])
+    items = estimate({'chunks': chunks})
     return {'phase': 'qualification', **{k: sum(i[k] for i in items) for k in
             ('calls', 'estimated_nanodollars', 'reserved_nanodollars')}}
 
@@ -75,7 +100,7 @@ def qualified_strategy(manifests, qualification):
     if not options:
         from review_plan import PlanningError
         raise PlanningError('no qualified feasible plan')
-    return min(options, key=lambda name: (sum(i['reserved_nanodollars'] for i in estimate(manifests[name])), name))
+    return min(options, key=lambda name: (sizing(manifests[name])['first_pass_nanodollars'], name))
 
 
 def plan_digest(manifest):
@@ -128,6 +153,7 @@ def create(manifests, summary, qualification, *, now=None):
     quote = {'schema': 3, 'binding': binding, 'issued_at': now, 'expires_at': now+86400,
              'phase': 'review' if selected else 'qualification_required',
              'projection_informational': True, 'next_call_reserved_nanodollars': next_reservation,
+             'review_sizing': {name: sizing(m) for name, m in manifests.items()},
              'items': items, 'strategy': selected, 'chunks': len(manifests[selected]['chunks']) if selected else 0,
              'cached_assessments': sum(bool(c.get('cached_assessment')) for c in manifests[selected]['chunks']) if selected else 0,
              'estimated_nanodollars': sum(i['estimated_nanodollars'] for i in items),

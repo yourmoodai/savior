@@ -75,6 +75,7 @@ jobs:
       BASE_SHA: ${{ needs.scope.outputs.base }}
       AWS_REGION: us-east-1
       REVIEW_COST_POLICY: 'true'
+      BEDROCK_REVIEW_CANDIDATE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.review_model || 'configured' }}
       BEDROCK_REVIEW_ENABLED: ${{ needs.scope.outputs.enabled }}
       BEDROCK_EXTERNAL_PROBE_NANODOLLARS: ${{ vars.BEDROCK_EXTERNAL_PROBE_NANODOLLARS }}
     steps:

@@ -4,6 +4,7 @@ from contextvars import ContextVar
 from datetime import date, datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 
@@ -20,6 +21,9 @@ def digest(value):
 def load():
     catalog = json.loads((ROOT / 'models.json').read_text())
     routing = json.loads((ROOT / 'routing.json').read_text())
+    candidate = os.environ.get('BEDROCK_REVIEW_CANDIDATE', 'configured')
+    if candidate != 'configured':
+        routing = {'schema': 1, 'roles': dict.fromkeys(ROLES, candidate)}
     if routing_override.get() is not None:
         routing = routing_override.get()
     validate(catalog, routing)
@@ -85,6 +89,11 @@ def current_pricing(model):
 def selected(role=None):
     catalog, routing = load()
     return catalog['models'][routing['roles'][role or active_role.get()]]
+
+
+def input_capacity(role=None):
+    """Leave room for the largest output retry on the selected route."""
+    return selected(role)['context_tokens'] - 4096
 
 
 def cost(model, inputs, outputs):

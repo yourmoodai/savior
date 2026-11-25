@@ -10,7 +10,7 @@ import zipfile
 
 from budget import Ledger, BudgetError
 from qualify import cached_qualification
-from quote import create, apply_policy
+from quote import create, apply_policy, sizing
 from review_plan import PlanningError, require_feasible, feasible
 
 ROOT = Path(__file__).parent
@@ -67,6 +67,7 @@ def build_quote(ledger):
         if report.get('omitted_binary_changes'):
             raise ValueError('unsupported binary changes require manual review')
         manifests[strategy] = report['manifest']
+    (DIRECTORY/'review-sizing.json').write_text(json.dumps({s: sizing(m) for s, m in manifests.items()})+'\n')
     require_feasible(manifests)
     _, qualification = cached_qualification()
     quote = apply_policy(create(manifests, ledger.summary(), qualification), ledger.policy_budget())
@@ -76,6 +77,8 @@ def build_quote(ledger):
 
 def main():
     DIRECTORY.mkdir(exist_ok=True)
+    sizing_file = DIRECTORY/'review-sizing.json'
+    sizing_file.unlink(missing_ok=True)
     reason, quote = None, None
     ledger = None
     try:
@@ -102,6 +105,8 @@ def main():
               'quote': quote, 'budget': ledger.summary() if ledger else None}
     if reason == 'planning_failed':
         report['planning_failure'] = json.loads((DIRECTORY/'planning-failure.json').read_text())['details']
+        if sizing_file.exists():
+            report['review_sizing'] = json.loads(sizing_file.read_text())
     (DIRECTORY/'preflight.json').write_text(json.dumps(report, indent=2)+'\n')
     (DIRECTORY/'report.json').write_text(json.dumps(report, indent=2)+'\n')
     if not reason:

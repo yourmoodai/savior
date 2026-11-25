@@ -11,7 +11,7 @@ import time
 from budget import Ledger, BudgetError, BudgetExhausted
 from diagnostics import record
 from prompt_profiles import settings
-from model_catalog import selected, cost as model_cost
+from model_catalog import selected, input_capacity, cost as model_cost
 
 MAX_RESPONSE_BYTES = 1048576  # 1 MiB
 MAX_REQUEST_BYTES = 524288  # 512 KiB
@@ -105,7 +105,7 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
     if not path:
         raise BedrockError('persistent review budget ledger required')
     inputs = count_tokens(messages, deadline)
-    if inputs > min(48000, model['context_tokens'] - 4096):
+    if inputs > input_capacity():
         raise BedrockError('prompt exceeds token budget; subdivision required')
     ledger = Ledger(path)
     identity = identity or hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()
@@ -140,7 +140,7 @@ def complete(messages, deadline, *, purpose='assessment', identity=None, expande
             'required_nanodollars': model_cost(model, model['context_tokens'], payload['inferenceConfig']['maxTokens'])}))
         raise BedrockError(str(error)) from None
     try:
-        if envelope['usage']['inputTokens'] > 48000:
+        if envelope['usage']['inputTokens'] > input_capacity():
             raise BedrockError('actual input exceeds token budget; subdivision required')
         if envelope.get('stopReason') == 'max_tokens' and not expanded and purpose != 'overview':
             return complete(messages, deadline, purpose=purpose, identity=identity, expanded=True, transport_attempt=transport_attempt, json_attempt=json_attempt)
