@@ -88,6 +88,8 @@ def run(argv, *, env=None, data=None, timeout=120):
 class Release:
     def __init__(self, config_path, parts, output):
         self.config = read_json(config_path)
+        record = self.config.get('windows', {}).get('verification_record')
+        self.windows_record = safe_path(record) if record is not None else None
         require(self.config.get('schema') == 1, 'unsupported_configuration')
         self.parts = safe_path(parts)
         self.output = safe_path(output)
@@ -173,6 +175,20 @@ class Release:
             self.fingerprint(key)
         if profile_eku(self.config) is None:
             self.fingerprint('windows')
+        if self.windows_record is None:
+            self.preflight_windows_provider()
+        else:
+            self.verified_windows_signers(self.parts/'win32-x64')
+            binding['windows_record_sha256'] = os.environ['WINDOWS_RECORD_SHA256']
+        require(isinstance(self.config.get('notary_timeout_seconds', 1800), int)
+                and 1 <= self.config.get('notary_timeout_seconds', 1800) <= 86400, 'invalid_notary_timeout')
+        if self.state:
+            require(self.state['binding'] == binding, 'candidate_inputs_changed')
+        if verify_credentials:
+            self.verify_credentials()
+        return binding
+
+    def preflight_windows_provider(self):
         windows = self.config.get('windows', {})
         require(windows.get('storetype') in ('PKCS12', 'PKCS11', 'TRUSTEDSIGNING', 'DIGICERTONE'), 'unsupported_windows_provider')
         require(isinstance(windows.get('alias'), str) and windows['alias'], 'missing_windows_alias')
@@ -184,13 +200,6 @@ class Release:
             require(re.fullmatch(r'[a-z0-9.-]+\.codesigning\.azure\.net', windows.get('endpoint', '')), 'invalid_windows_endpoint')
         self.secret('windows_ca')
         self.secret('timestamp_ca')
-        require(isinstance(self.config.get('notary_timeout_seconds', 1800), int)
-                and 1 <= self.config.get('notary_timeout_seconds', 1800) <= 86400, 'invalid_notary_timeout')
-        if self.state:
-            require(self.state['binding'] == binding, 'candidate_inputs_changed')
-        if verify_credentials:
-            self.verify_credentials()
-        return binding
 
     def verify_credentials(self):
         self.command('node', ROOT/'scripts/release/check-key.mjs', self.secret('manifest_public'),
@@ -282,6 +291,8 @@ class Release:
         for path in self.signed_paths('darwin-arm64'):
             self.verify_apple(path, self.fingerprint('apple'))
         self.verify_apple(self.work_parts/'darwin-arm64'/NODE, self.fingerprint('node_apple'))
+        if self.windows_record is not None:
+            return self.verified_windows_signers(self.work_parts/'win32-x64')
         eku = profile_eku(self.config)
         signers = {}
         for path in self.signed_paths('win32-x64'):
@@ -292,6 +303,18 @@ class Release:
                 signers[name] = fingerprint
         self.verify_windows(self.work_parts/'win32-x64/runtime/win32-x64/node.exe', self.fingerprint('node_windows'))
         return signers
+
+    def verified_windows_signers(self, stage):
+        from windows_handoff import BINARIES, NODE as WINDOWS_NODE, verify
+        record = verify(stage, self.windows_record, os.environ['WINDOWS_RECORD_SHA256'], 'release')
+        signatures = record['signatures']
+        eku = profile_eku(self.config)
+        require(eku and all(signatures[p]['profile_eku'] == eku for p in BINARIES),
+                'windows_profile_signer_mismatch')
+        require(signatures[WINDOWS_NODE]['signer_sha256'] == self.fingerprint('node_windows'),
+                'node_windows_signer_mismatch')
+        return {('savior.node' if p.endswith('.node') else Path(p).name): signatures[p]['signer_sha256']
+                for p in BINARIES}
 
     def sign(self):
         # Retrying a failed signing stage starts from unsigned inputs, not partial signatures.
@@ -307,16 +330,21 @@ class Release:
                      '--exclude', 'Contents/Frameworks/node', '--exclude', 'Contents/Helpers/*',
                      '--p12-file', self.secret('apple_p12'), '--p12-password-file',
                      self.secret('apple_password'), bundle, timeout=300)
+        if self.windows_record is None:
+            self.sign_windows()
+        signers = self.verify_platforms()
+        if profile_eku(self.config):
+            self.state['windows_signers'] = signers
+        self.state['signed_inventory'] = inventory(self.work_parts)
+        self.state['checks']['platform_signatures'] = (
+            'verified_windows_handoff' if self.windows_record is not None else 'cross_platform_tools_only')
+
+    def sign_windows(self):
         windows = self.config['windows']
         store = (self.secret('windows_keystore') if windows['storetype'] != 'TRUSTEDSIGNING'
                  else windows['endpoint'])
         self.command('jsign', *signing_arguments(windows, store, self.secret('windows_password'),
                                                 self.signed_paths('win32-x64')), timeout=600)
-        signers = self.verify_platforms()
-        if profile_eku(self.config):
-            self.state['windows_signers'] = signers
-        self.state['signed_inventory'] = inventory(self.work_parts)
-        self.state['checks']['platform_signatures'] = 'cross_platform_tools_only'
 
     def notarize(self):
         require(inventory(self.work_parts) == self.state['signed_inventory'], 'signed_artifacts_changed')
@@ -370,6 +398,9 @@ class Release:
 
     def package(self):
         require(inventory(self.work_parts) == self.state['signed_inventory'], 'signed_artifacts_changed')
+        if self.windows_record is not None:
+            require(self.verified_windows_signers(self.work_parts/'win32-x64') == self.state['windows_signers'],
+                    'signed_windows_identity_mismatch')
         require(not self.candidate.exists(), 'package_output_exists_use_new_output')
         env = dict(os.environ)
         env['SAVIOR_RELEASE_SIGNING_KEY'] = self.secret('manifest_private').read_text()
@@ -377,6 +408,8 @@ class Release:
         run([self.tools['node'], ROOT/'scripts/release/check-key.mjs', self.secret('manifest_public')],
             data=env['SAVIOR_RELEASE_SIGNING_KEY'].encode())
         signer_args = ['--windows-signers', json.dumps(self.state['windows_signers'])] if profile_eku(self.config) else []
+        if self.windows_record is not None:
+            signer_args.extend(['--windows-verification-record', self.windows_record])
         run([os.sys.executable, ROOT/'scripts/release/package.py', 'assemble', self.work_parts,
              self.candidate/'plugin', '--node', self.tools['node'], '--npm', self.tools['npm'],
              '--require-signed', *signer_args], env=env, timeout=600)

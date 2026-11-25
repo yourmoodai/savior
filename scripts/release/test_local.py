@@ -299,6 +299,40 @@ class LocalReleaseTests(unittest.TestCase):
                    for name in ('savior.exe', 'savior-review.exe', 'savior.node')}
         self.simulate_signed_release(signers)
 
+    @unittest.skipUnless(shutil.which('node'), 'node is required for candidate assembly')
+    def test_protected_handoff_seals_evidence_and_checks_resume(self):
+        from windows_handoff import BINARIES, NODE, context, inventory
+        config = self.release.config
+        eku = '1.3.6.1.4.1.311.97.123.456.789.101'
+        config['identities'].pop('windows')
+        config['identities']['windows_profile_eku'] = eku
+        config['windows']['storetype'] = 'TRUSTEDSIGNING'
+        for key in ('windows_password','windows_keystore','windows_ca','timestamp_ca'):
+            config['credentials'].pop(key, None)
+        receipt = self.root/'verification.json'
+        self.release.windows_record = receipt
+        env = {'GITHUB_SHA': self.revision, 'GITHUB_REPOSITORY': 'yourmoodai/savior',
+               'GITHUB_REPOSITORY_ID': '1418413891', 'GITHUB_WORKFLOW_REF': 'release.yml@fixture',
+               'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1', 'WINDOWS_ARTIFACT_ID': '456'}
+        with patch.dict(os.environ, env):
+            signatures = {p: {'publisher':'fixture', 'profile_eku':eku,'timestamp':'fixture',
+                              'timestamp_signer_sha256':'b'*64,'signer_sha256':'a'*64} for p in (*BINARIES,NODE)}
+            record = {'schema':1, 'kind':'release', 'context':context(), 'signatures':signatures,
+                      'files':inventory(self.parts/'win32-x64','release')}
+            receipt.write_text(json.dumps(record))
+            os.environ['WINDOWS_RECORD_SHA256'] = hashlib.sha256(receipt.read_bytes()).hexdigest()
+            signers = self.release.verified_windows_signers(self.parts/'win32-x64')
+            self.simulate_signed_release(signers)
+            with zipfile.ZipFile(next(self.release.candidate.glob('*.zip'))) as archive:
+                evidence = json.loads(archive.read('release.json'))['windows_verification']
+            self.assertEqual(evidence, {'record':record,'artifact_id':'456',
+                                        'record_sha256':os.environ['WINDOWS_RECORD_SHA256']})
+            # validate() already finished. Remove its completion marker to test resume's input gate.
+            (self.release.candidate/'validated.json').unlink()
+            os.environ['GITHUB_RUN_ATTEMPT'] = '2'
+            with self.assertRaisesRegex(ValueError,'windows_verification_context_changed'):
+                self.release.execute('package')
+
     def simulate_signed_release(self, signers):
         key_script = r'''
           const {generateKeyPairSync}=require('node:crypto'),fs=require('node:fs');
@@ -315,6 +349,8 @@ class LocalReleaseTests(unittest.TestCase):
         submission = '01234567-89ab-cdef-0123-456789abcdef'
         original_command = self.release.command
         def command(name, *args, **kwargs):
+            if self.release.windows_record is not None and name in ('jsign', 'osslsigncode'):
+                self.fail('Linux invoked Windows signing tools for a verified stage')
             if name in ('node', 'npm'):
                 return original_command(name, *args, **kwargs)
             if name == 'rcodesign' and args[0] == 'staple':
@@ -323,7 +359,9 @@ class LocalReleaseTests(unittest.TestCase):
                 return json.dumps({'jobId': submission, 'status': 'Accepted', 'statusCode': 0,
                                    'sha256': self.release.state['payload_sha256']}).encode()
             return b''
-        with patch.object(self.release, 'verify_platforms', return_value=signers), \
+        verify = self.release.verify_platforms if self.release.windows_record is not None else lambda: signers
+        with patch.object(self.release, 'verify_platforms', side_effect=verify), \
+                patch.object(self.release, 'verify_apple'), \
                 patch.object(self.release, 'submit', return_value=submission), \
                 patch.object(self.release, 'command', side_effect=command):
             for stage in local.STAGES:
