@@ -23,9 +23,9 @@ export function cost_evidence(pr) {
   if (!artifacts.length) throw Error('no budget-stop artifact for this head');
   const current=artifacts[0];
   function check(artifact) {
-    cost_run(artifact,get('/actions/runs/'+artifact.workflow_run.id),pr);
+    return cost_run(artifact,get('/actions/runs/'+artifact.workflow_run.id),pr);
   }
-  check(current);
+  if (check(current)!==pr.base.sha) throw Error('stale budget-stop workflow');
   const quote=approval.verify_archive(download(current.id),current,pr,repository);
   function claims() {
     const rows=new Map();
@@ -45,5 +45,10 @@ export function cost_evidence(pr) {
     }
     return [...rows.values()].map((row,i)=>({...row,id:i+1}));
   }
-  return {artifact:current,quote,claims};
+  function revalidate() {
+    const artifact=get('/actions/artifacts/'+current.id);
+    if (artifact.name!==current.name || check(artifact)!==pr.base.sha || Date.now()>=quote.expires_at*1000)
+      throw Error('budget stop expired or changed');
+  }
+  return {artifact:current,quote,claims,revalidate};
 }

@@ -58,8 +58,6 @@ async function main() {
   const reviewer=agent(name || process.env.SAVIOR_REVIEW_AGENT || 'agy');
   const path='/pulls/'+number, pr=get(path);
   current(pr,pr);
-  if (git(['remote','get-url','origin']).trim()!=='https://github.com/'+repository+'.git')
-    throw Error('expected the configured Savior origin');
   git(['fetch','--no-tags','origin','refs/heads/main','refs/pull/'+number+'/head']);
   if (git(['rev-parse','HEAD']).trim()!==pr.base.sha ||
       git(['status','--porcelain','--untracked-files=all','--','tools/local_review','tools/adversarial_reviewer','package.json']).trim())
@@ -68,7 +66,7 @@ async function main() {
   const checks=list('/commits/'+pr.head.sha+'/check-runs?filter=all&app_id='+app_id+'&per_page=100','check_runs');
   async function refresh() {
     current(get(path),pr);
-    if (Date.now()>=evidence.quote.expires_at*1000) throw Error('budget stop expired');
+    evidence.revalidate();
   }
   const check=await complete({pr,agent:reviewer,evidence,existing:checks,write:app_client.bind(null,true),refresh,
     inspect:()=>assess(snapshot(pr),evidence.claims(),reviewer.infer),reviews:()=>list(path+'/reviews?per_page=100')});

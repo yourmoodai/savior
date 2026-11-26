@@ -15,6 +15,11 @@ function cost_run(artifact,run,pr) {
       run.path !== '.github/workflows/pr-validation.yml' || run.display_title !== 'pr validation #'+pr.number ||
       (run.event === 'workflow_dispatch' && run.head_branch !== 'main') || run.status !== 'completed')
     throw Error('trusted completed cost stop required');
+  if (run.event==='workflow_dispatch') return run.head_sha;
+  const target=run.pull_requests?.find(p=>p.number===pr.number && p.base.ref==='main' &&
+    p.base.repo.id===repo_id && p.head.repo.id===repo_id && p.head.sha===pr.head.sha);
+  if (!target || run.head_sha!==pr.head.sha) throw Error('untrusted budget-stop target');
+  return target.base.sha;
 }
 
 function receipt_id(pr,artifact,config) {
@@ -38,7 +43,7 @@ async function validate_check({github,context,pr,id}) {
     throw Error('current successful local App check required');
   const {data:artifact} = await github.rest.actions.getArtifact({...context.repo,artifact_id:Number(artifact_id)});
   const {data:run} = await github.rest.actions.getWorkflowRun({...context.repo,run_id:artifact.workflow_run.id});
-  cost_run(artifact,run,pr);
+  if (cost_run(artifact,run,pr)!==pr.base.sha) throw Error('stale budget-stop workflow');
   const archive = await github.rest.actions.downloadArtifact({...context.repo,artifact_id:artifact.id,archive_format:'zip'});
   verify_archive(Buffer.from(archive.data),artifact,pr,repository);
   return marker(check);

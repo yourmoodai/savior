@@ -10,7 +10,7 @@ const {repository,repo_id,app_id,check_name,bot,receipt_id,validate_check,marker
 const pr={number:42,head:{sha:'a'.repeat(40)},base:{sha:'b'.repeat(40)}};
 const artifact={id:8,name:'',workflow_run:{id:9,repository_id:repo_id},size_in_bytes:123};
 const run={id:9,path:'.github/workflows/pr-validation.yml',event:'workflow_dispatch',
-  head_branch:'main',display_title:'pr validation #42',status:'completed',repository:{full_name:repository}};
+  head_branch:'main',head_sha:pr.base.sha,display_title:'pr validation #42',status:'completed',repository:{full_name:repository}};
 const sha='c'.repeat(64);
 const agent={name:'agy',identity:sha};
 const source={paths:['add.js'],available:['add.js'],read:()=>'return a-b;',patch:'@@ -0,0 +1 @@\n+return a-b;'};
@@ -94,4 +94,12 @@ test('CI binds the App identity, review, trusted cost artifact and both revision
   await assert.rejects(validate_check({...args,context:{...context,ref:'refs/heads/feature'}}));
   item.name+='wrong';
   await assert.rejects(validate_check(args),/quote_stale/);
+});
+
+test('pull request budget stops originate on the matching main target',()=>{
+  const pull={...pr,base:{...pr.base,ref:'main',repo:{id:repo_id}},head:{...pr.head,repo:{id:repo_id}}};
+  const source={...run,event:'pull_request_target',head_sha:pr.head.sha,pull_requests:[pull]};
+  assert.equal(receipt.cost_run(artifact,source,pr),pr.base.sha);
+  for (const changed of [{...pull,number:43},{...pull,base:{...pull.base,ref:'feature'}}])
+    assert.throws(()=>receipt.cost_run(artifact,{...source,pull_requests:[changed]},pr));
 });
