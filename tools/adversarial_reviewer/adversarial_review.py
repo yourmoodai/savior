@@ -59,7 +59,7 @@ RESPONSE_SCHEMA = {
 }
 
 SYSTEM_PROMPT = """You are a careful code reviewer. Determine whether the changes introduce a bug.
-First explain what changed and whether it introduces a defect.
+Use the rationale for the reason behind the verdict. Put each concrete defect in findings.
 Finish evaluating hypotheses before composing the final response. A rejected hypothesis
 is not a finding. If the rationale concludes there is no defect, return an empty findings array.
 For clean changes, give one sentence of at most 25 words. For findings, use at most two short sentences.
@@ -279,8 +279,6 @@ def review_messages(diff, files, doc_context, anchors, candidate=None, supportin
         "Evidence location IDs and source coordinates. Within each inclusive range, IDs and lines advance together. Select one integer ID, not a range. 'file' means metadata:\n"
         + location_ranges(anchors)
         + "\n"
-        + ('Return JSON with "rationale", "findings", and "abstention" fields, in that order.\n'
-           if candidate is None else 'Return JSON containing decisions keyed by finding_id.\n')
     )
     if candidate is not None:
         content += (
@@ -289,6 +287,12 @@ def review_messages(diff, files, doc_context, anchors, candidate=None, supportin
     system = (system_prompt if candidate is None else verification_prompt) + '\n' + runtime_facts()
     system += "\nReturn JSON matching this schema: " + json.dumps(RESPONSE_SCHEMA if candidate is None else verification_schema)
     content += supporting_context
+    if candidate is None:
+        content += ('\nReturn JSON with "rationale", "findings", and "abstention" in that order. '
+                    'Write one sentence of at most 25 words in rationale, stating the deciding reason. '
+                    'Put detailed evidence in findings. Use abstention for uncertainty that prevents a verdict.')
+    else:
+        content += '\nReturn JSON containing decisions keyed by finding_id.'
     return [{"role": "system", "content": system}, {"role": "user", "content": content}]
 
 

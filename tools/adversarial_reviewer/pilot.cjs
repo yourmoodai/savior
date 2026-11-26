@@ -14,7 +14,7 @@ module.exports = async function restore({github,context}) {
   const reservations = owned.filter(a=>a.name.startsWith(pilot+'-reserved-'+a.workflow_run.id+'-'));
   const finals = owned.filter(a=>a.name.startsWith(pilot+'-settled-'+a.workflow_run.id+'-'));
   for (const run of runs) {
-    const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,{...context.repo,run_id:run.id,filter:'all',per_page:100});
+    const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,{...context.repo,run_id:run.id,filter:'all',per_page:30});
     for (const job of jobs) {
       // Partial reruns copy completed jobs under new IDs and attempt numbers.
       // Only identical execution evidence can reuse the original reservation.
@@ -64,5 +64,5 @@ module.exports = async function restore({github,context}) {
     const archive = await github.rest.actions.downloadArtifact({...context.repo,artifact_id:artifact.id,archive_format:'zip'});
     fs.writeFileSync(`review-result/previous-caches/${artifact.id}.zip`,Buffer.from(archive.data));
   }
-  fs.writeFileSync('review-result/reservation.json',JSON.stringify({pilot,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT,maximum_usd:10}));
+  fs.writeFileSync('review-result/reservation.json',JSON.stringify({pilot,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT,maximum_usd:11}));
 };

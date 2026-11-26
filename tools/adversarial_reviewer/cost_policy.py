@@ -33,12 +33,13 @@ def validate_attribution(repository, pr, started, settled):
 
 
 def remaining(db, repository, pr):
-    from budget import BudgetError
+    from budget import BudgetError, LIMIT
     day = utc_day()
-    rows = db.execute('SELECT c.reserved,c.charged,a.repository,a.pr,a.started,a.settled '
-                      'FROM calls c LEFT JOIN attribution a ON a.call_id=c.id').fetchall()
-    pr_spent, daily_spent = 0, 0
-    for reserved, charged, repo, number, started, settled in rows:
+    rows = db.execute('SELECT c.reserved,c.charged,a.repository,a.pr,a.started,a.settled,f.call_id '
+                      'FROM calls c LEFT JOIN attribution a ON a.call_id=c.id '
+                      'LEFT JOIN funding f ON f.call_id=c.id').fetchall()
+    pr_spent, daily_spent, pilot_spent = 0, 0, 0
+    for reserved, charged, repo, number, started, settled, funded in rows:
         if type(reserved) is not int or reserved < 0 or (charged is not None and (type(charged) is not int or charged < 0)):
             raise BudgetError('invalid historical charge')
         if repo is None:
@@ -47,6 +48,8 @@ def remaining(db, repository, pr):
         if (charged is None) != (settled is None) or (charged is not None and charged > reserved):
             raise BudgetError('unresolved or conflicting spending evidence')
         amount = reserved if charged is None else charged
+        if funded is None:
+            pilot_spent += amount
         if repo == repository:
             if number == pr:
                 pr_spent += amount
@@ -55,14 +58,20 @@ def remaining(db, repository, pr):
             if settled is None or started <= day <= settled:
                 daily_spent += amount
     return {'repository': repository, 'pr': pr, 'utc_day': day,
+            'pilot_remaining_nanodollars': max(0, LIMIT-pilot_spent),
             'pr_limit_nanodollars': PR_LIMIT, 'daily_limit_nanodollars': DAILY_LIMIT,
             'pr_remaining_nanodollars': max(0, PR_LIMIT-pr_spent),
             'daily_remaining_nanodollars': max(0, DAILY_LIMIT-daily_spent)}
+
+
+def available(allowance):
+    return min(allowance['pr_remaining_nanodollars'], allowance['daily_remaining_nanodollars'],
+               allowance['pilot_remaining_nanodollars'])
 
 
 def check(amount, allowance):
     from budget import BudgetError, BudgetExhausted
     if type(amount) is not int or amount < 0:
         raise BudgetError('invalid call reservation')
-    if amount > min(allowance['pr_remaining_nanodollars'], allowance['daily_remaining_nanodollars']):
+    if amount > available(allowance):
         raise BudgetExhausted('call reservation exceeds repository policy')
