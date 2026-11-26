@@ -32,8 +32,8 @@ c5ec550c73dd7b4e81e206fdff3cf4c46b0ae1b29fec1db5cd4e12d88416abbf https://dl-cdn.
 2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk
 042026082cc9bc7872d1baa81755c50efa70b05f03b5369fdc5f0a1303009720 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libcrypto3-3.5.9-r1.apk
 1f70ca404818805a6465b615bbfe84ef861488a963d7e630108ebd7fbaa51665 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libcurl-8.23.0-r0.apk
-e7e7408ea787ed06d00159b0ff1f9b65a63cf634f36d9e0fa7512ce2c489a503 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libexpat-2.10.0-r0.apk
-6da1a19313a40c56cac756fb11e2c4d5267831e1c22fc8323f24c943c94da6e0 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libffi-3.5.2-r1.apk
+3779d8b0dfac33f82fd4ca0749318066e6beabe77cd788aa2d9f502e74a87b07 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libexpat-2.11.0-r0.apk
+b26d26991fb66b7b3ba0e9f38b46f7f0bc0a84dfe4c274e4ab713aed51ddaa79 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libffi-3.8.1-r0.apk
 393dcd32629f06d7d85409c272d142d0c082772d10b87ef55ee82f47de3be637 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libgcc-15.2.0-r5.apk
 563244a562f5c48b921f7f0b4a571e373cfcba65175fe2d4f752c5f975738bcd https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libgcc-static-15.2.0-r5.apk
 e7204aad00e31d544e0a34eac5a7eb7d3586d2b7b22afd6e5907189c4e0337cc https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libgomp-15.2.0-r5.apk
@@ -65,10 +65,10 @@ ed11241475e5757ce8eb9788b18116a804a579395d4813605df12989a2acbabf https://dl-cdn.
 f79c696b960d974832723215431b93e21ecb29b2449892b3fd6587713f1f2f50 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/p11-kit-trust-0.26.2-r0.apk
 2919897914820f42a17a8d7d37df310d2dfad1c82ebe5f539cc5c765f916752a https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/pcre2-10.49-r0.apk
 20cc47b76b82e9424a35ecc4fdd7bd904ef49ada1684214910fae31bc0cab737 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/pkgconf-2.5.1-r0.apk
-8b1678559e6c29db978a923b611cd21a8bfda26d4814edefbb2d62a903bf7df8 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/pyc-3.14.10-r1.apk
-32ae9c446a79f965f942ae704c5121fa4744c5fee76ec86955fe0fc9a6e6c412 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/python3-3.14.10-r1.apk
-bc63349707d5658ee2d852e415846246b8d71ece5007120b1d2aee85b4a2ad0a https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/python3-pyc-3.14.10-r1.apk
-19a814d76898adbf90ec0f33ff1fd85fb8454be8615f4993fba0b69b7b978926 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/python3-pycache-pyc0-3.14.10-r1.apk
+4fb982f4229f42e011d57a4aa3baede649bb10b1eea668c4d3f8761f791dc9ef https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/pyc-3.14.10-r2.apk
+ef4c4688fa4360e7b544aa723374fb202af25ff662b0b6adef2cd34f03254c7b https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/python3-3.14.10-r2.apk
+95ee050d81b33e4565a7d1267152f63fb054141e719df5e7ec3d7eb7f7a4d659 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/python3-pyc-3.14.10-r2.apk
+95c7b4733bd86b55b68732e367d5fca30c3c1bdd13f937f64168605d8ef8b6c1 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/python3-pycache-pyc0-3.14.10-r2.apk
 766911ecb986a6c5cf0841a6b556cd1e9dbbf22b3559726de32416486cd15c81 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/readline-8.3.3-r1.apk
 7d14a70040f83f40ae5ea8829e3eb58d82f06d959478658b81b30033d390651f https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/rhash-libs-1.4.6-r0.apk
 f959c2baf5a6438bd7d74aa16b56c8526c116233052a71d598940e6f5b4400f9 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/samurai-1.2-r8.apk
@@ -78,6 +78,6 @@ e578a140670e4cf9816117b0c2063632bf3754ecbe8fa593a7fd2b4039372bf0 https://dl-cdn.
 ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk
 7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk
 889ed6014fc9acb815a7755732d4099bd84b1176b4845853bb050361d8b876b2 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-dev-1.4-r0.apk
-774da060da278110a2075de01ecee04fb036033ec19de9f3c36f0283c150a487 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-1.5.7-r2.apk
-1b548f46268e658cdd79fc65eb3e58e627d57d8694c3615f6e9490e6f70ba0cd https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-dev-1.5.7-r2.apk
-23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk
+e749f6f01fe4196e9f5ac2491e18e4623271743ca64a2119252d19433717ff4c https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-1.6.0-r1.apk
+843c998d7db06681476fc2ec31d38c33789abaca3aa93a4e4428bed4ce4bf5e2 https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-dev-1.6.0-r1.apk
+69243fd7b0633f20fee47ccf566ecfe2802a7a9d18700f10abc54aa8060774ab https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.6.0-r1.apk
