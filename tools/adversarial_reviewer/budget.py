@@ -6,7 +6,7 @@ import sqlite3
 import time
 import uuid
 
-LIMIT = 10_000_000_000  # nanodollars: $10 pilot, including uncertain calls
+LIMIT = 11_000_000_000  # nanodollars: $11 pilot, including uncertain calls
 QUALIFICATION_LIMIT = 2_000_000_000  # nanodollars: $2
 INPUT_RATE = 620  # nanodollars per token; US DeepSeek V3.2 standard on-demand
 OUTPUT_RATE = 1850

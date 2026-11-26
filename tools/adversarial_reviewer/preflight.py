@@ -9,6 +9,7 @@ import tempfile
 import zipfile
 
 from budget import Ledger, BudgetError
+from cost_policy import available
 from qualify import cached_qualification
 from quote import create, apply_policy, sizing
 from review_plan import PlanningError, require_feasible, feasible
@@ -113,8 +114,7 @@ def main():
         reservation = json.loads((DIRECTORY/'reservation.json').read_text())
         reservation.update(repository=quote['binding']['repository'], pr=quote['binding']['pr'],
                            utc_day=quote['policy']['utc_day'], projected_nanodollars=quote['projected_nanodollars'],
-                           maximum_usd=min(quote['policy']['pr_remaining_nanodollars'],
-                                           quote['policy']['daily_remaining_nanodollars'])/1e9)
+                           maximum_usd=available(quote['policy'])/1e9)
         (DIRECTORY/'reservation.json').write_text(json.dumps(reservation)+'\n')
     with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
         output.write(f"spend={str(reason is None).lower()}\n")

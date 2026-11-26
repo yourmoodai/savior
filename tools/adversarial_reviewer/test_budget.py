@@ -64,7 +64,7 @@ class BudgetTests(unittest.TestCase):
         self.assertEqual(self.ledger.summary()['committed_usd'], 0.2)
         with self.assertRaises(BudgetError):
             self.ledger.reserve(3_000_000,0,'qualification','over ceiling')
-        for invalid in (-1, True, 10_000_000_001):
+        for invalid in (-1, True, 11_000_000_001):
             with self.assertRaises(BudgetError):
                 self.ledger.record_external_reservation(invalid)
 

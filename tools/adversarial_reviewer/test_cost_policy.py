@@ -29,6 +29,22 @@ class CostPolicyTests(unittest.TestCase):
     def settle(self, key, amount):
         self.ledger.reconcile(key, {'usage': {'inputTokens': amount, 'outputTokens': 0}}, 0)
 
+    def test_cumulative_pilot_retains_charges_and_holds_across_days(self):
+        for pr in range(1, 6):
+            with patch.dict(os.environ, PR_NUMBER=str(pr)), patch(
+                'cost_policy.utc_day', return_value=f'2026-10-{10+pr}'
+            ):
+                self.settle(self.reserve(2_000_000_000), 2_000_000_000)
+        with patch.dict(os.environ, PR_NUMBER='6'):
+            self.reserve(999_999_999)
+            self.ledger = Ledger(self.path)
+            self.assertEqual(self.ledger.policy_budget()['pilot_remaining_nanodollars'], 1)
+            with self.assertRaises(BudgetExhausted):
+                self.reserve(2)
+            self.reserve(1)
+            with self.assertRaises(BudgetExhausted):
+                self.reserve(1)
+
     def test_exact_boundaries_and_one_nanodollar_over(self):
         check(2_000_000_000, self.ledger.policy_budget())
         with self.assertRaises(BudgetExhausted):
