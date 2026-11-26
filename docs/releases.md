@@ -330,7 +330,9 @@ candidate and daily at `06:23 UTC`. Daily/manual standalone runs require a
 successful default-branch qualification at the same revision and reuse that exact
 candidate artifact. Missing or expired artifacts require fresh qualification;
 the workflow does not silently rebuild a different candidate. Four clients share
-each native job, with at most four jobs active. Artifacts retain inventories,
+each native job, with at most four jobs active.
+Standalone runs can reuse matching assessments from a successful default-branch
+push for the same candidate. Artifacts retain inventories,
 failed attempts, partial events, and JSON/Markdown compatibility tables for 90
 days. Publication revalidates raw evidence and includes the table, inventory,
 and evidence archive beside the release assets.

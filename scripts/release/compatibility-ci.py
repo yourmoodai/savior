@@ -10,6 +10,7 @@ import sys
 def main():
     if sys.argv[1:] == ['plan']:
         candidate_run = os.environ['GITHUB_RUN_ID']
+        assessment_run = ''
         if os.environ['GITHUB_EVENT_NAME'] in ('schedule', 'workflow_dispatch') and os.environ.get('COMPATIBILITY_STANDALONE') == 'true':
             repository = os.environ['GITHUB_REPOSITORY']
             branch = os.environ['DEFAULT_BRANCH']
@@ -21,12 +22,15 @@ def main():
             if not matching:
                 raise SystemExit('no qualified candidate at this revision; run release qualification first')
             candidate_run = str(matching[0]['id'])
+            # A manual qualification may test a pull request under the default workflow.
+            if matching[0]['event'] == 'push':
+                assessment_run = candidate_run
         subprocess.run(['node', 'scripts/release/compatibility-inventory.mjs', 'discover',
                         '.cache/compatibility/inventory.json'], check=True)
         matrix = subprocess.check_output(['node', 'scripts/release/compatibility-inventory.mjs', 'matrix',
                                           '.cache/compatibility/inventory.json'], text=True).strip()
         with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-            output.write(f'matrix={matrix}\ncandidate_run={candidate_run}\n')
+            output.write(f'matrix={matrix}\ncandidate_run={candidate_run}\nassessment_run={assessment_run}\n')
     elif sys.argv[1:] == ['report']:
         candidates = list(Path('.cache/release').glob('savior-*.zip'))
         if len(candidates) != 1:

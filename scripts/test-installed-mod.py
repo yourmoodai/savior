@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 import threading
 import time
+import traceback
 import queue
 import re
 import sys
@@ -369,4 +370,17 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as error:
+        if directory := os.environ.get('SAVIOR_HOST_REPORT_DIR'):
+            # Terminal output, exception messages and absolute paths may contain draft text.
+            diagnostic = {'exception': type(error).__name__,
+                          'errno': error.errno if isinstance(error, OSError) else None,
+                          'winerror': error.winerror if os.name == 'nt' and isinstance(error, OSError) else None,
+                          'frames': [[Path(frame.f_code.co_filename).name, line]
+                                     for frame, line in traceback.walk_tb(error.__traceback__)]}
+            with (Path(directory) / f'{strategy}-{scenario}.error.jsonl').open('x') as report:
+                report.write(json.dumps(diagnostic) + '\n')
+            raise SystemExit(1) from None
+        raise
