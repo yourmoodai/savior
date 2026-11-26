@@ -34,7 +34,7 @@ def messages(units, support):
 
 class SourceGraphTests(unittest.TestCase):
     def test_whole_change_fits_larger_route_and_cannot_restore_on_smaller_route(self):
-        files = {f'p{i}.md': '# report\n'+'a'*1700+str(i)+'\n' for i in range(20)}
+        files = {f'p{i}.md': '# report\n'+'a'*6800+str(i)+'\n' for i in range(5)}
         diff, snapshot = difference({}, files), sources({}, files)
         with patch('review_plan.capacities', return_value=(160000, 160000)):
             planned = pack(diff, estimate_input_units, messages, snapshot, 'adaptive')
@@ -43,6 +43,31 @@ class SourceGraphTests(unittest.TestCase):
             restore(planned['review_plan'], diff, snapshot)
         with self.assertRaises(PlanningError):
             restore(planned['review_plan'], diff, snapshot)
+
+    def test_wide_change_preserves_each_primary_anchor_and_its_dependencies(self):
+        old = {'shared.py': 'def shared():\n    return 0\n'}
+        files = {**old, **{f'module_{i}.py': f'from shared import shared\ndef value():\n    return shared() + {i}\n'
+                           for i in range(14)}}
+        diff, snapshot = difference(old, files), sources(old, files)
+        planned = pack(diff, estimate_input_units, messages, snapshot, 'adaptive')
+        chunks = restore(planned['review_plan'], diff, snapshot)['chunks']
+        self.assertGreater(len(chunks), 1)
+        expected = [a['id'] for a in anchors(parse(diff))]
+        actual = []
+        for chunk in chunks:
+            self.assertLessEqual(len({u.path for u in chunk['units']}), 6)
+            self.assertLessEqual(len(chunk['units']), 20)
+            self.assertIn('def shared():', chunk['support'])
+            actual.extend(a['id'] for a in anchors(chunk['units']))
+        self.assertCountEqual(actual, expected)
+
+    def test_many_changes_in_one_file_use_multiple_judgments(self):
+        source = ''.join(f'def total_{i}():\n    return {i}\n' + '\n' * 8 for i in range(23))
+        old, new = {'totals.py': source}, {'totals.py': source.replace('return ', 'return 1 + ')}
+        diff, snapshot = difference(old, new), sources(old, new)
+        planned = pack(diff, estimate_input_units, messages, snapshot, 'adaptive')
+        chunks = restore(planned['review_plan'], diff, snapshot)['chunks']
+        self.assertEqual([len(c['units']) for c in chunks], [20, 3])
 
     def test_unchanged_diff_context_is_not_a_dependency_root(self):
         old = {'a.py': 'def changed():\n    return 1\ndef unrelated():\n    return eval("missing")\n'}
@@ -438,8 +463,11 @@ class SourceGraphTests(unittest.TestCase):
             os.chdir(folder)
             directory = Path('review-result')
             directory.mkdir()
-            binding = {'head': 'head', 'base': 'base', 'repository': 'org/repo', 'pr': 1, 'configuration': 'config'}
-            (directory/'preflight.json').write_text(json.dumps({'blocked_reason': None, 'commit_id': 'head', 'quote': {'binding': binding}}))
+            routing = {'models': {}, 'routing': {'schema': 1, 'roles': {}}}
+            binding = {'head': 'head', 'base': 'base', 'repository': 'org/repo', 'pr': 1,
+                       'configuration': 'config', 'routing': routing}
+            (directory/'preflight.json').write_text(json.dumps({'blocked_reason': None, 'commit_id': 'head',
+                                                               'quote': {'binding': binding, 'review_sizing': {}}}))
             for strategy in ('baseline', 'adaptive'):
                 (directory/(strategy+'-manifest.json')).write_text(json.dumps({
                     'files': 1, 'total_lines': 10, 'total_chunks': 1, 'total_units': 1, 'excluded_assets': [],
@@ -449,6 +477,7 @@ class SourceGraphTests(unittest.TestCase):
             with patch.dict(os.environ, HEAD_SHA='head', BASE_SHA='base', GITHUB_REPOSITORY='org/repo', PR_NUMBER='1',
                             BEDROCK_REVIEW_ENABLED='true', REVIEW_COST_POLICY='true', GITHUB_STEP_SUMMARY=''), \
                     patch('preflight.restore', return_value=ledger), patch('quote.validate'), \
+                    patch('model_catalog.manifest', return_value=routing), \
                     patch('quote.configuration', return_value='config'), patch('qualify.qualify') as qualify:
                 runpy.run_path(str(script), run_name='__main__')
             qualify.assert_not_called()

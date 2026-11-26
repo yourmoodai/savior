@@ -2,6 +2,7 @@ import {readFile, writeFile, mkdir} from 'node:fs/promises';
 import {dirname, resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
+import {catalog} from '../../hooks/compatibility-catalog.js';
 
 export const targets = {'darwin-arm64':'macos-15', 'linux-x64':'ubuntu-24.04', 'linux-arm64':'ubuntu-24.04-arm', 'win32-x64':'windows-2022'};
 export const stable_version = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
@@ -84,13 +85,28 @@ export async function discover(as_of = new Date().toISOString()) {
     window_start:new Date(Date.parse(as_of) - 90 * day).toISOString(), releases:selected});
 }
 
-export function job_matrix(inventory) {
+export function job_matrix(inventory, adapters = catalog.adapters) {
   validate_inventory(inventory);
   const include = [];
-  // Four clients per job bounds native run length and stays below GitHub's 256-job limit.
+  const reviewed = new Set(adapters.flatMap(adapter=>adapter.client_versions));
+  // Each reviewed client also runs the installed harness, which dominates probe time.
+  const batches = [];
+  let batch = [], weight = 0;
+  for (const {version} of inventory.releases) {
+    const cost = reviewed.has(version) ? 6 : 1;
+    if (weight + cost > 12) {
+      batches.push(batch);
+      batch = [];
+      weight = 0;
+    }
+    batch.push(version);
+    weight += cost;
+  }
+  batches.push(batch);
   for (const [target, os] of Object.entries(inventory_targets(inventory))) {
-    for (let i = 0; i < inventory.releases.length; i += 4) include.push({target, os, batch:i / 4,
-      versions:inventory.releases.slice(i,i+4).map(release=>release.version).join(',')});
+    for (const [index, versions] of batches.entries()) {
+      include.push({target, os, batch:index, versions:versions.join(',')});
+    }
   }
   if (include.length > 256) throw Error('inventory_exceeds_job_limit');
   return {include};

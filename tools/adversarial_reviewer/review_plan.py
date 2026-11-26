@@ -11,7 +11,9 @@ from bedrock_client import MAX_REQUEST_BYTES
 from egm import FOCUS
 from model_catalog import input_capacity
 
-SCHEMA = 6
+SCHEMA = 7
+MAX_PRIMARY_FILES = 6
+MAX_PRIMARY_UNITS = 20
 frozen_execution = ContextVar('frozen_review_plan', default=None)
 
 
@@ -34,6 +36,10 @@ def verification_messages(messages):
 
 def capacities():
     return min(input_capacity(role) for role in FOCUS), input_capacity('verification')
+
+
+def within_primary_scope(units):
+    return len(units) <= MAX_PRIMARY_UNITS and len({unit.path for unit in units}) <= MAX_PRIMARY_FILES
 
 
 def verification_bound(messages):
@@ -109,6 +115,9 @@ def pack(diff, count, messages, sources, strategy):
                 'request_bytes_bound': wire_bound, 'verification_input_units': count(verification)}
 
     def combined(units):
+        # Model context also holds dependencies. Limit how many changes require a single judgment.
+        if strategy == 'adaptive' and not within_primary_scope(units):
+            return None
         try:
             chunk = request(units)
         except SourceError as error:
@@ -179,6 +188,8 @@ def restore(frozen, diff, sources):
             or frozen['snapshots'] != {s: v.revision for s, v in sources.items()}):
         raise PlanningError('frozen evidence plan changed')
     chunks = [{**c, 'units': [Unit(**{**u, 'rows': tuple(u['rows'])}) for u in c['units']]} for c in frozen['chunks']]
+    if frozen['strategy'] == 'adaptive' and any(not within_primary_scope(c['units']) for c in chunks):
+        raise PlanningError('adaptive primary change limit exceeded')
     expected = Counter(a['id'] for a in anchors(parse(diff)))
     actual = Counter(a['id'] for c in chunks for a in anchors(c['units']))
     expected_coordinates = Counter(json.dumps(a, sort_keys=True) for a in anchors(parse(diff)))
