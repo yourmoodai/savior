@@ -49,12 +49,12 @@ def validate(response, anchors):
         raise ValueError("invalid abstention reason")
     if abstention.strip():
         raise ValueError(f"model abstained: {abstention.strip()}")
-    if (
-        not isinstance(rationale, str)
-        or not 10 <= len(rationale.strip()) <= 1200
-        or repetitive(rationale)
-    ):
-        raise ValueError("missing or repetitive rationale")
+    if not isinstance(rationale, str) or len(rationale.strip()) < 10:
+        raise ValueError("missing or short rationale")
+    if len(rationale.strip()) > 1200:
+        raise ValueError("rationale exceeds 1200 characters")
+    if repetitive(rationale):
+        raise ValueError("repetitive rationale")
     if not isinstance(findings, list):
         raise ValueError("invalid findings: expected array")
     if len(findings) > 3:

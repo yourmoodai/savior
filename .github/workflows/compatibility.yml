@@ -20,7 +20,6 @@ jobs:
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       candidate_run: ${{ steps.plan.outputs.candidate_run }}
-      assessment_run: ${{ steps.plan.outputs.assessment_run }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -85,24 +84,18 @@ jobs:
           python -m pip install --require-hashes --only-binary=:all:
           -r tools/host/requirements-windows.txt
       - uses: ./.github/actions/model-cache
-      - name: restore assessments from the qualified candidate
-        id: prior_assessments
-        if: needs.inventory.outputs.assessment_run != ''
-        continue-on-error: true
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          pattern: compatibility-assessments-${{ matrix.target }}-*
           path: .cache/compatibility/previous
-          github-token: ${{ github.token }}
-          run-id: ${{ needs.inventory.outputs.assessment_run }}
+          key: compatibility-${{ github.sha }}-${{ matrix.target }}-${{ matrix.batch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: compatibility-${{ github.sha }}-${{ matrix.target }}-${{ matrix.batch }}-
       - name: assess frozen native clients
         env:
           CLIENT_VERSIONS: ${{ matrix.versions }}
         shell: bash
-        run: >-
-          python scripts/release/compatibility-run.py .cache/compatibility/inventory.json
-          .cache/compatibility/assessments --versions "$CLIENT_VERSIONS"
-          ${{ steps.prior_assessments.outcome == 'success' && '--previous .cache/compatibility/previous' || '' }}
+        run: python scripts/release/compatibility-run.py .cache/compatibility/inventory.json .cache/compatibility/assessments --versions "$CLIENT_VERSIONS" --previous .cache/compatibility/previous
+      - name: retain assessments for identical candidate inputs
+        run: python -c "import shutil; shutil.copytree('.cache/compatibility/assessments', '.cache/compatibility/previous', dirs_exist_ok=True)"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

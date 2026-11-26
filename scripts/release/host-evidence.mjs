@@ -44,10 +44,6 @@ const report = {schema:2, platform:process.platform, arch:process.arch, scenario
   suite:source ? 'source_checkout' : hostCases[scenario].suite,
   candidate_sha256:candidate, identity, recorded_at:new Date().toISOString(),
   scope:'configured_loopback_receiver', ...stream.finish(execution)};
-if (report.status !== 'passed') {
-  report.exit_code = execution.status;
-  report.exit_signal = execution.signal ?? null;
-}
 report.adapter_id = select_adapter(report.evidence?.host_version?.split(' ')[0])?.id ?? null;
 if (JSON.stringify(identity.harness) !== JSON.stringify(await hashes(harness_files))) {
   report.status='host_failed'; report.reason='harness_changed';
