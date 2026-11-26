@@ -90,15 +90,21 @@ def qualification_estimate():
 
 
 def qualified_strategy(manifests, qualification):
-    from chunk_plan import ASSESSMENT_LIMIT
+    from review_plan import feasible, PlanningError
+    preference = os.environ.get('REVIEW_PLAN_PREFERENCE', 'cheapest')
+    if preference not in ('cheapest', 'baseline'):
+        raise PlanningError('unknown review plan preference')
+    if preference == 'baseline' and not feasible(manifests.get('baseline', {})):
+        raise PlanningError('per-file baseline is infeasible')
     if not qualification or not qualification.get('qualified'):
         return None
     options = [name for name, result in qualification.get('comparison', {}).items()
-               if result.get('passed') is True and name in manifests
-               and len(manifests[name]['chunks']) <= ASSESSMENT_LIMIT
-               and not any(c.get('omitted_support') for c in manifests[name]['chunks'])]
+               if result.get('passed') is True and feasible(manifests.get(name, {}))]
+    if preference == 'baseline':
+        if 'baseline' not in options:
+            raise PlanningError('per-file baseline did not pass qualification')
+        return 'baseline'
     if not options:
-        from review_plan import PlanningError
         raise PlanningError('no qualified feasible plan')
     return min(options, key=lambda name: (sizing(manifests[name])['first_pass_nanodollars'], name))
 
