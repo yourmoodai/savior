@@ -8,11 +8,27 @@ import unittest
 from unittest.mock import patch
 
 from adversarial_review import verify_candidates, _run_model_reviewer
-from quote import create, execution_strategy
+from quote import create, execution_strategy, qualified_strategy
+from review_plan import PlanningError
 from result_cache import source_identity
 
 
 class HarnessContracts(unittest.TestCase):
+    def test_per_file_retry_needs_complete_evidence_and_qualification(self):
+        plans = {s: {'chunks': [{'input_tokens': 100}] * n}
+                 for s, n in [('baseline', 3), ('adaptive', 1)]}
+        qualification = {'qualified': True, 'comparison': {s: {'passed': True} for s in plans}}
+        self.assertEqual(qualified_strategy(plans, qualification), 'adaptive')
+        with patch.dict(os.environ, REVIEW_PLAN_PREFERENCE='baseline'):
+            self.assertIsNone(qualified_strategy(plans, None))
+            self.assertEqual(qualified_strategy(plans, qualification), 'baseline')
+            qualification['comparison']['baseline']['passed'] = False
+            with self.assertRaisesRegex(PlanningError, 'qualification'):
+                qualified_strategy(plans, qualification)
+            plans['baseline']['chunks'][0]['omitted_support'] = ['missing dependency']
+            with self.assertRaisesRegex(PlanningError, 'infeasible'):
+                qualified_strategy(plans, None)
+
     def test_cheapest_qualified_plan_is_bound(self):
         plans = {s: {'chunks': [{'input_tokens': 100}] * n}
                  for s, n in [('baseline', 1), ('adaptive', 3)]}

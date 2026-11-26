@@ -14,6 +14,11 @@ on:
         type: choice
         default: configured
         options: [configured, nova_micro, nova_lite, gemma_3_4b, qwen_coder_next]
+      review_plan:
+        description: Use the per-file baseline to retry an incomplete grouped review
+        type: choice
+        default: cheapest
+        options: [cheapest, baseline]
 permissions:
   contents: read
 concurrency:

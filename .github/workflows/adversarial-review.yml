@@ -76,6 +76,7 @@ jobs:
       AWS_REGION: us-east-1
       REVIEW_COST_POLICY: 'true'
       BEDROCK_REVIEW_CANDIDATE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.review_model || 'configured' }}
+      REVIEW_PLAN_PREFERENCE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.review_plan || 'cheapest' }}
       BEDROCK_REVIEW_ENABLED: ${{ needs.scope.outputs.enabled }}
       BEDROCK_EXTERNAL_PROBE_NANODOLLARS: ${{ vars.BEDROCK_EXTERNAL_PROBE_NANODOLLARS }}
     steps:
@@ -116,6 +117,7 @@ jobs:
         if: needs.scope.outputs.enabled == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 2
           script: |
             try { await require('./tools/adversarial_reviewer/pilot.cjs')({github,context}); }
             catch (error) {
