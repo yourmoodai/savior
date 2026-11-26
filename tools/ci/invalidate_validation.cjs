@@ -25,7 +25,8 @@ module.exports=async ({github,context})=>{
     await github.rest.repos.createCommitStatus({...context.repo,sha:pr.head.sha,context:'pr readiness',state:'failure',
       description:pull ? 'approval changed; review and validation required' : 'base changed; review and validation required'});
     for (const run of runs) {
-      if (run.display_title===`pr validation #${pr.number}` && run.status!=='completed')
+      const title = 'pr validation #'+pr.number;
+      if ((run.display_title===title || run.display_title.startsWith(title+' local ')) && run.status!=='completed')
         await github.rest.actions.cancelWorkflowRun({...context.repo,run_id:run.id});
     }
     if (!pull && !pr.draft) await github.rest.actions.createWorkflowDispatch({...context.repo,

@@ -5,14 +5,14 @@ function assert_target(pr, binding) {
       pr.base.sha !== binding.base || pr.base.ref !== 'main') throw Error('approved revision changed');
 }
 
-function assert_approval(reviews, binding) {
+function assert_approval(reviews, binding, local_marker) {
   const latest = new Map();
   for (const r of [...reviews].sort((a,b)=>a.id-b.id)) {
     if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(r.state)) latest.set(r.user.login,r);
   }
   if ([...latest.values()].some(r=>r.state==='CHANGES_REQUESTED')) throw Error('changes requested');
-  const r=latest.get('github-actions[bot]');
-  const marker=`<!-- savior-assessment:${binding.head}:${binding.base}:${binding.run}:${binding.attempt} -->`;
+  const r=latest.get(local_marker ? require('../local_review/receipt.cjs').bot : 'github-actions[bot]');
+  const marker=local_marker || `<!-- savior-assessment:${binding.head}:${binding.base}:${binding.run}:${binding.attempt} -->`;
   if (r?.user.type !== 'Bot' || r.state !== 'APPROVED' || r.commit_id !== binding.head ||
       !r.body?.startsWith(marker)) throw Error('current adversarial approval required');
 }
@@ -40,6 +40,12 @@ async function execute({github,context,core,phase,binding,results}) {
       core.setOutput('dependabot', 'true');
       return;
     }
+    const id = context.payload.inputs?.local_check_id;
+    if (id) {
+      if (context.eventName !== 'workflow_dispatch' || context.ref !== 'refs/heads/main' || !/^[1-9]\d*$/.test(id))
+        throw Error('invalid local review dispatch');
+      core.setOutput('local_check',id);
+    }
     for (const [key,value] of Object.entries(target)) core.setOutput(key,value);
     await status('pending','waiting for adversarial approval and validation');
     return;
@@ -47,9 +53,11 @@ async function execute({github,context,core,phase,binding,results}) {
   try {
     assert_target(pr,target);
     const reviews=await github.paginate(github.rest.pulls.listReviews,{...args,per_page:100});
-    assert_approval(reviews,target);
+    const local = target.local_check;
+    const local_marker = local && await require('../local_review/receipt.cjs').validate_check({github,context,pr,id:local});
+    assert_approval(reviews,target,local_marker);
     if (phase==='finish') {
-      if (!results || !['review','admission','commits','verify','qualification'].every(k=>results[k]?.result==='success') ||
+      if (!results || results.review?.result !== (local ? 'skipped' : 'success') || !['admission','commits','verify','qualification'].every(k=>results[k]?.result==='success') ||
           results.site?.result !== (results.admission.outputs.site_required==='true' ? 'success' : 'skipped'))
         throw Error('review or downstream validation failed');
       assert_target((await github.rest.pulls.get(args)).data,target);

@@ -1,5 +1,5 @@
 name: pr validation
-run-name: 'pr validation #${{ github.event.pull_request.number || inputs.pr_number }}'
+run-name: 'pr validation #${{ github.event.pull_request.number || inputs.pr_number }}${{ inputs.local_check_id && format('' local {0}'', inputs.local_check_id) || '''' }}'
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, edited]
@@ -8,6 +8,9 @@ on:
     inputs:
       pr_number:
         required: true
+        type: string
+      local_check_id:
+        description: Completed budget fallback App check
         type: string
       review_model:
         description: Model to qualify for this run
@@ -34,6 +37,7 @@ jobs:
       pull-requests: read
       statuses: write
     outputs:
+      local_check: ${{ steps.control.outputs.local_check }}
       dependabot: ${{ steps.control.outputs.dependabot }}
       pr: ${{ steps.control.outputs.pr }}
       head: ${{ steps.control.outputs.head }}
@@ -57,7 +61,7 @@ jobs:
               binding: 'start' === 'start' ? undefined : {...binding,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT},
               results: JSON.parse(process.env.RESULTS)});
   review:
-    if: needs.start.outputs.dependabot != 'true'
+    if: needs.start.outputs.dependabot != 'true' && !needs.start.outputs.local_check
     needs: start
     permissions:
       contents: read
@@ -67,10 +71,15 @@ jobs:
     uses: ./.github/workflows/adversarial-review.yml
   admission:
     needs: [start, review]
-    if: needs.review.outputs.approved == 'true'
+    if: >-
+      always() && needs.start.result == 'success' && needs.start.outputs.dependabot != 'true' &&
+      ((needs.start.outputs.local_check && needs.review.result == 'skipped') ||
+       (needs.review.result == 'success' && needs.review.outputs.approved == 'true'))
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
+      actions: read
+      checks: read
       contents: read
       pull-requests: read
       statuses: write
@@ -148,6 +157,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
+      actions: read
+      checks: read
       contents: read
       pull-requests: read
       statuses: write
