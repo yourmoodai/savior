@@ -29,6 +29,12 @@ function receipt_id(pr,artifact,config) {
   return ['v1',pr.number,pr.base.sha,pr.head.sha,artifact,config].join('/');
 }
 
+function receipt_binding(value) {
+  const match=/^v1\/([1-9]\d*)\/([a-f0-9]{40})\/([a-f0-9]{40})\/([1-9]\d*)\/([a-f0-9]{64})$/.exec(value);
+  if (!match) throw Error('invalid local review receipt');
+  return {pr:Number(match[1]),base:match[2],head:match[3],artifact_id:Number(match[4])};
+}
+
 function marker(check) {
   return '<!-- savior-local-review:'+check.id+':'+sha256(check.output.text)+' -->';
 }
@@ -48,10 +54,9 @@ async function validate_check({github,context,pr,id}) {
   if (context.eventName !== 'workflow_dispatch' || context.ref !== 'refs/heads/main' ||
       context.payload.repository.id !== repo_id || !/^[1-9]\d*$/.test(id)) throw Error('invalid local dispatch');
   const {data:check} = await github.rest.checks.get({...context.repo,check_run_id:Number(id)});
-  const parts = check.external_id?.split('/') || [];
-  const [, , , ,artifact_id,config] = parts;
-  if (parts.length !== 6 || !/^[1-9]\d*$/.test(artifact_id) || !/^[a-f0-9]{64}$/.test(config) ||
-      check.external_id !== receipt_id(pr,artifact_id,config) || check.id !== Number(id) ||
+  const binding=receipt_binding(check.external_id);
+  const artifact_id=binding.artifact_id;
+  if (binding.pr!==pr.number || binding.base!==pr.base.sha || binding.head!==pr.head.sha || check.id!==Number(id) ||
       check.app?.id !== app_id || check.name !== check_name || check.head_sha !== pr.head.sha ||
       check.status !== 'completed' || check.conclusion !== 'success' || !check.output?.text)
     throw Error('current successful local App check required');
@@ -63,4 +68,4 @@ async function validate_check({github,context,pr,id}) {
   return marker(check);
 }
 
-module.exports = {repository,repo_id,app_id,bot,check_name,sha256,run_base,cost_run,receipt_id,marker,assert_no_conflict,validate_check};
+module.exports = {repository,repo_id,app_id,bot,check_name,sha256,run_base,cost_run,receipt_id,receipt_binding,marker,assert_no_conflict,validate_check};

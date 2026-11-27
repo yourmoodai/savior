@@ -44,6 +44,7 @@ export function agent(name='agy',model=process.env.SAVIOR_REVIEW_MODEL) {
   for (const key of ['PATH','HOME','USER','LANG','TMPDIR','DEVELOPER_PROFILE','PROFILE_ROUTER_ACTIVE',
     'AGY_CONFIG_DIR','CLAUDE_CONFIG_DIR','CODEX_CONFIG_DIR','CODEX_HOME'])
     if (process.env[key]) env[key]=process.env[key];
+  if (name==='codex' && !env.CODEX_HOME && env.CODEX_CONFIG_DIR) env.CODEX_HOME=env.CODEX_CONFIG_DIR;
   const config_path = name==='agy' ? join(homedir(),'.gemini','antigravity-cli','settings.json') :
     name==='claude' ? join(env.CLAUDE_CONFIG_DIR || join(homedir(),'.claude'),'settings.json') :
     join(env.CODEX_HOME || join(homedir(),'.codex'),'config.toml');

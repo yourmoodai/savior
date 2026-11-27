@@ -5,12 +5,15 @@ import sys
 import zipfile
 
 def claims(data, head, quote_id):
+    if len(data) > 64_000_000:  # 64 MB
+        raise ValueError('oversized review artifact')
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         name = 'report.json'
         if archive.namelist().count(name) != 1 or archive.getinfo(name).file_size > 64_000_000:  # 64 MB
             raise ValueError('missing or oversized verdict')
         report = json.loads(archive.read(name))
-        if report['commit_id'] != head or report['quote']['id'] != quote_id:
+        if (not isinstance(report, dict) or not isinstance(report.get('quote'), dict)
+                or report.get('commit_id') != head or report['quote'].get('id') != quote_id):
             raise ValueError('report revision or quote mismatch')
         if 'findings' in report:
             if not isinstance(report['findings'], list):
@@ -25,4 +28,4 @@ def claims(data, head, quote_id):
         raise ValueError('missing findings or preflight evidence')
 
 if __name__ == '__main__':
-    print(json.dumps(claims(sys.stdin.buffer.read(64_000_001), *sys.argv[1:])))
+    print(json.dumps(claims(sys.stdin.buffer.read(64_000_001), *sys.argv[1:]), ensure_ascii=False, separators=(',', ':')))

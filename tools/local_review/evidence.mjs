@@ -23,9 +23,9 @@ export function outstanding_findings(pr,reviews,fetch_check) {
   const id=/^<!-- savior-local-review:(\d+):/.exec(own.body)?.[1];
   if (!id) throw Error('unidentified outstanding local review');
   const check=fetch_check(id);
-  const binding=check.external_id?.split('/') || [];
-  if (check.app?.id!==app_id || check.id!==Number(id) || check.name!==check_name || check.conclusion!=='failure' ||
-      check.head_sha!==own.commit_id || binding[1]!==String(pr.number) || binding[3]!==own.commit_id ||
+  const binding=receipt.receipt_binding(check.external_id);
+  if (check.app?.id!==app_id || check.id!==Number(id) || check.name!==check_name || check.status!=='completed' || check.conclusion!=='failure' ||
+      check.head_sha!==own.commit_id || binding.pr!==pr.number || binding.head!==own.commit_id ||
       !own.body.startsWith(marker(check))) throw Error('unverified outstanding local review');
   const text=/^```json\n([\s\S]+)\n```$/.exec(check.output.text)?.[1];
   const report=JSON.parse(text);
@@ -60,7 +60,7 @@ export function cost_evidence(pr) {
       if (reports.length!==1 || reports[0].size_in_bytes>64_000_000) throw Error('missing or ambiguous previous assessment');
       const script=fileURLToPath(new URL('report.py',import.meta.url));
       const findings=JSON.parse(execFileSync('python3',[script,head,quote_id],
-        {input:download(reports[0].id),maxBuffer:4_000_000}));
+        {input:download(reports[0].id),maxBuffer:64_000_000,timeout:120_000}));
       for (const item of findings) {
         const path=item.file.replace(/:\d+$/,'');
         const claim={path,title:item.title,details:item.details,evidence:item.evidence,side:item.source_side};

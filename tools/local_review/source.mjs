@@ -16,6 +16,7 @@ function tree(revision) {
 }
 
 export function snapshot(pr) {
+  if (![pr.base.sha,pr.head.sha].every(sha=>/^[a-f0-9]{40}$/.test(sha))) throw Error('invalid revision');
   const base = git(['merge-base',pr.base.sha,pr.head.sha]).trim();
   const range = [base,pr.head.sha];
   const diff = ['diff','--no-ext-diff','--no-textconv','--no-renames','--ignore-submodules=none'];
