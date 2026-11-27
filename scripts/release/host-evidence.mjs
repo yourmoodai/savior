@@ -52,6 +52,10 @@ if (JSON.stringify(identity.models) !== JSON.stringify(await modelHashes()) ||
     identity.instrumentation_sha256 && identity.instrumentation_sha256 !== await fileDigest('tests/fixtures/host-failure.mjs')) {
   report.status='host_failed'; report.reason='inputs_changed';
 }
+if (report.status !== 'passed') {
+  report.exit_code = execution.status;
+  report.exit_signal = execution.signal ?? null;
+}
 await writeFile(stem+'.json', JSON.stringify(report,null,2)+'\n', {flag:'wx',mode:0o600});
 console.log(JSON.stringify({scenario,strategy,status:report.status,reason:report.reason}));
 if (report.status !== 'passed') process.exitCode = 1;

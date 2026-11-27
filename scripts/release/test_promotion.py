@@ -9,10 +9,12 @@ class PromotionTests(unittest.TestCase):
         self.run = {'workflow_id':12,'head_sha':self.revision,'head_branch':'v0.2.0',
                     'event':'push','status':'completed','conclusion':'success','run_attempt':2,
                     'repository':{'full_name':'example/project'}}
-        names = ['gate','package','publish'] + [f'{job} ({platform})'
-            for job in ('installed','published-download') for platform in ('macos-15','ubuntu-24.04','windows-2022')]
+        names = ['gate','package','windows / verify','compatibility / inventory','compatibility / report','publish'] + [f'{job} ({platform})'
+            for job in ('installed','published-download') for platform in ('macos-15','ubuntu-24.04','ubuntu-24.04-arm','windows-2022')]
         names += [f'build ({platform}, {target})' for platform,target in (
-            ('macos-15','darwin-arm64'),('ubuntu-24.04','linux-x64'),('windows-2022','win32-x64'))]
+            ('macos-15','darwin-arm64'),('ubuntu-24.04','linux-x64'),('ubuntu-24.04-arm','linux-arm64'),('windows-2022','win32-x64'))]
+        names += [f'compatibility / assess ({target}, batch)' for target in
+                  ('darwin-arm64', 'linux-x64', 'linux-arm64', 'win32-x64')]
         self.jobs = {'total_count':len(names),'jobs':[{'name':name,'conclusion':'success'} for name in names]}
         self.refs = [{'ref':'refs/heads/marketplace','object':{'sha':'b'*40}}]
         self.writes = []
@@ -48,6 +50,17 @@ class PromotionTests(unittest.TestCase):
         self.jobs['jobs'].pop()
         with self.assertRaises(ValueError):
             qualified_run('example/project',7,self.revision,'v0.2.0',self.api)
+
+    def test_arm64_install_evidence_is_required_on_later_pages(self):
+        jobs = self.jobs['jobs']
+        def pages(endpoint):
+            if '/jobs?' in endpoint:
+                return {'total_count': len(jobs), 'jobs': jobs[3:] if '&page=2' in endpoint else jobs[:3]}
+            return self.api(endpoint)
+        self.assertEqual(qualified_run('example/project',7,self.revision,'v0.2.0',pages), 2)
+        jobs.remove(next(job for job in jobs if job['name'] == 'installed (ubuntu-24.04-arm)'))
+        with self.assertRaisesRegex(ValueError, 'release_jobs_not_qualified'):
+            qualified_run('example/project',7,self.revision,'v0.2.0',pages)
 
     def test_stale_approval_cannot_overwrite_marketplace(self):
         for head in (None,'d'*40):

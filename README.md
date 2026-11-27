@@ -32,8 +32,7 @@ submission so you can fix it.
 
 **There is no published release yet.** You can
 [build and try Savior from source](CONTRIBUTING.md#development). The intended
-release platforms are Apple silicon Macs and Windows/Linux on Intel or AMD
-64-bit computers, with Claude Code installed.
+release platforms are Apple silicon Macs, Windows x64, and GNU/Linux on x64 or ARM64, with Claude Code installed.
 
 After setup, open `/savior` in Claude Code to check that it is ready. The
 [usage guide](docs/usage.md) covers settings, troubleshooting, and the future

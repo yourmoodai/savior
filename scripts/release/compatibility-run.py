@@ -5,7 +5,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import platform
 import shutil
 import subprocess
 import sys
@@ -17,11 +16,10 @@ import uuid
 import zipfile
 from datetime import datetime, timezone
 
+from native_target import native_target
 from archive import validate as validate_archive
 
 ROOT = Path(__file__).resolve().parents[2]
-TARGETS = {('Darwin', 'arm64'): 'darwin-arm64', ('Linux', 'x86_64'): 'linux-x64',
-           ('Windows', 'AMD64'): 'win32-x64'}
 
 
 def digest(path):
@@ -88,7 +86,7 @@ def reuse(previous, release, target, catalog, candidate_sha256, inputs, inventor
             row = json.loads(file.read_text())
         except (OSError, ValueError):
             continue
-        if (row.get('version') != release['version'] or row.get('target') != target
+        if (not isinstance(row, dict) or row.get('version') != release['version'] or row.get('target') != target
                 or row.get('candidate_sha256') != candidate_sha256 or row.get('qualification_inputs') != inputs
                 or row.get('artifact') != release['artifacts'][target]
                 or row.get('adapter_id') != (matches[0]['id'] if matches else None)
@@ -193,13 +191,14 @@ def main():
     parser.add_argument('--previous', type=Path, help='prior immutable assessments; identities must match')
     args = parser.parse_args()
     os.chdir(ROOT)
-    target = TARGETS.get((platform.system(), platform.machine()))
-    if not target:
-        parser.error('unsupported native platform')
     subprocess.run(['node', 'scripts/release/compatibility-inventory.mjs', 'matrix', str(args.inventory)],
                    check=True, stdout=subprocess.DEVNULL)
     inventory = json.loads(args.inventory.read_text())
     releases = inventory['releases']
+    try:
+        target = native_target(releases[0]['artifacts'])
+    except ValueError as error:
+        parser.error(str(error))
     if args.versions:
         selected = args.versions.split(',')
         releases = [release for release in releases if release['version'] in selected]

@@ -10,7 +10,7 @@ const release = (version, published_at = as_of, fields = {}) => ({tag_name:'v'+v
 const artifact = (version,target) => ({name:`@anthropic-ai/claude-code-${target}`,version,
   url:`https://registry.npmjs.org/@anthropic-ai/claude-code-${target}/-/claude-code-${target}-${version}.tgz`,
   integrity:'sha512-'+Buffer.alloc(64).toString('base64')});
-const inventory = () => ({schema:1,source:'https://api.github.com/repos/anthropics/claude-code/releases',as_of,
+const inventory = () => ({schema:2,source:'https://api.github.com/repos/anthropics/claude-code/releases',as_of,
   window_start:start,window_days:90,releases:window_releases([release('2.1.322'),release('2.1.321')],as_of)
     .map(row=>({...row,artifacts:Object.fromEntries(Object.keys(targets).map(target=>[target,artifact(row.version,target)]))}))});
 const digest = 'a'.repeat(64), candidate = 'b'.repeat(64), inputs = {harness:'c'.repeat(64)};
@@ -27,7 +27,7 @@ test('90-day window uses inclusive UTC publication bounds and excludes unstable 
 
 test('inventory rejects mutable artifacts, duplicate clients, invalid bounds and targets', () => {
   const valid = inventory();
-  assert.equal(job_matrix(valid).include.length,3);
+  assert.equal(job_matrix(valid).include.length,4);
   assert.ok(job_matrix(valid).include.every(job=>job.versions==='2.1.321,2.1.322'));
   for (const mutate of [value=>value.window_days=91, value=>value.window_start=as_of,
     value=>value.releases.push(value.releases[0]), value=>delete value.releases[0].artifacts['linux-x64'],
@@ -67,10 +67,22 @@ function assessments(value = inventory()) {
 test('complete native evidence qualifies reviewed mappings while exposing unsupported gaps', () => {
   const report = aggregate(inventory(),digest,assessments(),candidate,inputs,fixture_adapters);
   assert.equal(report.status,'passed'); assert.equal(report.coverage,'partial');
-  assert.equal(report.supported.length,3); assert.equal(report.assessments.length,6);
+  assert.equal(report.supported.length,4); assert.equal(report.assessments.length,8);
   assert.ok(report.supported.every(row=>row.client_version==='2.1.322'));
   assert.match(markdown(report),/no_reviewed_adapter/);
   assert.match(markdown(report),/whole-host/);
+});
+
+test('archived inventories report missing ARM64 coverage for each release', () => {
+  const archived = inventory();
+  archived.schema = 1;
+  for (const release of archived.releases) delete release.artifacts['linux-arm64'];
+  const rows = assessments(archived).filter(row=>row.target !== 'linux-arm64');
+  const report = aggregate(archived,digest,rows,candidate,inputs,fixture_adapters);
+  assert.equal(report.status,'failed');
+  assert.deepEqual(report.errors, archived.releases.map(release=>({
+    version:release.version,target:'linux-arm64',reason:'missing_inventory_target',
+  })));
 });
 
 test('multiple exact clients can qualify the same reviewed adapter without equal platform binaries', () => {
@@ -88,16 +100,17 @@ test('multiple exact clients can qualify the same reviewed adapter without equal
   const adapters = [{id:'composer_2_1_322',client_versions:['2.1.321','2.1.322']}];
   const report = aggregate(inventory(),digest,rows,candidate,inputs,adapters);
   assert.equal(report.status,'passed'); assert.equal(report.coverage,'complete');
-  assert.equal(report.supported.length,6);
+  assert.equal(report.supported.length,8);
 });
 
 test('missing, stale, partial and mixed evidence cannot qualify an advertised client', () => {
   const original = assessments();
-  for (const mutate of [rows=>rows.pop(), rows=>rows[3].cases.pop(), rows=>rows[3].candidate_sha256=digest,
-    rows=>rows[3].qualification_inputs={}, rows=>rows[3].checks.handlers.status='failed',
-    rows=>rows[3].status='unsupported_api', rows=>rows[3].cases[0].suite='source_checkout',
-    rows=>rows[3].cases.forEach(row=>row.identity.models.model=candidate),
-    rows=>rows[3].cases[0].events.reverse(),rows=>rows[3].host_sha256=candidate]) {
+  const advertised = original.findIndex(row => row.status === 'passed');
+  for (const mutate of [rows=>rows.pop(), rows=>rows[advertised].cases.pop(), rows=>rows[advertised].candidate_sha256=digest,
+    rows=>rows[advertised].qualification_inputs={}, rows=>rows[advertised].checks.handlers.status='failed',
+    rows=>rows[advertised].status='unsupported_api', rows=>rows[advertised].cases[0].suite='source_checkout',
+    rows=>rows[advertised].cases.forEach(row=>row.identity.models.model=candidate),
+    rows=>rows[advertised].cases[0].events.reverse(),rows=>rows[advertised].host_sha256=candidate]) {
     const rows = structuredClone(original); mutate(rows);
     assert.equal(aggregate(inventory(),digest,rows,candidate,inputs,fixture_adapters).status,'failed');
   }

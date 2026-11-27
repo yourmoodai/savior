@@ -2,6 +2,21 @@ import { packaged } from './distribution';
 
 type Host = { plugin: {root: string}; process: {run(argv: readonly string[], options?: {timeoutMs?: number; env?: Record<string,string>}): Promise<{exitCode:number;stdout:string;stderr:string}>} };
 
+async function linux_target(host: Host) {
+  for (const uname of ['/usr/bin/uname', '/bin/uname', '/run/current-system/sw/bin/uname']) {
+    try {
+      const kernel = await host.process.run([uname, '-sm'], {timeoutMs:10000});
+      if (kernel.exitCode !== 0) continue;
+      switch (kernel.stdout.trim()) {
+        case 'Linux aarch64': return 'linux-arm64';
+        case 'Linux x86_64': return 'linux-x64';
+        default: return 'unsupported';
+      }
+    } catch {}
+  }
+  return 'unsupported';
+}
+
 export class Runtime {
   node = 'node';
   env: Record<string,string> = {};
@@ -12,15 +27,22 @@ export class Runtime {
     if (!this.release) return;
     this.ready = false;
     this.status = 'downloading and verifying local runtime and model; drafts remain local until ready';
-    const targets = [['darwin-arm64','SaviorRuntime.app/Contents/MacOS/savior-bootstrap'], ['darwin-arm64','node'], ['linux-x64','node'], ['win32-x64','node.exe']] as const;
+    const targets = [['darwin-arm64','SaviorRuntime.app/Contents/MacOS/savior-bootstrap'], ['darwin-arm64','node'], ['linux-arm64','node'], ['linux-x64','node'], ['win32-x64','node.exe']] as const;
     try {
       let target: string | undefined;
+      let linuxTarget: string | undefined;
       for (const [name, executable] of targets) {
         const node = host.plugin.root + '/runtime/' + name + '/' + executable;
         try {
-          const result = await host.process.run([node, '-p', 'process.platform+"-"+process.arch'], {timeoutMs:10000});
+          if (name.startsWith('linux-')) {
+            linuxTarget ??= await linux_target(host);
+            if (name !== linuxTarget) continue;
+          }
+          // First activation of the ARM64 launcher can download the pinned Node executable.
+          const result = await host.process.run([node, '-p', 'process.platform+"-"+process.arch'], {timeoutMs:name === 'linux-arm64' ? 600000 : 10000});
           if (result.exitCode === 0 && result.stdout.trim() === name) { this.node = node; target = name; break; }
         } catch {}
+        if (name === linuxTarget) break;
       }
       if (!target) { this.status = 'unsupported platform or runtime unavailable'; return; }
       const setup = await host.process.run([this.node, host.plugin.root + '/bridge/bootstrap.mjs'], {timeoutMs:600000});

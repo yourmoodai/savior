@@ -49,7 +49,14 @@ class LocalReleaseTests(unittest.TestCase):
             for name in self.release.expected_files(target):
                 path = directory/name
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(b'synthetic artifact')
+                if target.startswith('linux-') and (name.endswith('.node') or path.name in
+                        ('node', 'savior', 'savior-review', 'savior-node-launcher')):
+                    header = bytearray(64)
+                    header[:7] = b'\x7fELF\x02\x01\x01'
+                    header[18:20] = (62 if target == 'linux-x64' else 183).to_bytes(2, 'little')
+                    path.write_bytes(header + path.name.encode())
+                else:
+                    path.write_bytes(b'synthetic artifact')
             self.metadata(target)
         self.environment = {}
         for key, variable in self.config['credentials'].items():
@@ -76,6 +83,25 @@ class LocalReleaseTests(unittest.TestCase):
 
     def initialize(self):
         self.release.initialize()
+
+    def test_assembly_rejects_a_valid_elf_with_the_wrong_node_digest(self):
+        with patch.object(local.packaging.subprocess, 'run') as command:
+            with self.assertRaisesRegex(ValueError, 'does not match the launcher pin'):
+                local.packaging.assemble(self.parts, self.root/'candidate')
+        self.assertFalse(any('sign.mjs' in str(call) for call in command.call_args_list))
+
+    def test_reject_swapped_linux_machine(self):
+        target = 'linux-arm64'
+        stage = self.parts/target
+        local.packaging.verify_linux_architecture(stage, target)
+        for binary in ('node', 'savior', 'savior-review', 'savior-node-launcher',
+                       'savior.linux-arm64-gnu.node'):
+            path = stage/('native' if binary.endswith('.node') else f'runtime/{target}')/binary
+            original = path.read_bytes()
+            path.write_bytes(original[:18] + b'\x3e\x00' + original[20:])
+            with self.subTest(binary=binary), self.assertRaisesRegex(ValueError, 'ELF architecture'):
+                local.packaging.verify_linux_architecture(stage, target)
+            path.write_bytes(original)
 
     def test_plan_does_not_create_output_or_call_signers(self):
         with patch('sys.argv', ['local.py', 'plan', '--config', str(self.config_path),
@@ -360,7 +386,17 @@ class LocalReleaseTests(unittest.TestCase):
                                    'sha256': self.release.state['payload_sha256']}).encode()
             return b''
         verify = self.release.verify_platforms if self.release.windows_record is not None else lambda: signers
+        pin = self.root/'fixture-node.sha256'
+        pin.write_text(local.packaging.digest(self.parts/'linux-arm64/runtime/linux-arm64/node'))
+        original_run = local.run
+        def run(argv, **options):
+            if argv[1:2] == [local.ROOT/'scripts/release/package.py']:
+                with patch.object(local.packaging, 'ARM64_NODE_PIN', pin), patch.dict(os.environ, options['env'], clear=True):
+                    local.packaging.package_command([str(arg) for arg in argv[2:]])
+                return b''
+            return original_run(argv, **options)
         with patch.object(self.release, 'verify_platforms', side_effect=verify), \
+                patch('local.run', side_effect=run), \
                 patch.object(self.release, 'verify_apple'), \
                 patch.object(self.release, 'submit', return_value=submission), \
                 patch.object(self.release, 'command', side_effect=command):

@@ -2988,6 +2988,7 @@ dependencies = [
  "base16ct",
  "fs2",
  "reqwest",
+ "rustix",
  "savior",
  "savior-review",
  "serde",

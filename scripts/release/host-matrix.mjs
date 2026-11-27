@@ -26,7 +26,7 @@ export function validateMatrix(reports, candidate, adapters = catalog.adapters) 
         report.suite !== contract.suite || report.candidate_sha256 !== candidate ||
         report.scope !== 'configured_loopback_receiver' || report.last_stage !== 'completed' ||
         !Number.isFinite(Date.parse(report.recorded_at)) ||
-        !['darwin-arm64','linux-x64','win32-x64'].includes(`${report.platform}-${report.arch}`) ||
+        !['darwin-arm64','linux-x64','linux-arm64','win32-x64'].includes(`${report.platform}-${report.arch}`) ||
         !hashMap(identity?.harness) || !hashMap(identity?.models) ||
         !sha256(evidence?.host_sha256) || !report.adapter_id ||
         report.adapter_id !== select_adapter(evidence?.host_version?.split(' ')[0], adapters)?.id ||

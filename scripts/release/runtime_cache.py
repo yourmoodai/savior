@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import stat
 
 def seed(plugin, assets, cache, target):
     raw=(plugin/'runtime-manifest.json').read_bytes()
@@ -15,5 +16,8 @@ def seed(plugin, assets, cache, target):
         source=assets/entry['asset']
         assert source.stat().st_size==entry['bytes']
         assert hashlib.sha256(source.read_bytes()).hexdigest()==entry['sha256']
-        shutil.copy2(source,directory/entry['name'])
+        path = directory/entry['name']
+        shutil.copy2(source,path)
+        if target == 'linux-arm64' and entry['name'] == 'node':
+            path.chmod(path.stat().st_mode | stat.S_IXUSR)
     return directory

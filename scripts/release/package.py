@@ -15,9 +15,11 @@ from version_gate import development_version
 
 ROOT = Path(__file__).resolve().parents[2]
 NODE = '26.13.1'
+ARM64_NODE_PIN = Path(__file__).resolve().with_name('node-linux-arm64.sha256')
 TARGETS = {
     'darwin-arm64': ('tar.gz', 'aec2514ea1ceb2ba52455e9ec65986f6749a06dd759e5db2a72e6889668c9735', 'darwin-arm64'),
     'linux-x64': ('tar.gz', '518674de2b621728a5e4486f5fb3b7d2900bb3cc4aa97969edaa463db99f9778', 'linux-x64-gnu'),
+    'linux-arm64': ('tar.gz', '80a330b35415382878df18d41afbd106ea89bfb3be0087d6608e289a14c5cc7d', 'linux-arm64-gnu'),
     'win32-x64': ('zip', 'e2edda75bfb089654705cf65a13b58933bfd5f57148e8ebda916f58a2474f1f7', 'win32-x64-msvc'),
 }
 LIMIT = 210_000_000  # 210 MB, stricter than the host's 256 MiB download limit
@@ -26,6 +28,12 @@ def digest(path):
     with path.open('rb') as stream:
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
+def arm64_node_digest(path):
+    actual = digest(path)
+    if actual != ARM64_NODE_PIN.read_text().strip():
+        raise ValueError('ARM64 Node does not match the launcher pin')
+    return actual
+
 def copy_documentation(destination):
     for name in ['README.md', 'CONTRIBUTING.md']:
         shutil.copy2(ROOT/name, destination/name)
@@ -33,6 +41,23 @@ def copy_documentation(destination):
     shutil.copytree(ROOT/'benchmarks/results', destination/'benchmarks/results')
     for name in ['sources.json', 'NOTICE.md']:
         shutil.copy2(ROOT/'benchmarks'/name, destination/'benchmarks'/name)
+
+def verify_linux_architecture(part, target):
+    if target not in ('linux-x64', 'linux-arm64'):
+        return
+    machine = 62 if target == 'linux-x64' else 183
+    runtime = part/'runtime'/target
+    binaries = [runtime/name for name in ('node', 'savior', 'savior-review')]
+    binaries.append(part/'native'/f'savior.{TARGETS[target][2]}.node')
+    if target == 'linux-arm64':
+        binaries.append(runtime/'savior-node-launcher')
+    for binary in binaries:
+        with binary.open('rb') as stream:
+            header = stream.read(64)
+        if (len(header) != 64 or header[:7] != b'\x7fELF\x02\x01\x01' or
+                int.from_bytes(header[18:20], 'little') != machine):
+            raise ValueError(f'invalid ELF architecture for {target}: {binary.name}')
+
 
 def stage(target, destination):
     ext, expected, addon = TARGETS[target]
@@ -62,6 +87,10 @@ def stage(target, destination):
         shutil.copy2(ROOT/'native'/name,destination/'native'/name)
     if target == 'darwin-arm64':
         shutil.copy2(ROOT/'target/release/savior-bootstrap', directory/'savior-bootstrap')
+    if target == 'linux-arm64':
+        arm64_node_digest(directory/'node')
+        shutil.copy2(ROOT/'target/release/savior-node-launcher', directory/'savior-node-launcher')
+    verify_linux_architecture(destination, target)
     provenance = {'schema': 1, 'target': target,
                   'version': json.loads((ROOT/'package.json').read_text())['version'],
                   'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
@@ -88,6 +117,7 @@ def assemble(parts, destination, node='node', npm='npm', require_signed=False, d
     for target in TARGETS:
         part=parts/target
         if not (part/'runtime'/target).is_dir(): raise ValueError('missing target '+target)
+        verify_linux_architecture(part, target)
         shutil.copytree(part,destination,dirs_exist_ok=True,ignore=shutil.ignore_patterns('stage.json'))
         suffix='.exe' if target.startswith('win32') else ''
         for name in ['node','savior','savior-review']:
@@ -150,6 +180,15 @@ def assemble(parts, destination, node='node', npm='npm', require_signed=False, d
                 entries[-1]['signer_sha256'] = windows_signers[name]
             shutil.copy2(source,destination.parent/asset)
             source.unlink()
+        if target == 'linux-arm64':
+            directory = destination/'runtime'/target
+            node_binary = directory/'node'
+            asset = f'runtime-{version}-{target}-node'
+            entries.append({'name':'node', 'asset':asset, 'bytes':node_binary.stat().st_size,
+                            'sha256':arm64_node_digest(node_binary)})
+            node_binary.replace(destination.parent/asset)
+            (directory/'savior-node-launcher').replace(node_binary)
+            node_binary.chmod(0o755)
         runtime['targets'][target]=entries
     (destination/'runtime-manifest.json').write_text(json.dumps(runtime,sort_keys=True,separators=(',',':'))+'\n')
     signing_env = dict(os.environ)
@@ -186,7 +225,7 @@ def assemble(parts, destination, node='node', npm='npm', require_signed=False, d
                    check=True,env=signing_env)
     print(json.dumps({'archive':str(output),'bytes':output.stat().st_size,'sha256':digest(output)}))
 
-if __name__=='__main__':
+def package_command(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     sub=parser.add_subparsers(dest='command',required=True)
     p=sub.add_parser('stage');p.add_argument('target',choices=TARGETS);p.add_argument('destination',type=Path)
@@ -196,7 +235,10 @@ if __name__=='__main__':
     p.add_argument('--development',action='store_true')
     p.add_argument('--windows-signers',type=json.loads)
     p.add_argument('--windows-verification-record',type=Path)
-    args=parser.parse_args()
+    args=parser.parse_args(argv)
     if args.command=='stage':stage(args.target,args.destination)
     else:assemble(args.parts,args.destination,args.node,args.npm,args.require_signed,args.development,
                   args.windows_signers,args.windows_verification_record)
+
+if __name__=='__main__':
+    package_command()
