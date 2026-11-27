@@ -24,3 +24,7 @@ class HostDiagnosticsTests(unittest.TestCase):
             self.assertNotIn('private-fixture', encoded)
             self.assertNotIn(directory, encoded)
             self.assertEqual(process.stderr, b'')
+            retry = subprocess.run([sys.executable, script], env=env, capture_output=True, timeout=10)
+            self.assertNotEqual(retry.returncode, 0)
+            self.assertEqual(retry.stderr, b'')
+            self.assertEqual((root / 'fixed_phrase-success.error.jsonl').read_text(), encoded)

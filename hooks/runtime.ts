@@ -2,6 +2,21 @@ import { packaged } from './distribution';
 
 type Host = { plugin: {root: string}; process: {run(argv: readonly string[], options?: {timeoutMs?: number; env?: Record<string,string>}): Promise<{exitCode:number;stdout:string;stderr:string}>} };
 
+async function linux_target(host: Host) {
+  for (const uname of ['/usr/bin/uname', '/bin/uname', '/run/current-system/sw/bin/uname']) {
+    try {
+      const kernel = await host.process.run([uname, '-sm'], {timeoutMs:10000});
+      if (kernel.exitCode !== 0) continue;
+      switch (kernel.stdout.trim()) {
+        case 'Linux aarch64': return 'linux-arm64';
+        case 'Linux x86_64': return 'linux-x64';
+        default: return 'unsupported';
+      }
+    } catch {}
+  }
+  return 'unsupported';
+}
+
 export class Runtime {
   node = 'node';
   env: Record<string,string> = {};
@@ -20,12 +35,7 @@ export class Runtime {
         const node = host.plugin.root + '/runtime/' + name + '/' + executable;
         try {
           if (name.startsWith('linux-')) {
-            if (!linuxTarget) {
-              const kernel = await host.process.run(['/usr/bin/uname', '-sm'], {timeoutMs:10000});
-              const arch = kernel.stdout.trim();
-              linuxTarget = kernel.exitCode === 0 && arch === 'Linux aarch64' ? 'linux-arm64'
-                : kernel.exitCode === 0 && arch === 'Linux x86_64' ? 'linux-x64' : 'unsupported';
-            }
+            linuxTarget ??= await linux_target(host);
             if (name !== linuxTarget) continue;
           }
           // First activation of the ARM64 launcher can download the pinned Node executable.

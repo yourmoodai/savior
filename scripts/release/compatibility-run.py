@@ -191,11 +191,14 @@ def main():
     parser.add_argument('--previous', type=Path, help='prior immutable assessments; identities must match')
     args = parser.parse_args()
     os.chdir(ROOT)
-    target = native_target()
     subprocess.run(['node', 'scripts/release/compatibility-inventory.mjs', 'matrix', str(args.inventory)],
                    check=True, stdout=subprocess.DEVNULL)
     inventory = json.loads(args.inventory.read_text())
     releases = inventory['releases']
+    try:
+        target = native_target(releases[0]['artifacts'])
+    except ValueError as error:
+        parser.error(str(error))
     if args.versions:
         selected = args.versions.split(',')
         releases = [release for release in releases if release['version'] in selected]

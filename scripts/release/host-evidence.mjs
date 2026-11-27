@@ -44,10 +44,6 @@ const report = {schema:2, platform:process.platform, arch:process.arch, scenario
   suite:source ? 'source_checkout' : hostCases[scenario].suite,
   candidate_sha256:candidate, identity, recorded_at:new Date().toISOString(),
   scope:'configured_loopback_receiver', ...stream.finish(execution)};
-if (report.status !== 'passed') {
-  report.exit_code = execution.status;
-  report.exit_signal = execution.signal ?? null;
-}
 report.adapter_id = select_adapter(report.evidence?.host_version?.split(' ')[0])?.id ?? null;
 if (JSON.stringify(identity.harness) !== JSON.stringify(await hashes(harness_files))) {
   report.status='host_failed'; report.reason='harness_changed';
@@ -55,6 +51,10 @@ if (JSON.stringify(identity.harness) !== JSON.stringify(await hashes(harness_fil
 if (JSON.stringify(identity.models) !== JSON.stringify(await modelHashes()) ||
     identity.instrumentation_sha256 && identity.instrumentation_sha256 !== await fileDigest('tests/fixtures/host-failure.mjs')) {
   report.status='host_failed'; report.reason='inputs_changed';
+}
+if (report.status !== 'passed') {
+  report.exit_code = execution.status;
+  report.exit_signal = execution.signal ?? null;
 }
 await writeFile(stem+'.json', JSON.stringify(report,null,2)+'\n', {flag:'wx',mode:0o600});
 console.log(JSON.stringify({scenario,strategy,status:report.status,reason:report.reason}));

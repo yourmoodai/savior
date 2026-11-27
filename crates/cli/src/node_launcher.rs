@@ -44,6 +44,18 @@ mod launcher {
         Err(io::Error::other("invalid_cache_root"))
     }
 
+    fn cached_node(path: &Path) -> io::Result<Option<File>> {
+        match fs::symlink_metadata(path) {
+            Ok(meta) if meta.is_file() && meta.nlink() == 1 => {
+                let mut file = File::open(path)?;
+                Ok(verified(&mut file)?.then_some(file))
+            }
+            Ok(_) => Err(io::Error::other("unsafe_cached_node")),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
     fn private_cache(root: &Path, relative: &Path) -> io::Result<PathBuf> {
         DirBuilder::new().recursive(true).mode(0o700).create(root)?;
         let mut directory = fs::canonicalize(root)?;
@@ -95,10 +107,9 @@ mod launcher {
             .join(manifest_hash);
         let directory = private_cache(&cache_root()?, &relative)?;
         let path = directory.join("node");
-        let file = match fs::symlink_metadata(&path) {
-            Ok(meta) if meta.is_file() && meta.nlink() == 1 => File::open(&path)?,
-            Ok(_) => return Err("unsafe_cached_node".into()),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+        let file = match cached_node(&path)? {
+            Some(file) => file,
+            None => {
                 let url = format!(
                     "https://github.com/yourmoodai/savior/releases/download/v{version}/{asset}"
                 );
@@ -118,18 +129,32 @@ mod launcher {
                     .set_permissions(Permissions::from_mode(0o700))?;
                 temp.as_file().sync_all()?;
                 drop(temp.persist(&path)?);
-                File::open(path)?
+                cached_node(&path)?.ok_or("node_digest_mismatch")?
             }
-            Err(error) => return Err(error.into()),
         };
-        let mut file = file;
-        if !verified(&mut file)? {
-            return Err("node_digest_mismatch".into());
-        }
         Err(Command::new(format!("/proc/self/fd/{}", file.as_raw_fd()))
             .args(args)
             .exec()
             .into())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn corrupt_regular_node_can_be_replaced_but_links_are_rejected() {
+            let directory = tempfile::tempdir().unwrap();
+            let path = directory.path().join("node");
+            assert!(cached_node(&path).unwrap().is_none());
+            fs::write(&path, b"truncated").unwrap();
+            assert!(cached_node(&path).unwrap().is_none());
+            let link = directory.path().join("link");
+            std::os::unix::fs::symlink(&path, &link).unwrap();
+            assert!(cached_node(&link).is_err());
+            fs::hard_link(&path, directory.path().join("second")).unwrap();
+            assert!(cached_node(&path).is_err());
+        }
     }
 }
 

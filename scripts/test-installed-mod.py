@@ -380,7 +380,10 @@ if __name__ == "__main__":
                           'winerror': error.winerror if os.name == 'nt' and isinstance(error, OSError) else None,
                           'frames': [[Path(frame.f_code.co_filename).name, line]
                                      for frame, line in traceback.walk_tb(error.__traceback__)]}
-            with (Path(directory) / f'{strategy}-{scenario}.error.jsonl').open('x') as report:
-                report.write(json.dumps(diagnostic) + '\n')
+            try:
+                with (Path(directory) / f'{strategy}-{scenario}.error.jsonl').open('x') as report:
+                    report.write(json.dumps(diagnostic) + '\n')
+            except OSError:
+                pass
             raise SystemExit(1) from None
         raise

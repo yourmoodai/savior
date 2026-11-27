@@ -12,6 +12,12 @@ from runtime_cache import seed
 
 
 class NativeRuntimeTests(unittest.TestCase):
+    def test_arm64_cannot_assess_a_legacy_three_target_inventory(self):
+        with patch('platform.system', return_value='Linux'), patch('platform.machine', return_value='aarch64'):
+            with self.assertRaisesRegex(ValueError, 'linux-arm64 is outside the frozen inventory'):
+                native_target({'linux-x64', 'darwin-arm64', 'win32-x64'})
+            self.assertEqual(native_target({'linux-arm64'}), 'linux-arm64')
+
     def test_unsupported_linux_architecture_reports_its_identity(self):
         with patch('platform.system', return_value='Linux'), patch('platform.machine', return_value='ppc64le'):
             with self.assertRaisesRegex(ValueError, 'unsupported native target: Linux ppc64le'):

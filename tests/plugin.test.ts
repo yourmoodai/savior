@@ -285,6 +285,18 @@ test('ARM64 refuses a launcher reporting a different architecture', async () => 
   expect(runtime.ready).toBe(false);
 });
 
+test('Linux x64 probes the bundled runtime using the NixOS system uname', async () => {
+  const calls: string[][] = [];
+  const runtime = new Runtime(true);
+  await runtime.start({plugin:{root:'/synthetic/plugin'},process:{run:async args => {
+    calls.push([...args]);
+    if (args[0] === '/run/current-system/sw/bin/uname') return {exitCode:0,stdout:'Linux x86_64',stderr:''};
+    if (args[0]?.endsWith('/linux-x64/node') && args[1] === '-p') return {exitCode:0,stdout:'linux-x64',stderr:''};
+    throw Error('unavailable');
+  }}});
+  expect(calls.at(-1)).toEqual(['/synthetic/plugin/runtime/linux-x64/node','/synthetic/plugin/bridge/bootstrap.mjs']);
+});
+
 test('packaged runtime becomes ready only after prepare and doctor', async () => {
   const runtime = new Runtime(true);
   await runtime.start({plugin:{root:'/synthetic/plugin'},process:{run:async (args,options) => {
