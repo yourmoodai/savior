@@ -7,6 +7,17 @@ HARNESS = Path(__file__).resolve().parents[2]
 CASES = json.loads((Path(__file__).with_name('host-cases.json')).read_text())
 
 
+def close_windows_terminal(process):
+    try:
+        process.close(force=True)
+    except PermissionError as error:
+        # Windows also reports access denied when the child exits during termination.
+        match error:
+            case PermissionError(winerror=5) if not process.isalive():
+                return
+        raise
+
+
 def prepare(root, home, scenario):
     if CASES[scenario]['suite'] != 'instrumented_failure':
         return root

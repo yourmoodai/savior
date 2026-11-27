@@ -18,7 +18,7 @@ import sys
 import hashlib
 import signal
 from contextlib import nullcontext
-from release.host_fixture import CASES, prepare, arm, recover, worker_alive
+from release.host_fixture import CASES, prepare, arm, recover, worker_alive, close_windows_terminal
 
 class Terminal:
     def __init__(self, argv, cwd, env):
@@ -50,7 +50,8 @@ class Terminal:
     def alive(self):
         return self.process.isalive() if self.master is None else self.process.poll() is None
     def close(self):
-        if self.master is None: self.process.close(force=True)
+        if self.master is None:
+            close_windows_terminal(self.process)
         else:
             if self.process.poll() is None:
                 self.process.terminate()

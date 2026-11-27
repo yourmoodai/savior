@@ -5,8 +5,9 @@ import subprocess
 import tempfile
 import time
 import unittest
+from unittest.mock import Mock
 
-from host_fixture import CASES, prepare, arm, recover, worker_alive
+from host_fixture import CASES, prepare, arm, recover, worker_alive, close_windows_terminal
 
 
 class HostFixtureTests(unittest.TestCase):
@@ -34,6 +35,22 @@ class HostFixtureTests(unittest.TestCase):
         for scenario in ('success', 'unchanged', 'protected'):
             self.assertEqual(prepare(self.root, self.home, scenario), self.root)
         self.assertFalse((self.root / 'bridge/cli.real.mjs').exists())
+
+    def test_windows_close_confirms_child_exit_after_access_denied(self):
+        for winerror, alive, should_raise in [(5, False, False), (5, True, True), (32, False, True)]:
+            with self.subTest(winerror=winerror, alive=alive):
+                process = Mock()
+                error = PermissionError('terminal close failed')
+                error.winerror = winerror
+                process.close.side_effect = error
+                process.isalive.return_value = alive
+                if should_raise:
+                    with self.assertRaises(PermissionError) as raised:
+                        close_windows_terminal(process)
+                    self.assertIs(raised.exception, error)
+                else:
+                    close_windows_terminal(process)
+                process.close.assert_called_once_with(force=True)
 
     def test_full_copy_delegates_startup_and_arms_only_rewrite(self):
         original = {str(file.relative_to(self.root)): file.read_bytes()
