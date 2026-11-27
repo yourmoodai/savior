@@ -4,6 +4,7 @@ Review every assigned path and check each prior allegation against actual code. 
 Return a single JSON object. For additional repository evidence return {"request":[{"path":"...","side":"new"}]}.
 Batch related context requests. Files and extra evidence are numbered as <line><tab><original text>.
 Copy the complete text after the first tab as evidence, including indentation, and report the number before it.
+A prior path marked absent exists in neither current tree. Check the patch for moved code before disposing of that allegation.
 Otherwise return {"verdict":"approve|changes_requested|incomplete","coverage":[{"path":"...","reason":"what you verified"}],
 "prior":[{"id":1,"status":"refuted|confirmed","reason":"concrete evidence"}],
 "findings":[{"path":"...","side":"new|old","line":1,"prior_ids":[],"evidence":"exact full line","reason":"specific introduced defect and impact"}]}.
@@ -58,7 +59,9 @@ export async function assess(source,claims,infer,progress=()=>{}) {
       supplied.add(JSON.stringify([path,side]));
       return {path,side,text:text.split(/\r?\n/).map((line,index)=>(index+1)+'\t'+line).join('\n')};
     }
-    const files = scope.map(path=>file(path,source.read(path,'new')===null ? 'old' : 'new'));
+    const files = scope.map(path=>source.available.includes(path)
+      ? file(path,source.read(path,'new')===null ? 'old' : 'new')
+      : {path,side:'absent',text:null});
     const evidence = {patch:source.patch,changed:source.paths,scope,files,prior,available:source.available,extra:[]};
     for (let round=0; ; round++) {
       const input = instructions+'\n'+JSON.stringify(evidence);

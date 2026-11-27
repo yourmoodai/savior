@@ -61,6 +61,18 @@ test('context requests must add evidence and can follow transitive dependencies'
   await assert.rejects(assess(source,[claim],()=>({request:[{path:'add.js',side:'new'}]})),/already supplied/);
 });
 
+test('historical paths absent from both trees still require an explicit disposition',async()=>{
+  const previous={...claim,path:'removed.js'};
+  const input={...source,read:path=>path==='add.js' ? 'return a-b;' : null};
+  const result={...clean,coverage:[...clean.coverage,{path:'removed.js',reason:'checked removal and the remaining patch'}]};
+  await assess(input,[previous],prompt=>{
+    const evidence=JSON.parse(prompt.split('\n').at(-1));
+    assert.deepEqual(evidence.files[1],{path:'removed.js',side:'absent',text:null});
+    return result;
+  });
+  await assert.rejects(assess(input,[previous],()=>({...result,prior:[]})),/incomplete review coverage/);
+});
+
 function check_fixture() {
   return {id:44,app:{id:app_id},name:check_name,status:'completed',conclusion:'success',head_sha:pr.head.sha,
     external_id:receipt_id(pr,artifact.id,sha),html_url:'https://github.com/yourmoodai/savior/runs/44',
