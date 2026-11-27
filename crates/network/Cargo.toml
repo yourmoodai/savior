@@ -1,0 +1,37 @@
+[package]
+name = "savior-network"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Local fail-closed HTTP prompt transformation gateway."
+keywords = ["privacy", "local-inference", "offline", "open-source-models", "span-replacement"]
+categories = ["network-programming"]
+
+[dependencies]
+savior.workspace = true
+serde.workspace = true
+serde_json = { workspace = true, features = ["raw_value"] }
+thiserror.workspace = true
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "io-util", "signal"] }
+hyper = { version = "1.12.0", features = ["client", "server", "http1", "http2"] }
+hyper-util = { version = "0.1.21", features = ["tokio", "server-auto", "http1", "http2"] }
+http-body-util = "0.1.5"
+bytes = "1.12"
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring", "tls12"] }
+rcgen = { version = "0.14.10", features = ["pem", "x509-parser"] }
+webpki-roots = "1.0.12"
+flate2 = "1.1.11"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.191"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[[bin]]
+name = "savior-network"
+path = "src/main.rs"

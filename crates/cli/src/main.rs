@@ -33,7 +33,7 @@ fn run() -> Result<serde_json::Value, String> {
     }
     if command == "help" || command == "--help" {
         return Ok(
-            serde_json::json!({"commands":["rewrite", "doctor", "prepare", "inspect", "traces", "watch"]}),
+            serde_json::json!({"commands":["rewrite", "doctor", "prepare", "inspect", "traces", "watch", "network"]}),
         );
     }
     if !["rewrite", "doctor"].contains(&command.as_str()) || std::env::args().count() != 2 {
@@ -82,6 +82,33 @@ fn run() -> Result<serde_json::Value, String> {
     )
 }
 fn main() {
+    if std::env::args().nth(1).as_deref() == Some("network") {
+        let executable = std::env::current_exe().ok().and_then(|path| {
+            path.parent().map(|parent| {
+                parent.join(if cfg!(windows) {
+                    "savior-network.exe"
+                } else {
+                    "savior-network"
+                })
+            })
+        });
+        let status = executable.and_then(|binary| {
+            std::process::Command::new(binary)
+                .args(std::env::args().skip(2))
+                .status()
+                .ok()
+        });
+        match status {
+            Some(status) => std::process::exit(status.code().unwrap_or(1)),
+            None => {
+                println!(
+                    "{}",
+                    serde_json::json!({"version":1,"status":"error","code":"network_runtime_unavailable"})
+                );
+                std::process::exit(1);
+            }
+        }
+    }
     if std::env::args().nth(1).as_deref() == Some("watch") {
         if let Err(code) = savior_review::live::watch(&std::env::args().skip(2).collect::<Vec<_>>())
         {

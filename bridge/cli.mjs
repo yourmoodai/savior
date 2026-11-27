@@ -12,15 +12,15 @@ const allowed_errors = new Set(['invalid_input','invalid_span','invalid_options'
 
 async function main() {
   const command = process.argv[2];
-  if (!command || command === '--help') { process.stdout.write('savior rewrite | doctor | inspect | traces status|enable|disable|export|delete | watch [--view spans|span-diff|prompt-diff]\n'); return; }
+  if (!command || command === '--help') { process.stdout.write('savior rewrite | doctor | inspect | traces status|enable|disable|export|delete | watch [--view spans|span-diff|prompt-diff] | network\n'); return; }
   const root=fileURLToPath(new URL('..',import.meta.url));
-  if (['inspect','traces','watch'].includes(command)) {
+  if (['inspect','traces','watch','network'].includes(command)) {
     if (existsSync(join(root,'release.json')) && !process.env.SAVIOR_RUNTIME_DIR) {
       const {prepare_runtime}=await import('./bootstrap.mjs');
       process.env.SAVIOR_RUNTIME_DIR=(await prepare_runtime()).runtime_dir;
     }
-    const binary=join(process.env.SAVIOR_RUNTIME_DIR || join(root,'target/release'),(command==='watch'?'savior':'savior-review')+(process.platform==='win32'?'.exe':''));
-    if (command==='watch') {
+    const binary=join(process.env.SAVIOR_RUNTIME_DIR || join(root,'target/release'),(['watch','network'].includes(command)?'savior':'savior-review')+(process.platform==='win32'?'.exe':''));
+    if (['watch','network'].includes(command)) {
       const child=spawn(binary,process.argv.slice(2),{stdio:'inherit'});
       const interrupt=()=>child.kill('SIGINT');
       const terminate=()=>child.kill('SIGTERM');

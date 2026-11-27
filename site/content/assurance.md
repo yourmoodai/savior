@@ -67,9 +67,13 @@ the installed artifact, and observe supported success and failure paths. Broader
 claims also require independent observation or containment of every outbound
 route, including telemetry, retries, redirects, startup, voice, and bypasses.
 
-The proposed proxy is not implemented. It cannot be used as evidence. If the host
-can send original text outside the mod’s control, that requires a separate
-enforcement design before claiming complete protection.
+A development network gateway can rewrite supported API requests when explicitly
+configured as a proxy. It does not enforce system-wide routing or prevent direct
+connections. The macOS relay candidate has been compiled but is not activated;
+no real client has qualified network coverage. See the
+[network implementation status](https://github.com/yourmoodai/savior/blob/main/docs/network.md#implementation-status)
+for the remaining enforcement and release gates. This work does not establish
+complete protection.
 
 Savior’s inference works offline after setup. The hosting provider still handles
 requests for this website, and your chosen AI service receives submitted text.

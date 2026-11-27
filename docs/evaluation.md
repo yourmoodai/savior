@@ -97,7 +97,8 @@ about 480 MiB including the detector. A separate busy-machine run reached
 Synthetic and provisional labels do not estimate real-world accuracy,
 provider-policy compliance, or judge calibration. The Claude Code integration
 does not prove the absence of host telemetry, other plugin behavior, or voice
-uploads before filtering. The proposed proxy remains unimplemented; see
+uploads before filtering. Development proxy tests do not qualify real clients
+or establish native bypass resistance; see
 [ADR 3](adr/0003-future-egress-enforcement.md).
 
 ## Detailed results

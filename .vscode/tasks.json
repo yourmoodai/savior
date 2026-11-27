@@ -1,6 +1,15 @@
 {
   "version": "2.0.0",
   "tasks": [
+    {"label":"network gateway debug","type":"process","command":"npm","args":["run","network:debug","--","serve","${input:network_configuration_directory}"],"problemMatcher":["$rustc"]},
+    {"label":"network gateway release","type":"process","command":"npm","args":["run","network","--","serve","${input:network_configuration_directory}"],"problemMatcher":[]},
+    {"label":"build network gateway debug","type":"process","command":"npm","args":["run","network:build:debug"],"problemMatcher":["$rustc"]},
+    {"label":"build network gateway release","type":"process","command":"npm","args":["run","network:build:release"],"problemMatcher":["$rustc"]},
+    {"label":"test network gateway","type":"process","command":"npm","args":["run","network:test"],"problemMatcher":["$rustc"]},
+    {"label":"profile network gateway memory","type":"process","command":"npm","args":["run","network:profile","--","${input:network_configuration_directory}"],"problemMatcher":[]},
+    {"label":"build macos network extension debug","type":"process","command":"npm","args":["run","network:macos:debug"],"problemMatcher":[]},
+    {"label":"build macos network extension release","type":"process","command":"npm","args":["run","network:macos:release"],"problemMatcher":[]},
+    {"label":"test macos network policy","type":"process","command":"npm","args":["run","network:macos:test"],"problemMatcher":[]},
     {"label":"replay reviewer experiment", "type":"process", "command":"npm", "args":["run","reviewer:experiment","--","replay"], "problemMatcher":[]},
     {"label":"audit reviewer context offline", "type":"process", "command":"npm", "args":["run","reviewer:experiment","--","context-audit","--base","origin/main","--head","HEAD","--output",".cache/context-audit.json"], "problemMatcher":[]},
     {"label":"qualify research packing offline","type":"process","command":"npm","args":["run","reviewer:packing:qualify"],"problemMatcher":[]},
@@ -293,6 +302,7 @@
     }
   ],
   "inputs": [
+    {"id":"network_configuration_directory","type":"promptString","description":"Absolute private network configuration directory"},
     {"id":"compatibility_inventory","type":"promptString","description":"Frozen compatibility inventory path","default":".cache/compatibility/inventory.json"},
     {"id":"compatibility_output","type":"promptString","description":"Fresh native assessment directory","default":".cache/compatibility/assessments"},
     {"id":"quality_report","type":"promptString","description":"Quality report to review","default":".cache/battle-2026-10-20/quality.json"},

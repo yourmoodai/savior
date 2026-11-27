@@ -50,7 +50,9 @@ and releases in the accepted issue.
 Architecture Decision Records (ADRs) explain why a boundary exists and when the
 system must refuse to act. Start with ADR 1 for prompt processing, ADR 4 for
 inspection, and ADRs 2 and 5 for distribution. ADR 6 concerns development review,
-which is separate from the offline application. ADR 3 is proposed research.
+which is separate from the offline application. ADR 3 owns the development
+network gateway boundary; the [network guide](docs/network.md#implementation-status)
+owns its current implementation status and native qualification gaps.
 
 ADRs describe enduring boundaries, not implementation logs. Keep their language
 visual and audience-first; put commands, thresholds, and mechanical procedure
@@ -60,7 +62,7 @@ in the relevant benchmark, release, or tool guide.
 | --- | --- | --- |
 | [ADR 1](docs/adr/0001-local-span-replacement.md) | Accepted | Local transformation and adapter boundaries |
 | [ADR 2](docs/adr/0002-release-and-quality-evidence.md) | Accepted | Release integrity and evidence gates |
-| [ADR 3](docs/adr/0003-future-egress-enforcement.md) | Proposed; unimplemented | Transparent proxy and limits on egress claims |
+| [ADR 3](docs/adr/0003-future-egress-enforcement.md) | Accepted for implementation; development gateway only | Network adapters and limits on egress claims |
 | [ADR 4](docs/adr/0004-consented-local-traces.md) | Accepted | Inspection, ephemeral viewing, and consented retention |
 | [ADR 5](docs/adr/0005-sign-binaries-before-release.md) | Accepted for implementation | Platform signing, offline macOS launch, and approved promotion |
 | [ADR 6](docs/adr/0006-qualify-review-model-routing.md) | Accepted; live activation gated | Development-review routing, qualification, and spending limits |

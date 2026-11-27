@@ -28,6 +28,28 @@ and run `npm run site:test`. This checks JavaScript-disabled reading, reduced
 motion, narrow layouts, local resource requests, and scroll-driven transforms.
 Screenshots are saved under `.cache/site/`.
 
+## Appearance
+
+`static/style.css` owns the shared theme. Components use semantic color tokens
+from its `theme` layer; the screen-only `prefers-color-scheme: dark` palette
+changes those tokens for every template. This follows the token-based approach
+used by `awill1988/awill1988.github.io`, adapted to Savior's gold and olive palette.
+Keep component rules independent of the active theme. Add colors to the palette
+rather than placing literal colors in component selectors.
+
+The site follows the browser's light or dark preference without scripts,
+cookies, or stored settings. The installation panel retains its dark surface in
+both screen themes, with its own foreground and focus colors. Print uses the
+light palette and a light installation panel. The gold Savior asset remains
+unchanged; only the monochrome GitHub icon adapts to dark backgrounds.
+
+`npm run site:test` checks both palettes at desktop and narrow widths with
+JavaScript disabled, text and focus contrast, preference changes without a
+reload, and the print palette. Review the homepage, assurance page, and 404
+screenshots alongside the checks before publishing.
+
+## Release claims
+
 `zola.toml` owns release status and installation wording. The launcher blocks a
 released state until a separate assurance decision changes that gate. The public
 assurance page records the current interception boundary. The existing

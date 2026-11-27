@@ -237,10 +237,16 @@ Apple, timestamp services, and npm. Container CMake presets use a separate
 
 ### Client compatibility
 
-`hooks/compatibility-catalog.ts` owns exact client-to-adapter mappings and the
-type snapshot used by `npm run check`. The current adapter supports the tested
-2.1.322 API only. Run `npm run check:claude` from the intended project to query
-the configured client through its existing routing. This read-only command
+`hooks/compatibility-catalog.ts` owns exact client-to-adapter mappings. Each entry
+identifies its entry module, draft-recovery owner, and the pinned type snapshot
+used by `npm run check`. The current entry,
+`composer_2_1_322`, supports the tested 2.1.322 API only. `session.version()` selects
+the contract once per session; the loaded entry accepts only its own adapter ID.
+Unknown versions, ambiguous matches, and a failed probe refuse supported
+submissions before processing.
+
+Run `npm run check:claude` from the intended project to query the configured
+client through its existing routing. This read-only command
 prints the matching adapter and entry or exits nonzero for an unsupported client.
 `SAVIOR_CLAUDE_BINARY` can explicitly select a native test fixture. Debug the
 selector with `node --inspect-brk scripts/claude-compatibility.mjs`; it has no
@@ -252,14 +258,43 @@ Each adapter owns its `typecheck` configuration and a type cache under
 and tests explicitly, so a later incompatible entry is not parsed as part of the
 current adapter's type check.
 
+The current handler processes non-slash `prompt.submit` events whose origin is
+`composer`. It calls `next({...e, text: processed})` after successful processing
+and returns `drop` on refusal. A successful handler test establishes this
+continuation contract, not host draft retention or provider receipt.
+
 Changing a catalog version is a support claim requiring fresh qualification.
-Keep incompatible API implementations in separate entry modules and select the
-matching bundle before loading it. The future version-aware installer must verify
-the signed compatibility mapping and archive, preserve profile routing, and stop
-on unknown or ambiguous matches. Current distribution contains one adapter; it
-does not yet install multiple API variants. Several exact clients can share this
-adapter after review, provided every advertised client/platform pair passes the
-rolling qualification gate. Discovery never edits that support claim.
+Several exact clients can share an adapter after review, provided every
+advertised client/platform pair passes the rolling qualification gate for the
+same API and draft lifecycle.
+Discovery never edits that support claim. When those contracts differ, add a
+separate entry module and pinned type snapshot. Select the matching bundle before
+loading it; do not import incompatible variants and rely on runtime checks to
+hide them, or branch Rust replacement semantics on client versions.
+
+The catalog and read-only selector exist; distribution contains one adapter.
+The future multi-bundle installer must verify the signed compatibility mapping
+and archive, preserve profile routing, and stop on unknown or ambiguous matches.
+If a client cannot load the mod or register its refusal handler, an internal
+version guard cannot protect that client.
+
+#### Related mod designs
+
+Anthropic's [mod interface](https://github.com/anthropics/claude-code/blob/main/mods/README.md)
+provides continuation and refusal hooks plus an engine test kit. Patch-version
+similarity does not establish compatibility: draft recovery can change without
+changing the replacement protocol. The
+[2026-11-11 host qualification](evaluation.md#claude-21322-interception-check)
+found that Claude 2.1.322 restores a refused composer draft itself; filling it
+before returning `drop` duplicated the retry. Requalify that behavior when
+changing the client pin. Handler mocks do not model the terminal lifecycle;
+delivery qualification needs an independently observed receiver.
+
+[Redact](https://github.com/karanb192/claude-code-redact) also rewrites conversation
+rows and documents records created outside `prompt.submit`, including earlier
+headless queue records. [Managed security](https://github.com/anthropics/claude-code/blob/main/mods/sec-default/README.md)
+constrains user-mod access to some appended rows. These designs inform scope;
+their tests cannot qualify Savior or establish coverage of every outbound route.
 
 ### Rolling 90-day window
 
