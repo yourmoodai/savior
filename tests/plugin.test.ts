@@ -48,6 +48,35 @@ test('only replacement text reaches downstream', async ($, on) => {
   expect(forwarded).toBe(replacement);
 });
 
+test('live delivery survives trace failure and cannot block forwarding', async ($, on) => {
+  const observation_id = 'a'.repeat(64);
+  let forwarded = '', published = false;
+  on('process.run', ($, e) => {
+    if (e.argv.includes('live')) {
+      expect(e.argv.slice(-2)).toEqual([observation_id, 'forwarded']);
+      published = true;
+      throw Error('synthetic viewer unavailable');
+    }
+    return {value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:2,status:'rewritten',text:replacement,observation_id,trace_warning:'trace_not_recorded'}),stderr:''}};
+  });
+  on('ui.invalidate', () => ({value:undefined}));
+  on('prompt.submit', ($, e) => {forwarded=e.text;return {text:e.text};});
+  await $.prompt.submit(prompt);
+  expect(forwarded).toBe(replacement);
+  expect(published).toBe(true);
+});
+
+test('invalid observation identifiers never reach forwarding', async ($, on) => {
+  for (const observation_id of ['invalid', '../private', 'a'.repeat(65)]) {
+    expect(() => read_result({version:2,status:'rewritten',text:replacement,observation_id})).toThrow('invalid_response');
+  }
+  on('process.run', () => ({value:{isStdoutTruncated:false,isStderrTruncated:false,exitCode:0,stdout:JSON.stringify({version:2,status:'rewritten',text:replacement,observation_id:'invalid'}),stderr:''}}));
+  let forwarded = false;
+  on('prompt.submit', ($, e) => {forwarded=true;return {text:e.text};});
+  expect(await $.prompt.submit(prompt)).toHaveProperty('drop');
+  expect(forwarded).toBe(false);
+});
+
 test('process failure refuses without forwarding or duplicating host recovery', async ($, on) => {
   let forwarded = false;
   let restored = '';

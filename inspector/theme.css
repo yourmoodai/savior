@@ -1,0 +1,68 @@
+/* Components consume semantic tokens; themes own the palette and scales. */
+:root {
+  color-scheme: light dark;
+  --color-page: hsl(45 25% 97%);
+  --color-surface: hsl(45 30% 100%);
+  --color-text: hsl(75 7% 14%);
+  --color-text-muted: hsl(70 5% 39%);
+  --color-border: hsl(65 12% 85%);
+  --color-accent: hsl(38 70% 33%);
+  --color-selection: hsl(43 52% 91%);
+  --color-success: hsl(157 52% 27%);
+  --color-removal-text: hsl(356 44% 44%);
+  --color-removal-surface: hsl(3 100% 96%);
+  --color-insertion-surface: hsl(143 44% 93%);
+  --color-backdrop: hsl(75 7% 7% / 50%);
+  --font-body: system-ui, sans-serif;
+  --font-code: ui-monospace, SFMono-Regular, monospace;
+  --text-xs: .75rem;
+  --text-sm: .85rem;
+  --text-body: 1rem;
+  --text-title: 1.3rem;
+  --text-stat: 1.6rem;
+  --text-display: clamp(1.8rem, 3vw, 2.5rem);
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --radius-control: .4rem;
+  --radius-panel: .6rem;
+  --radius-dialog: .8rem;
+  --radius-pill: 2rem;
+  --line-body: 1.6;
+  --line-heading: 1.2;
+  --line-code: 1.7;
+  --tracking-heading: -.04em;
+  --tracking-label: .05em;
+  --tracking-eyebrow: .12em;
+  --weight-medium: 550;
+  --weight-strong: 650;
+  --duration-pulse: 2s;
+  --border-width: 1px;
+  --focus-width: 2px;
+  --focus-offset: 3px;
+  --layout-max: 90rem;
+  --dialog-max: 33rem;
+  --activity-height: 40rem;
+  --workspace-height: 30rem;
+  --detail-height: 28rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-page: hsl(120 4% 10%);
+    --color-surface: hsl(100 5% 13%);
+    --color-text: hsl(43 29% 91%);
+    --color-text-muted: hsl(74 8% 66%);
+    --color-border: hsl(80 8% 23%);
+    --color-accent: hsl(40 72% 66%);
+    --color-selection: hsl(47 21% 17%);
+    --color-success: hsl(147 40% 72%);
+    --color-removal-text: hsl(0 79% 81%);
+    --color-removal-surface: hsl(351 27% 21%);
+    --color-insertion-surface: hsl(146 30% 18%);
+  }
+}

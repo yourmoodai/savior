@@ -7,8 +7,12 @@ use std::{
     path::Path,
 };
 
-pub(super) fn connect(profile: &Path) -> io::Result<UnixStream> {
-    let path = crate::transport::socket_path(profile, "watch", false)?;
+pub(crate) fn connect(profile: &Path) -> io::Result<UnixStream> {
+    connect_named(profile, "watch")
+}
+
+pub(crate) fn connect_named(profile: &Path, name: &str) -> io::Result<UnixStream> {
+    let path = crate::transport::socket_path(profile, name, false)?;
     let metadata = std::fs::symlink_metadata(&path)?;
     // SAFETY: geteuid has no preconditions.
     if !metadata.file_type().is_socket()
@@ -25,19 +29,24 @@ pub(super) fn connect(profile: &Path) -> io::Result<UnixStream> {
     Ok(fd.into())
 }
 
-#[cfg(any(feature = "watch", test))]
-pub(super) struct Listener {
+#[cfg(any(feature = "watch", feature = "inspector", test))]
+pub(crate) struct Listener {
     listener: std::os::unix::net::UnixListener,
     path: std::path::PathBuf,
     _lock: std::fs::File,
 }
 
-#[cfg(any(feature = "watch", test))]
+#[cfg(any(feature = "watch", feature = "inspector", test))]
 impl Listener {
+    #[cfg(any(feature = "watch", test))]
     pub(super) fn bind(profile: &Path) -> crate::ReviewResult<Self> {
+        Self::bind_named(profile, "watch")
+    }
+
+    pub(crate) fn bind_named(profile: &Path, name: &str) -> crate::ReviewResult<Self> {
         use std::os::unix::fs::OpenOptionsExt;
-        let path = crate::transport::socket_path(profile, "watch", true)
-            .map_err(|_| "unsafe_watch_path")?;
+        let path =
+            crate::transport::socket_path(profile, name, true).map_err(|_| "unsafe_watch_path")?;
         let lock = std::fs::OpenOptions::new()
             .create(true)
             .truncate(false)
@@ -81,7 +90,7 @@ impl Listener {
         Ok(listener)
     }
 
-    pub(super) fn accept(&mut self) -> io::Result<Option<UnixStream>> {
+    pub(crate) fn accept(&mut self) -> io::Result<Option<UnixStream>> {
         match self.listener.accept() {
             Ok((stream, _)) => {
                 stream.set_nonblocking(true)?;
@@ -93,7 +102,7 @@ impl Listener {
     }
 }
 
-#[cfg(any(feature = "watch", test))]
+#[cfg(any(feature = "watch", feature = "inspector", test))]
 impl Drop for Listener {
     fn drop(&mut self) {
         let _ = std::fs::remove_file(&self.path);

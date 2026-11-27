@@ -300,6 +300,7 @@ pub struct TracedRewrite {
     threshold: f32,
     strategy: core::ReplacementMode,
     assess: bool,
+    observation_id: String,
     _permit: Permit,
 }
 #[napi]
@@ -308,13 +309,14 @@ impl Task for TracedRewrite {
     type JsValue = String;
     fn compute(&mut self) -> Result<String> {
         let mut model = self.model.try_lock().map_err(|_| err(core::Error::Busy))?;
-        Ok(savior_review::traces::rewrite_traced(
+        Ok(savior_review::traces::rewrite_observed(
             &mut *model,
             &self.text,
             self.threshold,
             &self.strategy,
             &self.context,
             self.assess,
+            &self.observation_id,
         )
         .to_string())
     }
@@ -377,8 +379,10 @@ impl Detector {
         text: Utf16String,
         options: Option<ReplacementOptions>,
         assess: Option<bool>,
+        observation_id: Option<String>,
     ) -> Result<AsyncTask<TracedRewrite>> {
         Ok(AsyncTask::new(TracedRewrite {
+            observation_id: observation_id.unwrap_or_else(savior_review::traces::random_id),
             model: self.model.clone(),
             context: self.trace_context.clone(),
             text: valid_text(text)?,

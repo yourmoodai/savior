@@ -9,6 +9,11 @@ use std::{
     fs,
     io::{Read, Write},
     path::Path,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
+    time::Duration,
 };
 use tiny_http::{Header, Method, Response, Server};
 
@@ -143,6 +148,47 @@ pub fn parquet_page(
 }
 
 pub fn command(args: &[String]) -> ReviewResult<()> {
+    if let [command, id, disposition] = args
+        && command == "live"
+    {
+        if !crate::observation::valid_id(id)
+            || ![
+                "failed",
+                "forwarded",
+                "forwarding_unknown",
+                "blocked",
+                "cancelled",
+            ]
+            .contains(&disposition.as_str())
+        {
+            return Err("invalid_request".into());
+        }
+        if disposition == "failed" {
+            let trace = crate::traces::Trace {
+                schema: 1,
+                offset_unit: "utf8".into(),
+                id: id.clone(),
+                timestamp_ms: now_ms(),
+                release: env!("CARGO_PKG_VERSION").into(),
+                release_manifest_sha256: None,
+                model_fingerprint: None,
+                policy: "unavailable".into(),
+                detector: "unavailable".into(),
+                elapsed_ms: 0.0,
+                outcome: "failed".into(),
+                disposition: "blocked".into(),
+                code: Some("adapter_failed".into()),
+                decision: None,
+                original: None,
+                output: None,
+            };
+            crate::observation::publish(id, "completed", json!({"trace":trace}));
+        } else {
+            crate::observation::publish(id, "delivery", json!({"disposition":disposition}));
+        }
+        println!("{}", json!({"published":true}));
+        return Ok(());
+    }
     let store = TraceStore::open(&state_directory()?)?;
     store.prune(now_ms())?;
     let value = match args {
@@ -210,6 +256,30 @@ fn header(name: &str, value: &str) -> Header {
 pub fn serve() -> ReviewResult<()> {
     let directory = state_directory()?;
     private_directory(&directory)?;
+    let mut listener =
+        crate::live::platform::Listener::bind_named(&crate::store::profile_dir()?, "view")?;
+    let session = Arc::new(Mutex::new(crate::observation::session::Session::default()));
+    let incoming = session.clone();
+    std::thread::spawn(move || {
+        loop {
+            match listener.accept() {
+                Ok(Some(mut stream)) => {
+                    let mut session = match crate::observation::receive(&mut stream) {
+                        Ok(event) => {
+                            let _ = incoming.lock().unwrap().apply(event);
+                            continue;
+                        }
+                        Err(_) => incoming.lock().unwrap(),
+                    };
+                    session.dropped += 1;
+                    session.sequence += 1;
+                }
+                Ok(None) => std::thread::sleep(Duration::from_millis(2)),
+                Err(_) => break,
+            }
+        }
+    });
+    let streams = Arc::new(AtomicUsize::new(0));
     let server = Server::http("127.0.0.1:0").map_err(|_| "inspector_unavailable")?;
     let address = server
         .server_addr()
@@ -234,6 +304,24 @@ pub fn serve() -> ReviewResult<()> {
             && value_of("Origin").is_none_or(|v| v == origin);
         let path = request.url().to_string();
         let authorized = value_of("Authorization").as_deref() == Some(&format!("Bearer {token}"));
+        if allowed && authorized && request.method() == &Method::Get && path == "/api/live" {
+            if streams.fetch_add(1, Ordering::AcqRel) >= 4 {
+                streams.fetch_sub(1, Ordering::AcqRel);
+                let _ =
+                    request.respond(Response::from_string("stream_limit").with_status_code(429));
+                continue;
+            }
+            let session = session.clone();
+            let streams = streams.clone();
+            let after = value_of("X-Savior-Cursor")
+                .and_then(|s| s.parse::<u64>().ok())
+                .unwrap_or(0);
+            std::thread::spawn(move || {
+                let _ = stream_session(request, session, after);
+                streams.fetch_sub(1, Ordering::AcqRel);
+            });
+            continue;
+        }
         if allowed && authorized && request.method() == &Method::Get && path == "/api/export" {
             let result = (|| -> ReviewResult<Vec<u8>> {
                 let store = TraceStore::open(&directory)?;
@@ -274,6 +362,11 @@ pub fn serve() -> ReviewResult<()> {
             (
                 "text/css",
                 include_str!("../../../inspector/style.css").into(),
+            )
+        } else if request.method() == &Method::Get && path == "/theme.css" {
+            (
+                "text/css",
+                include_str!("../../../inspector/theme.css").into(),
             )
         } else if request.method() == &Method::Get && path == "/savior.svg" {
             (
@@ -352,4 +445,34 @@ pub fn serve() -> ReviewResult<()> {
         let _ = request.respond(response);
     }
     Ok(())
+}
+
+fn stream_session(
+    request: tiny_http::Request,
+    session: Arc<Mutex<crate::observation::session::Session>>,
+    mut after: u64,
+) -> std::io::Result<()> {
+    // Explicit flushing avoids tiny_http's chunk buffer delaying small events.
+    let mut writer = request.into_writer();
+    writer.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-store\r\nConnection: close\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\n\r\n")?;
+    let mut first = true;
+    loop {
+        let snapshot = {
+            let session = session.lock().unwrap();
+            if first || session.sequence > after {
+                Some(session.snapshot(after))
+            } else {
+                None
+            }
+        };
+        if let Some(snapshot) = snapshot {
+            after = snapshot["sequence"].as_u64().unwrap_or(0);
+            write!(writer, "data: {snapshot}\n\n")?;
+        } else {
+            writer.write_all(b": keepalive\n\n")?;
+        }
+        writer.flush()?;
+        first = false;
+        std::thread::sleep(Duration::from_millis(250));
+    }
 }

@@ -10,13 +10,13 @@ use std::{
 };
 
 #[cfg(unix)]
-mod unix;
+pub(crate) mod unix;
 #[cfg(unix)]
-use unix as platform;
+pub(crate) use unix as platform;
 #[cfg(windows)]
-mod windows;
+pub(crate) mod windows;
 #[cfg(windows)]
-use windows as platform;
+pub(crate) use windows as platform;
 
 const MAX_FRAME_BYTES: usize = 4 * 1024 * 1024; // 4 MiB
 const PUBLISH_TIMEOUT: Duration = Duration::from_millis(50);
@@ -162,7 +162,11 @@ fn retry<T>(deadline: Instant, mut operation: impl FnMut() -> io::Result<T>) -> 
     }
 }
 
-fn read_exact(stream: &mut impl Read, mut bytes: &mut [u8], deadline: Instant) -> io::Result<()> {
+pub(crate) fn read_exact(
+    stream: &mut impl Read,
+    mut bytes: &mut [u8],
+    deadline: Instant,
+) -> io::Result<()> {
     while !bytes.is_empty() {
         let count = retry(deadline, || stream.read(bytes))?;
         if count == 0 {
@@ -173,7 +177,11 @@ fn read_exact(stream: &mut impl Read, mut bytes: &mut [u8], deadline: Instant) -
     Ok(())
 }
 
-fn write_all(stream: &mut impl Write, mut bytes: &[u8], deadline: Instant) -> io::Result<()> {
+pub(crate) fn write_all(
+    stream: &mut impl Write,
+    mut bytes: &[u8],
+    deadline: Instant,
+) -> io::Result<()> {
     while !bytes.is_empty() {
         let count = retry(deadline, || stream.write(bytes))?;
         if count == 0 {

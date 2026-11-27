@@ -68,6 +68,42 @@ fn default_is_metadata_only_and_revocation_wins() {
     store.record(e, generation).unwrap();
     assert!(store.get(&id).unwrap()["original"].is_null());
 }
+
+#[test]
+fn history_preference_defaults_no_and_survives_reopening() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().canonicalize().unwrap();
+    let store = TraceStore::open(&path).unwrap();
+    assert_eq!(store.status().unwrap()["onboarding_complete"], false);
+    assert!(!store.consent().unwrap().0);
+    store.set_consent(false).unwrap();
+    drop(store);
+    let store = TraceStore::open(&path).unwrap();
+    assert_eq!(store.status().unwrap()["onboarding_complete"], true);
+    assert!(!store.consent().unwrap().0);
+    store.set_consent(true).unwrap();
+    drop(store);
+    let store = TraceStore::open(&path).unwrap();
+    assert!(store.consent().unwrap().0);
+    assert_eq!(store.status().unwrap()["onboarding_complete"], true);
+}
+
+#[test]
+fn existing_explicit_consent_migrates_without_reprompting() {
+    for enabled in [false, true] {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().canonicalize().unwrap();
+        let legacy = rusqlite::Connection::open(path.join("traces.sqlite3")).unwrap();
+        legacy.execute_batch("CREATE TABLE trace_settings(id INTEGER PRIMARY KEY CHECK(id=1), enabled INTEGER NOT NULL, generation INTEGER NOT NULL);").unwrap();
+        legacy
+            .execute("INSERT INTO trace_settings VALUES(1,?1,3)", [enabled])
+            .unwrap();
+        drop(legacy);
+        let store = TraceStore::open(&path).unwrap();
+        assert_eq!(store.consent().unwrap(), (enabled, 3));
+        assert_eq!(store.status().unwrap()["onboarding_complete"], true);
+    }
+}
 #[test]
 fn exact_decisions_retention_annotations_and_delete() {
     let tmp = tempfile::tempdir().unwrap();
