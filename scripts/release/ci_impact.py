@@ -1,4 +1,4 @@
-"""Skip native qualification only when every changed path is website-only."""
+"""Classify the complete diff before selecting release qualification jobs."""
 
 import json
 import os
@@ -12,9 +12,18 @@ SITE_FILES = {'scripts/site.py', 'scripts/test-site.mjs',
               'docs/assets/social-preview.png', '.github/workflows/site.yml'}
 
 
-def native_required(paths):
-    # Unknown paths include shared dependencies, packaging, and CI itself.
-    return any(not (path.startswith('site/') or path in SITE_FILES) for path in paths)
+REVIEW_DIRS = ('tools/local_review/', 'tools/adversarial_reviewer/', 'tools/review_routing_research/')
+REVIEW_TESTS = {'tests/local-review.spec.mjs', 'tests/review-approval.spec.mjs',
+                'tests/review-author-gate.spec.mjs', 'tests/review-pilot.spec.mjs',
+                'tests/review-status.spec.mjs'}
+
+
+def change_scope(paths):
+    if paths and all(path.startswith('site/') or path in SITE_FILES for path in paths):
+        return 'website-only'
+    if paths and all(path.startswith(REVIEW_DIRS) or path in REVIEW_TESTS for path in paths):
+        return 'reviewer-only'
+    return 'full'
 
 
 def changed_paths(base, head, event):
@@ -60,10 +69,14 @@ def main():
         return
     paths = changed_paths(os.environ.get('BASE_SHA', ''), os.environ.get('HEAD_SHA', ''),
                           os.environ['GITHUB_EVENT_NAME'])
-    required = paths is None or native_required(paths)
+    scope = change_scope(paths)
     with Path(os.environ['GITHUB_OUTPUT']).open('a') as output:
-        output.write(f'native_required={str(required).lower()}\n')
-    print('native build required' if required else 'website-only change; native jobs skipped')
+        output.write(f'native_required={str(scope == "full").lower()}\n')
+    message = 'Full native qualification required.' if scope == 'full' else f'Native qualification skipped for a {scope} change.'
+    print(message)
+    if summary := os.environ.get('GITHUB_STEP_SUMMARY'):
+        with Path(summary).open('a') as output:
+            print(message, file=output)
 
 
 if __name__ == '__main__':
