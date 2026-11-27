@@ -6,8 +6,17 @@ import receipt from './receipt.cjs';
 
 const deny = ['command','read_file','write_file','read_url','execute_url','download_url','mcp'].map(tool=>tool+'(*)');
 const settings = {allowNonWorkspaceAccess:false,toolPermission:'strict',useG1Credits:false,permissions:{deny}};
+const strings = fields => Object.fromEntries(fields.map(key=>[key,{type:'string'}]));
+const rows = properties => ({type:'array',items:{type:'object',properties,required:Object.keys(properties)}});
+const schema = {type:'object', properties:{
+  request:rows(strings(['path','side'])),
+  verdict:{type:'string',enum:['approve','changes_requested','incomplete']},
+  coverage:rows(strings(['path','reason'])),
+  prior:rows({id:{type:'integer'},...strings(['status','reason'])}),
+  findings:rows({line:{type:'integer'},...strings(['path','side','evidence','reason'])}),
+}, additionalProperties:false};
 const commands = {
-  agy:['--sandbox','--disable-slash-commands','--settings',JSON.stringify(settings),'--print-timeout','12m'],
+  agy:['--sandbox','--disable-slash-commands','--settings',JSON.stringify(settings),'--json-schema',JSON.stringify(schema),'--print-timeout','12m'],
   claude:['--safe-mode','--strict-mcp-config','--mcp-config','{"mcpServers":{}}','--tools','','--no-session-persistence','--print'],
   codex:['-a','never','exec','--sandbox','read-only','--ignore-user-config','--ignore-rules','--ephemeral',
     '--skip-git-repo-check','--disable','shell_tool','--disable','unified_exec','--disable','multi_agent',
@@ -49,7 +58,9 @@ export function agent(name='agy',model=process.env.SAVIOR_REVIEW_MODEL) {
         const events = output.trim().split('\n').map(line=>JSON.parse(line));
         const final = events.filter(e=>e.event==='result');
         if (final.length!==1 || final[0].result.status!=='SUCCESS') throw Error('agy did not complete the review');
-        output = final[0].result.response;
+        const structured = final[0].result.structured_output;
+        if (!structured || typeof structured!=='object') throw Error('agy returned no structured assessment');
+        return structured;
       }
       const raw = output.trim().replace(/^\x60\x60\x60(?:json)?\s*\n([\s\S]*?)\n\x60\x60\x60$/,'$1');
       return JSON.parse(raw);

@@ -69,7 +69,7 @@ async function main() {
     evidence.revalidate();
   }
   const check=await complete({pr,agent:reviewer,evidence,existing:checks,write:app_client.bind(null,true),refresh,
-    inspect:()=>assess(snapshot(pr),evidence.claims(),reviewer.infer),reviews:()=>list(path+'/reviews?per_page=100')});
+    inspect:()=>assess(snapshot(pr),evidence.claims(),reviewer.infer,console.info),reviews:()=>list(path+'/reviews?per_page=100')});
   console.log(check.output.summary,check.html_url);
   if (check.conclusion!=='success') {process.exitCode=1;return;}
   await refresh();

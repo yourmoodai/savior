@@ -35,11 +35,12 @@ export function validate(result,scope,prior,source) {
   return result;
 }
 
-export async function assess(source,claims,infer) {
+export async function assess(source,claims,infer,progress=()=>{}) {
   const groups = [];
   const paths = [...new Set([...source.paths,...claims.map(c=>c.path)])];
   for (let offset=0; offset<paths.length; offset+=6) {
     const scope = paths.slice(offset,offset+6);
+    progress('reviewing files '+(offset+1)+'–'+(offset+scope.length)+' of '+paths.length);
     const prior = claims.filter(c=>scope.includes(c.path));
     const files = scope.map(path=>({path,text:source.read(path,'new') ?? source.read(path,'old')}));
     const evidence = {patch:source.patch,changed:source.paths,scope,files,prior,available:source.available,extra:[]};
@@ -47,7 +48,10 @@ export async function assess(source,claims,infer) {
       const input = instructions+'\n'+JSON.stringify(evidence);
       if (Buffer.byteLength(input)>2_000_000) throw Error('review evidence exceeds 2 MB');
       const result = await infer(input);
-      if (!result.request) { groups.push(validate(result,scope,prior,source)); break; }
+      if (!Object.hasOwn(result,'request') || (Array.isArray(result.request) && result.request.length===0)) {
+        groups.push(validate(result,scope,prior,source));
+        break;
+      }
       if (round>=3 || !Array.isArray(result.request) || !result.request.length || result.request.length>20)
         throw Error('review context unresolved');
       for (const {path,side} of result.request) {
