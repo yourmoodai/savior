@@ -31,9 +31,34 @@ test('require complete source coverage, prior dispositions, and exact finding li
   let calls=0;
   await assess(source,[claim],input=>{
     if (++calls===1) return {request:[{path:'add.js',side:'old'}]};
-    assert.ok(input.includes('"extra":[{"path":"add.js","side":"old","text":"return a-b;"}]'));
+    const evidence=JSON.parse(input.split('\n').at(-1));
+    assert.deepEqual(evidence.extra,[{path:'add.js',side:'old',text:'1\treturn a-b;'}]);
     return defect;
   });
+});
+
+test('ground a finding only against exact evidence in the named revision',async()=>{
+  const input={...source,read:()=> 'first\n    return a-b;\nlast'};
+  const finding={...defect.findings[0],evidence:'    return a-b;'};
+  const report={...defect,findings:[finding]};
+  const result=await assess(input,[claim],()=>report);
+  assert.deepEqual(result.findings,[{...finding,line:2}]);
+  for (const text of ['first\nreturn a-b;','first\n    return a-b;\n    return a-b;'])
+    await assert.rejects(assess({...input,read:()=>text},[claim],()=>report),/unverified finding location/);
+});
+
+test('context requests must add evidence and can follow transitive dependencies',async()=>{
+  const dependencies=['1.js','2.js','3.js','4.js'];
+  const input={...source,available:[...source.paths,...dependencies]};
+  let round=0;
+  const result=await assess(input,[claim],prompt=>{
+    const evidence=JSON.parse(prompt.split('\n').at(-1));
+    assert.deepEqual(evidence.extra.map(f=>f.path),dependencies.slice(0,round));
+    if (round===dependencies.length) return clean;
+    return {request:[{path:'add.js',side:'new'},{path:dependencies[round++],side:'new'}]};
+  });
+  assert.equal(result.verdict,'approve');
+  await assert.rejects(assess(source,[claim],()=>({request:[{path:'add.js',side:'new'}]})),/already supplied/);
 });
 
 function check_fixture() {
