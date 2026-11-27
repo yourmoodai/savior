@@ -3,7 +3,7 @@ import {fileURLToPath} from 'node:url';
 import approval from '../adversarial_reviewer/approval.cjs';
 import receipt from './receipt.cjs';
 
-const {repository,cost_run}=receipt;
+const {repository,cost_run,app_id,bot,check_name,marker}=receipt;
 const prefix='repos/'+repository;
 export function gh(args,options) {
   return execFileSync('gh',args,{timeout:120_000,maxBuffer:64_000_000,...options});
@@ -16,26 +16,48 @@ export function list(path,key) {
   return pages.flatMap(page=>key ? page[key] : page);
 }
 const download=id=>gh(['api',prefix+'/actions/artifacts/'+id+'/zip']);
+export function outstanding_findings(pr,reviews,fetch_check) {
+  const own=reviews.filter(r=>r.user?.type==='Bot' && r.user.login===bot &&
+    ['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(r.state)).sort((a,b)=>b.id-a.id)[0];
+  if (own?.state!=='CHANGES_REQUESTED') return [];
+  const id=/^<!-- savior-local-review:(\d+):/.exec(own.body)?.[1];
+  if (!id) throw Error('unidentified outstanding local review');
+  const check=fetch_check(id);
+  const binding=check.external_id?.split('/') || [];
+  if (check.app?.id!==app_id || check.id!==Number(id) || check.name!==check_name || check.conclusion!=='failure' ||
+      check.head_sha!==own.commit_id || binding[1]!==String(pr.number) || binding[3]!==own.commit_id ||
+      !own.body.startsWith(marker(check))) throw Error('unverified outstanding local review');
+  const text=/^```json\n([\s\S]+)\n```$/.exec(check.output.text)?.[1];
+  const report=JSON.parse(text);
+  if (report.verdict!=='changes_requested' || !Array.isArray(report.findings) || !report.findings.length)
+    throw Error('missing outstanding local findings');
+  return report.findings.map(f=>({path:f.path,details:f.reason,evidence:f.evidence,side:f.side,line:f.line}));
+}
+
 export function cost_evidence(pr) {
-  const name='review-cost-block-'+pr.number+'-'+pr.head.sha+'-';
+  const prefix='review-cost-block-'+pr.number+'-';
+  const name=prefix+pr.head.sha+'-';
   const artifacts=list('/actions/artifacts?per_page=100','artifacts')
-    .filter(a=>a.name.startsWith(name) && !a.expired).sort((a,b)=>b.id-a.id);
-  if (!artifacts.length) throw Error('no budget-stop artifact for this head');
-  const current=artifacts[0];
-  function check(artifact) {
-    return cost_run(artifact,get('/actions/runs/'+artifact.workflow_run.id),pr);
+    .filter(a=>a.name.startsWith(prefix) && !a.expired).sort((a,b)=>b.id-a.id);
+  const current=artifacts.find(a=>a.name.startsWith(name));
+  if (!current) throw Error('no budget-stop artifact for this head');
+  function check(artifact,target=pr) {
+    return cost_run(artifact,get('/actions/runs/'+artifact.workflow_run.id),target);
   }
   if (check(current)!==pr.base.sha) throw Error('stale budget-stop workflow');
   const quote=approval.verify_archive(download(current.id),current,pr,repository);
   function claims() {
     const rows=new Map();
     for (const artifact of artifacts) {
-      check(artifact);
+      const match=/^([0-9a-f]{40})-([0-9a-f]{64})$/.exec(artifact.name.slice(prefix.length));
+      if (!match) throw Error('invalid historical budget stop');
+      const [,head,quote_id]=match;
+      check(artifact,{...pr,head:{sha:head}});
       const reports=list('/actions/runs/'+artifact.workflow_run.id+'/artifacts?per_page=100','artifacts')
         .filter(a=>a.name==='adversarial-report' && !a.expired);
       if (reports.length!==1 || reports[0].size_in_bytes>64_000_000) throw Error('missing or ambiguous previous assessment');
       const script=fileURLToPath(new URL('report.py',import.meta.url));
-      const findings=JSON.parse(execFileSync('python3',[script,pr.head.sha,artifact.name.slice(name.length)],
+      const findings=JSON.parse(execFileSync('python3',[script,head,quote_id],
         {input:download(reports[0].id),maxBuffer:4_000_000}));
       for (const item of findings) {
         const path=item.file.replace(/:\d+$/,'');
@@ -43,6 +65,9 @@ export function cost_evidence(pr) {
         rows.set(JSON.stringify(claim),claim);
       }
     }
+    const reviews=list('/pulls/'+pr.number+'/reviews?per_page=100');
+    for (const claim of outstanding_findings(pr,reviews,id=>get('/check-runs/'+id)))
+      rows.set(JSON.stringify(claim),claim);
     return [...rows.values()].map((row,i)=>({...row,id:i+1}));
   }
   function revalidate() {

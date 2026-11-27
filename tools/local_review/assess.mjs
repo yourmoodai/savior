@@ -37,11 +37,12 @@ export function validate(result,scope,prior,source) {
 
 export async function assess(source,claims,infer) {
   const groups = [];
-  for (let offset=0; offset<source.paths.length; offset+=6) {
-    const scope = source.paths.slice(offset,offset+6);
+  const paths = [...new Set([...source.paths,...claims.map(c=>c.path)])];
+  for (let offset=0; offset<paths.length; offset+=6) {
+    const scope = paths.slice(offset,offset+6);
     const prior = claims.filter(c=>scope.includes(c.path));
     const files = scope.map(path=>({path,text:source.read(path,'new') ?? source.read(path,'old')}));
-    const evidence = {patch:source.patch,scope,files,prior,available:source.available,extra:[]};
+    const evidence = {patch:source.patch,changed:source.paths,scope,files,prior,available:source.available,extra:[]};
     for (let round=0; ; round++) {
       const input = instructions+'\n'+JSON.stringify(evidence);
       if (Buffer.byteLength(input)>2_000_000) throw Error('review evidence exceeds 2 MB');
@@ -57,7 +58,6 @@ export async function assess(source,claims,infer) {
       }
     }
   }
-  if (claims.some(c=>!source.paths.includes(c.path))) throw Error('unassigned prior finding');
   return {verdict:groups.every(g=>g.verdict==='approve')?'approve':'changes_requested',
     coverage:groups.flatMap(g=>g.coverage),prior:groups.flatMap(g=>g.prior),findings:groups.flatMap(g=>g.findings)};
 }

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {assess} from '../tools/local_review/assess.mjs';
 import {complete} from '../tools/local_review/run.mjs';
+import {outstanding_findings} from '../tools/local_review/evidence.mjs';
 import receipt from '../tools/local_review/receipt.cjs';
 import validation from '../tools/ci/pr_validation.cjs';
 
@@ -102,4 +103,28 @@ test('pull request budget stops originate on the matching main target',()=>{
   assert.equal(receipt.cost_run(artifact,source,pr),pr.base.sha);
   for (const changed of [{...pull,number:43},{...pull,base:{...pull.base,ref:'feature'}}])
     assert.throws(()=>receipt.cost_run(artifact,{...source,pull_requests:[changed]},pr));
+});
+
+test('preflight-only reports have no findings only with matching preflight evidence',()=>{
+  const program=`import io,json,sys,zipfile
+sys.path.insert(0,'tools/local_review')
+from report import claims
+base={'commit_id':'head','quote':{'id':'quote'},'blocked_reason':'cost_limit','budget':{}}
+for report,preflight,expected in [(base,base,[]),({**base,'findings':[1]},base,[1]),(base,{},None),({**base,'completed_chunks':2},base,None)]:
+    out=io.BytesIO()
+    with zipfile.ZipFile(out,'w') as z:
+        z.writestr('report.json',json.dumps(report)); z.writestr('preflight.json',json.dumps(preflight))
+    try: result=claims(out.getvalue(),'head','quote')
+    except ValueError: result=None
+    assert result==expected`;
+  execFileSync('python3',['-c',program]);
+});
+
+test('carry unresolved App findings to a later revision using the original report',()=>{
+  const check={...check_fixture(),conclusion:'failure',output:{text:'```json\n'+JSON.stringify(defect)+'\n```'}};
+  const review={user:{login:bot,type:'Bot'},id:7,state:'CHANGES_REQUESTED',commit_id:pr.head.sha,body:marker(check)};
+  const next={...pr,head:{sha:'d'.repeat(40)}};
+  assert.equal(outstanding_findings(next,[review],()=>check)[0].details,defect.findings[0].reason);
+  assert.throws(()=>outstanding_findings(next,[review],()=>({...check,app:{id:88}})));
+  assert.deepEqual(outstanding_findings(next,[{...review,state:'DISMISSED'}],()=>check),[]);
 });

@@ -12,9 +12,17 @@ def claims(data, head, quote_id):
         report = json.loads(archive.read(name))
         if report['commit_id'] != head or report['quote']['id'] != quote_id:
             raise ValueError('report revision or quote mismatch')
-        if name == 'preflight.json' and report['blocked_reason'] == 'cost_limit':
+        if 'findings' in report:
+            if not isinstance(report['findings'], list):
+                raise ValueError('invalid findings')
+            return report['findings']
+        if (report.get('blocked_reason') == 'cost_limit'
+                and set(report) == {'commit_id', 'quote', 'budget', 'blocked_reason'}
+                and archive.namelist().count('preflight.json') == 1
+                and archive.getinfo('preflight.json').file_size <= 64_000_000
+                and report == json.loads(archive.read('preflight.json'))):
             return []
-        return report['findings']
+        raise ValueError('missing findings or preflight evidence')
 
 if __name__ == '__main__':
     print(json.dumps(claims(sys.stdin.buffer.read(64_000_001), *sys.argv[1:])))
