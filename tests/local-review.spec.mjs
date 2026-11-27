@@ -138,3 +138,8 @@ test('a competing App failure blocks admission regardless of review order',()=>{
   receipt.assert_no_conflict([failed],[dismissal],pr);
   assert.throws(()=>receipt.assert_no_conflict([failed],[{...dismissal,commit_id:'obsolete'}],pr));
 });
+
+test('a request for changes from a deleted account stays outstanding',()=>{
+  const review={id:7,user:null,state:'CHANGES_REQUESTED'};
+  assert.throws(()=>validation.assert_approval([review],{}),/changes requested/);
+});

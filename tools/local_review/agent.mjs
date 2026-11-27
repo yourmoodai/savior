@@ -29,7 +29,11 @@ function read_settings(path) {
 }
 
 function parse_output(text) {
-  try { return JSON.parse(text); }
+  try {
+    const value=JSON.parse(text);
+    if (!value || typeof value!=='object' || Array.isArray(value)) throw Error();
+    return value;
+  }
   catch { throw Error('malformed reviewer output'); }
 }
 
@@ -70,7 +74,7 @@ export function agent(name='agy',model=process.env.SAVIOR_REVIEW_MODEL) {
         const final = events.filter(e=>e.event==='result');
         if (final.length!==1 || final[0].result.status!=='SUCCESS') throw Error('agy did not complete the review');
         const structured = final[0].result.structured_output;
-        if (!structured || typeof structured!=='object') throw Error('agy returned no structured assessment');
+        if (!structured || typeof structured!=='object' || Array.isArray(structured)) throw Error('agy returned no structured assessment');
         return structured;
       }
       const raw = output.trim().replace(/^\x60\x60\x60(?:json)?\s*\n([\s\S]*?)\n\x60\x60\x60$/,'$1');

@@ -38,11 +38,11 @@ export async function complete({pr,agent,evidence,existing,inspect,write,refresh
   const history=await reviews();
   if (state==='APPROVED') receipt.assert_no_conflict(competing,history,pr);
   for (const row of history.sort((a,b)=>a.id-b.id)) {
-    if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(row.state)) latest.set(row.user.login,row);
+    if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(row.state)) latest.set(row.user?.login || row.id,row);
   }
   const own=latest.get(bot);
   if (state==='APPROVED' && [...latest.values()].some(r=>r.state==='CHANGES_REQUESTED' &&
-      (r.user.login!==bot || r.commit_id===pr.head.sha))) throw Error('outstanding request for changes');
+      (r.user?.login!==bot || r.commit_id===pr.head.sha))) throw Error('outstanding request for changes');
   const previous=/^<!-- savior-local-review:(\d+):/.exec(own?.body || '');
   if (previous && Number(previous[1])>check.id) throw Error('local review superseded');
   if (own?.body?.startsWith(stamp) && own.state==='DISMISSED') throw Error('local review dismissed');

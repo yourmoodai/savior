@@ -8,7 +8,7 @@ function assert_target(pr, binding) {
 function assert_approval(reviews, binding, local_marker) {
   const latest = new Map();
   for (const r of [...reviews].sort((a,b)=>a.id-b.id)) {
-    if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(r.state)) latest.set(r.user.login,r);
+    if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(r.state)) latest.set(r.user?.login || r.id,r);
   }
   if ([...latest.values()].some(r=>r.state==='CHANGES_REQUESTED')) throw Error('changes requested');
   const r=latest.get(local_marker ? require('../local_review/receipt.cjs').bot : 'github-actions[bot]');
