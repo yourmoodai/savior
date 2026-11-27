@@ -106,6 +106,7 @@ jobs:
               binding: 'admit' === 'start' ? undefined : {...binding,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT},
               results: JSON.parse(process.env.RESULTS)});
   commits:
+    if: "!cancelled() && needs.start.result == 'success' && needs.admission.result == 'success'"
     needs: [start, admission]
     permissions:
       contents: read
@@ -118,6 +119,7 @@ jobs:
       head_sha: ${{ needs.start.outputs.head }}
       base_sha: ${{ needs.start.outputs.base }}
   verify:
+    if: "!cancelled() && needs.start.result == 'success' && needs.admission.result == 'success'"
     needs: [start, admission]
     permissions:
       contents: read
@@ -130,6 +132,7 @@ jobs:
       head_sha: ${{ needs.start.outputs.head }}
       base_sha: ${{ needs.start.outputs.base }}
   qualification:
+    if: "!cancelled() && needs.start.result == 'success' && needs.admission.result == 'success'"
     needs: [start, admission]
     permissions:
       contents: read
@@ -142,7 +145,9 @@ jobs:
       head_sha: ${{ needs.start.outputs.head }}
       base_sha: ${{ needs.start.outputs.base }}
   site:
-    if: needs.admission.outputs.site_required == 'true'
+    if: >-
+      !cancelled() && needs.start.result == 'success' && needs.admission.result == 'success' &&
+      needs.admission.outputs.site_required == 'true'
     needs: [start, admission]
     permissions:
       contents: read

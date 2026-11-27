@@ -3,7 +3,7 @@ import {fileURLToPath} from 'node:url';
 import approval from '../adversarial_reviewer/approval.cjs';
 import receipt from './receipt.cjs';
 
-const {repository,cost_run,app_id,bot,check_name,marker}=receipt;
+const {repository,run_base,cost_run,app_id,bot,check_name,marker}=receipt;
 const prefix='repos/'+repository;
 export function gh(args,options) {
   return execFileSync('gh',args,{timeout:120_000,maxBuffer:64_000_000,...options});
@@ -39,20 +39,22 @@ export function cost_evidence(pr) {
   const name=prefix+pr.head.sha+'-';
   const artifacts=list('/actions/artifacts?per_page=100','artifacts')
     .filter(a=>a.name.startsWith(prefix) && !a.expired).sort((a,b)=>b.id-a.id);
-  const current=artifacts.find(a=>a.name.startsWith(name));
-  if (!current) throw Error('no budget-stop artifact for this head');
-  function check(artifact,target=pr) {
-    return cost_run(artifact,get('/actions/runs/'+artifact.workflow_run.id),target);
+  function workflow(artifact) {return get('/actions/runs/'+artifact.workflow_run.id);}
+  const records=[];
+  for (const artifact of artifacts) {
+    const match=/^([0-9a-f]{40})-([0-9a-f]{64})$/.exec(artifact.name.slice(prefix.length));
+    if (!match || !artifact.workflow_run?.id) continue;
+    const [,head,quote_id]=match;
+    const run=workflow(artifact), target={...pr,head:{sha:head}};
+    if (run_base(artifact,run,target)) records.push({artifact,head,quote_id,base:cost_run(artifact,run,target)});
   }
-  if (check(current)!==pr.base.sha) throw Error('stale budget-stop workflow');
+  const record=records.find(r=>r.artifact.name.startsWith(name) && r.base===pr.base.sha);
+  if (!record) throw Error('no trusted budget stop for the current revision');
+  const current=record.artifact;
   const quote=approval.verify_archive(download(current.id),current,pr,repository);
   function claims() {
     const rows=new Map();
-    for (const artifact of artifacts) {
-      const match=/^([0-9a-f]{40})-([0-9a-f]{64})$/.exec(artifact.name.slice(prefix.length));
-      if (!match) throw Error('invalid historical budget stop');
-      const [,head,quote_id]=match;
-      check(artifact,{...pr,head:{sha:head}});
+    for (const {artifact,head,quote_id} of records) {
       const reports=list('/actions/runs/'+artifact.workflow_run.id+'/artifacts?per_page=100','artifacts')
         .filter(a=>a.name==='adversarial-report' && !a.expired);
       if (reports.length!==1 || reports[0].size_in_bytes>64_000_000) throw Error('missing or ambiguous previous assessment');
@@ -72,7 +74,7 @@ export function cost_evidence(pr) {
   }
   function revalidate() {
     const artifact=get('/actions/artifacts/'+current.id);
-    if (artifact.name!==current.name || check(artifact)!==pr.base.sha || Date.now()>=quote.expires_at*1000)
+    if (artifact.name!==current.name || cost_run(artifact,workflow(artifact),pr)!==pr.base.sha || Date.now()>=quote.expires_at*1000)
       throw Error('budget stop expired or changed');
   }
   return {artifact:current,quote,claims,revalidate};

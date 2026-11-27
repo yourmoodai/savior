@@ -13,7 +13,7 @@ function current(pr,original) {
     throw Error('PR is stale or ineligible');
 }
 
-export async function complete({pr,agent,evidence,existing,inspect,write,refresh,reviews}) {
+export async function complete({pr,agent,evidence,existing,inspect,write,refresh,reviews,checks}) {
   const id=receipt_id(pr,evidence.artifact.id,agent.identity);
   let check=existing.find(c=>c.external_id===id && c.app?.id===app_id && c.name===check_name &&
     c.head_sha===pr.head.sha && c.status==='completed' && ['success','failure'].includes(c.conclusion));
@@ -34,7 +34,10 @@ export async function complete({pr,agent,evidence,existing,inspect,write,refresh
   const state=check.conclusion==='success'?'APPROVED':'CHANGES_REQUESTED';
   const stamp=marker(check);
   const latest=new Map();
-  for (const row of (await reviews()).sort((a,b)=>a.id-b.id)) {
+  const competing=state==='APPROVED' ? await checks() : [];
+  const history=await reviews();
+  if (state==='APPROVED') receipt.assert_no_conflict(competing,history,pr);
+  for (const row of history.sort((a,b)=>a.id-b.id)) {
     if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(row.state)) latest.set(row.user.login,row);
   }
   const own=latest.get(bot);
@@ -63,12 +66,12 @@ async function main() {
       git(['status','--porcelain','--untracked-files=all','--','tools/local_review','tools/adversarial_reviewer','package.json']).trim())
     throw Error('run from a clean checkout of trusted main');
   const evidence=cost_evidence(pr);
-  const checks=list('/commits/'+pr.head.sha+'/check-runs?filter=all&app_id='+app_id+'&per_page=100','check_runs');
+  const checks=()=>list('/commits/'+pr.head.sha+'/check-runs?filter=all&app_id='+app_id+'&per_page=100','check_runs');
   async function refresh() {
     current(get(path),pr);
     evidence.revalidate();
   }
-  const check=await complete({pr,agent:reviewer,evidence,existing:checks,write:app_client.bind(null,true),refresh,
+  const check=await complete({pr,agent:reviewer,evidence,existing:checks(),checks,write:app_client.bind(null,true),refresh,
     inspect:()=>assess(snapshot(pr),evidence.claims(),reviewer.infer,console.info),reviews:()=>list(path+'/reviews?per_page=100')});
   console.log(check.output.summary,check.html_url);
   if (check.conclusion!=='success') {process.exitCode=1;return;}

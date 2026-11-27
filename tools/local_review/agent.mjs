@@ -13,7 +13,7 @@ const schema = {type:'object', properties:{
   verdict:{type:'string',enum:['approve','changes_requested','incomplete']},
   coverage:rows(strings(['path','reason'])),
   prior:rows({id:{type:'integer'},...strings(['status','reason'])}),
-  findings:rows({line:{type:'integer'},...strings(['path','side','evidence','reason'])}),
+  findings:rows({line:{type:'integer'},prior_ids:{type:'array',items:{type:'integer'}},...strings(['path','side','evidence','reason'])}),
 }, additionalProperties:false};
 const commands = {
   agy:['--sandbox','--disable-slash-commands','--settings',JSON.stringify(settings),'--json-schema',JSON.stringify(schema),'--print-timeout','12m'],
@@ -22,6 +22,16 @@ const commands = {
     '--skip-git-repo-check','--disable','shell_tool','--disable','unified_exec','--disable','multi_agent',
     '-c','web_search="disabled"'],
 };
+
+function read_settings(path) {
+  try { return readFileSync(path,'utf8'); }
+  catch (error) { if (error.code==='ENOENT') return ''; throw error; }
+}
+
+function parse_output(text) {
+  try { return JSON.parse(text); }
+  catch { throw Error('malformed reviewer output'); }
+}
 
 export function agent(name='agy',model=process.env.SAVIOR_REVIEW_MODEL) {
   if (!Object.hasOwn(commands,name)) throw Error('choose agy, claude or codex');
@@ -33,8 +43,9 @@ export function agent(name='agy',model=process.env.SAVIOR_REVIEW_MODEL) {
   const config_path = name==='agy' ? join(homedir(),'.gemini','antigravity-cli','settings.json') :
     name==='claude' ? join(env.CLAUDE_CONFIG_DIR || join(homedir(),'.claude'),'settings.json') :
     join(env.CODEX_HOME || join(homedir(),'.codex'),'config.toml');
-  let config='';
-  try { config=readFileSync(config_path,'utf8'); } catch (error) { if (error.code!=='ENOENT') throw error; }
+  const config=read_settings(config_path);
+  const routed=name==='agy' && env.AGY_CONFIG_DIR ? join(env.AGY_CONFIG_DIR,'settings.json') : null;
+  const profile_settings=routed ? [routed,read_settings(routed)] : [];
   if (name==='claude' && process.env.CLAUDE_CODE_OAUTH_TOKEN) env.CLAUDE_CODE_OAUTH_TOKEN=process.env.CLAUDE_CODE_OAUTH_TOKEN;
   if (name==='codex' && !model) model=/^model\s*=\s*"([^"]+)"/m.exec(config)?.[1];
   if (model) args.push('--model',model);
@@ -42,7 +53,7 @@ export function agent(name='agy',model=process.env.SAVIOR_REVIEW_MODEL) {
   if (name==='codex') args.push('-');
   const version = spawnSync(name,['--version'],{env,encoding:'utf8',timeout:15_000});
   if (version.status!==0) throw Error('cannot identify installed '+name);
-  const identity = receipt.sha256(JSON.stringify([name,version.stdout.trim(),model,args,config_path,config,env.DEVELOPER_PROFILE,env.PATH]));
+  const identity = receipt.sha256(JSON.stringify([name,version.stdout.trim(),model,args,config_path,config,profile_settings,env.DEVELOPER_PROFILE,env.PATH]));
   function infer(input) {
     const cwd = mkdtempSync(join(tmpdir(),'savior-review-'));
     try {
@@ -55,7 +66,7 @@ export function agent(name='agy',model=process.env.SAVIOR_REVIEW_MODEL) {
       }
       let output = result.stdout;
       if (name==='agy') {
-        const events = output.trim().split('\n').map(line=>JSON.parse(line));
+        const events = output.trim().split('\n').map(parse_output);
         const final = events.filter(e=>e.event==='result');
         if (final.length!==1 || final[0].result.status!=='SUCCESS') throw Error('agy did not complete the review');
         const structured = final[0].result.structured_output;
@@ -63,7 +74,7 @@ export function agent(name='agy',model=process.env.SAVIOR_REVIEW_MODEL) {
         return structured;
       }
       const raw = output.trim().replace(/^\x60\x60\x60(?:json)?\s*\n([\s\S]*?)\n\x60\x60\x60$/,'$1');
-      return JSON.parse(raw);
+      return parse_output(raw);
     } finally { rmSync(cwd,{recursive:true,force:true}); }
   }
   return {name,identity,infer};

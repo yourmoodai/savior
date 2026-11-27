@@ -8,18 +8,21 @@ const bot = 'your-mood-savior-prose-review[bot]';
 const check_name = 'Savior local code review';
 const sha256 = text => createHash('sha256').update(text).digest('hex');
 
-function cost_run(artifact,run,pr) {
-  if (!artifact || artifact.expired || artifact.size_in_bytes > 1_000_000 ||
-      artifact.workflow_run?.repository_id !== repo_id || run.id !== artifact.workflow_run.id ||
+function run_base(artifact,run,pr) {
+  if (artifact.workflow_run?.repository_id!==repo_id || run.id!==artifact.workflow_run.id ||
       !trusted_run(run,repository,'main') || !['workflow_dispatch','pull_request_target'].includes(run.event) ||
-      run.path !== '.github/workflows/pr-validation.yml' || run.display_title !== 'pr validation #'+pr.number ||
-      (run.event === 'workflow_dispatch' && run.head_branch !== 'main') || run.status !== 'completed')
-    throw Error('trusted completed cost stop required');
-  if (run.event==='workflow_dispatch') return run.head_sha;
+      run.path!=='.github/workflows/pr-validation.yml' || run.display_title!=='pr validation #'+pr.number ||
+      run.status!=='completed') return null;
+  if (run.event==='workflow_dispatch') return run.head_branch==='main' ? run.head_sha : null;
   const target=run.pull_requests?.find(p=>p.number===pr.number && p.base.ref==='main' &&
-    p.base.repo.id===repo_id && p.head.repo.id===repo_id && p.head.sha===pr.head.sha);
-  if (!target || run.head_sha!==pr.head.sha) throw Error('untrusted budget-stop target');
-  return target.base.sha;
+    p.base.repo.id===repo_id && p.head.repo?.id===repo_id && p.head.sha===pr.head.sha);
+  return target && [target.base.sha,target.head.sha].includes(run.head_sha) ? target.base.sha : null;
+}
+
+function cost_run(artifact,run,pr) {
+  const base=run_base(artifact,run,pr);
+  if (!base || artifact.expired || artifact.size_in_bytes>1_000_000) throw Error('trusted completed cost stop required');
+  return base;
 }
 
 function receipt_id(pr,artifact,config) {
@@ -28,6 +31,17 @@ function receipt_id(pr,artifact,config) {
 
 function marker(check) {
   return '<!-- savior-local-review:'+check.id+':'+sha256(check.output.text)+' -->';
+}
+
+function assert_no_conflict(checks,reviews,pr) {
+  const prefix=['v1',pr.number,pr.base.sha,pr.head.sha,''].join('/');
+  for (const check of checks) {
+    if (check.app?.id!==app_id || check.name!==check_name || check.head_sha!==pr.head.sha ||
+        check.conclusion!=='failure' || !check.external_id?.startsWith(prefix)) continue;
+    const dismissed=reviews.some(r=>r.state==='DISMISSED' && r.user?.login===bot && r.user.type==='Bot' &&
+      r.commit_id===pr.head.sha && r.body?.startsWith(marker(check)));
+    if (!dismissed) throw Error('conflicting local review requires resolution');
+  }
 }
 
 async function validate_check({github,context,pr,id}) {
@@ -49,4 +63,4 @@ async function validate_check({github,context,pr,id}) {
   return marker(check);
 }
 
-module.exports = {repository,repo_id,app_id,bot,check_name,sha256,cost_run,receipt_id,marker,validate_check};
+module.exports = {repository,repo_id,app_id,bot,check_name,sha256,run_base,cost_run,receipt_id,marker,assert_no_conflict,validate_check};

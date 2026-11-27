@@ -6,7 +6,7 @@ import zipfile
 
 def claims(data, head, quote_id):
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
-        name = 'report.json' if 'report.json' in archive.namelist() else 'preflight.json'
+        name = 'report.json'
         if archive.namelist().count(name) != 1 or archive.getinfo(name).file_size > 64_000_000:  # 64 MB
             raise ValueError('missing or oversized verdict')
         report = json.loads(archive.read(name))

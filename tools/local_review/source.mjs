@@ -18,7 +18,7 @@ function tree(revision) {
 export function snapshot(pr) {
   const base = git(['merge-base',pr.base.sha,pr.head.sha]).trim();
   const range = [base,pr.head.sha];
-  const diff = ['diff','--no-ext-diff','--no-textconv','--no-renames'];
+  const diff = ['diff','--no-ext-diff','--no-textconv','--no-renames','--ignore-submodules=none'];
   const paths = git([...diff,'--name-only','-z',...range]).split('\0').filter(Boolean);
   if (!paths.length || paths.some(p=>/[\x00-\x1f\x7f]/.test(p))) throw Error('empty or unsupported review scope');
   const trees = {old:tree(base),new:tree(pr.head.sha)};

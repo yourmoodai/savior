@@ -4,8 +4,8 @@ Review every assigned path and check each prior allegation against actual code. 
 Return a single JSON object. For additional repository evidence return {"request":[{"path":"...","side":"new"}]}.
 Otherwise return {"verdict":"approve|changes_requested|incomplete","coverage":[{"path":"...","reason":"what you verified"}],
 "prior":[{"id":1,"status":"refuted|confirmed","reason":"concrete evidence"}],
-"findings":[{"path":"...","side":"new|old","line":1,"evidence":"exact full line","reason":"specific introduced defect and impact"}]}.
-Use a positive 1-based line. Report only introduced defects, located in an assigned file. Each confirmed allegation needs a finding.
+"findings":[{"path":"...","side":"new|old","line":1,"prior_ids":[],"evidence":"exact full line","reason":"specific introduced defect and impact"}]}.
+Use a positive 1-based line. Report only introduced defects, located in an assigned file. List each confirmed allegation ID on its supporting finding. Use an empty prior_ids array for new defects.
 If evidence is insufficient, request context or respond incomplete. Approve only a fully reviewed group with zero defects.`;
 
 function exactly(rows,expected,key) {
@@ -23,13 +23,15 @@ export function validate(result,scope,prior,source) {
   if (!Array.isArray(result.findings) || (result.verdict==='approve') !== (result.findings.length===0))
     throw Error('verdict disagrees with findings');
   for (const f of result.findings) {
+    if (!Array.isArray(f.prior_ids) || f.prior_ids.some(id=>!result.prior.some(r=>r.id===id && r.status==='confirmed')))
+      throw Error('invalid prior finding reference');
     if (!scope.includes(f.path) || !['old','new'].includes(f.side) || !Number.isSafeInteger(f.line) || f.line<1 ||
         !explanation(f.reason) || typeof f.evidence !== 'string' || !f.evidence.trim() ||
         source.read(f.path,f.side)?.split(/\r?\n/)[f.line-1] !== f.evidence) throw Error('unverified finding location');
   }
   for (const row of result.prior) {
     const claim = prior.find(p=>p.id===row.id);
-    if (!(row.status==='refuted' || (row.status==='confirmed' && result.findings.some(f=>f.path===claim.path))))
+    if (!(row.status==='refuted' || (row.status==='confirmed' && result.findings.some(f=>f.path===claim.path && f.prior_ids.includes(row.id)))))
       throw Error('unresolved prior finding');
   }
   return result;

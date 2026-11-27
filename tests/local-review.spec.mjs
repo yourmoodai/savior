@@ -19,13 +19,15 @@ const claim={id:1,path:'add.js'};
 const clean={verdict:'approve',coverage:[{path:'add.js',reason:'verified the return value'}],
   prior:[{id:1,status:'refuted',reason:'verified against supplied file'}],findings:[]};
 const defect={verdict:'changes_requested',coverage:clean.coverage,prior:[{...clean.prior[0],status:'confirmed'}],
-  findings:[{path:'add.js',line:1,side:'new',evidence:'return a-b;',reason:'addition now subtracts'}]};
+  findings:[{path:'add.js',prior_ids:[1],line:1,side:'new',evidence:'return a-b;',reason:'addition now subtracts'}]};
 
 test('require complete source coverage, prior dispositions, and exact finding lines',async()=>{
   for (const result of [clean,defect]) assert.equal((await assess(source,[claim],()=>result)).verdict,result.verdict);
   for (const result of [{...clean,coverage:[]},{...clean,prior:[]},{...clean,prior:defect.prior},
     {...defect,findings:[{...defect.findings[0],line:2}]},{...defect,verdict:'approve'},{...clean,verdict:'incomplete'}])
     await assert.rejects(assess(source,[claim],()=>result));
+  const two={...defect,prior:[...defect.prior,{...defect.prior[0],id:2}]};
+  await assert.rejects(assess(source,[claim,{...claim,id:2}],()=>two),/unresolved prior finding/);
   let calls=0;
   await assess(source,[claim],input=>{
     if (++calls===1) return {request:[{path:'add.js',side:'old'}]};
@@ -42,7 +44,7 @@ function check_fixture() {
 test('cache on GitHub survives a retry and never revives dismissed approval',async()=>{
   let calls=0,check;
   const reviews=[],events=[];
-  const args={pr,agent,evidence:{artifact},existing:[],refresh:async()=>{},inspect:async()=>{calls++;return clean;},
+  const args={pr,agent,evidence:{artifact},existing:[],checks:async()=>[],refresh:async()=>{},inspect:async()=>{calls++;return clean;},
     write:async()=>async(path,method,payload)=>{
       events.push(path);
       if (path==='/check-runs') {check={...check_fixture(),...payload};return check;}
@@ -127,4 +129,12 @@ test('carry unresolved App findings to a later revision using the original repor
   assert.equal(outstanding_findings(next,[review],()=>check)[0].details,defect.findings[0].reason);
   assert.throws(()=>outstanding_findings(next,[review],()=>({...check,app:{id:88}})));
   assert.deepEqual(outstanding_findings(next,[{...review,state:'DISMISSED'}],()=>check),[]);
+});
+
+test('a competing App failure blocks admission regardless of review order',()=>{
+  const failed={...check_fixture(),conclusion:'failure'};
+  assert.throws(()=>receipt.assert_no_conflict([failed],[],pr),/conflicting/);
+  const dismissal={state:'DISMISSED',user:{type:'Bot',login:bot},commit_id:pr.head.sha,body:marker(failed)};
+  receipt.assert_no_conflict([failed],[dismissal],pr);
+  assert.throws(()=>receipt.assert_no_conflict([failed],[{...dismissal,commit_id:'obsolete'}],pr));
 });

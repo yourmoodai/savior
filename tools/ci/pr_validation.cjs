@@ -52,15 +52,21 @@ async function execute({github,context,core,phase,binding,results}) {
   }
   try {
     assert_target(pr,target);
-    const reviews=await github.paginate(github.rest.pulls.listReviews,{...args,per_page:100});
     const local = target.local_check;
     const local_marker = local && await require('../local_review/receipt.cjs').validate_check({github,context,pr,id:local});
-    assert_approval(reviews,target,local_marker);
+    async function approval() {
+      const checks=local && await github.paginate(github.rest.checks.listForRef,{...context.repo,ref:target.head,
+        check_name:require('../local_review/receipt.cjs').check_name,filter:'all',per_page:100});
+      const reviews=await github.paginate(github.rest.pulls.listReviews,{...args,per_page:100});
+      if (local) require('../local_review/receipt.cjs').assert_no_conflict(checks,reviews,pr);
+      assert_approval(reviews,target,local_marker);
+    }
     if (phase==='finish') {
       if (!results || results.review?.result !== (local ? 'skipped' : 'success') || !['admission','commits','verify','qualification'].every(k=>results[k]?.result==='success') ||
           results.site?.result !== (results.admission.outputs.site_required==='true' ? 'success' : 'skipped'))
         throw Error('review or downstream validation failed');
       assert_target((await github.rest.pulls.get(args)).data,target);
+      await approval();
       await status('success','approved revision passed all applicable validation');
       return;
     }
@@ -73,6 +79,7 @@ async function execute({github,context,core,phase,binding,results}) {
       ['scripts/site.py','scripts/test-site.mjs','docs/assets/savior.svg','docs/assets/social-preview.png','.github/workflows/site.yml'].includes(p);
     core.setOutput('site_required',String(files.length>=3000 || files.some(f=>site_path(f.filename) || (f.previous_filename && site_path(f.previous_filename)))));
     assert_target((await github.rest.pulls.get(args)).data,target);
+    await approval();
     core.setOutput('test_sha',merge.sha);
   } catch(error) {
     if (phase==='finish') await status('failure',String(error.message).slice(0,140));
