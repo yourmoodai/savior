@@ -40,14 +40,27 @@ function ready(pr, context) {
 
 function cost_block(quote, pr, repository) {
   const p = quote.policy;
+  const remaining = [p?.pr_remaining_nanodollars, p?.daily_remaining_nanodollars];
+  if (p && Object.hasOwn(p,'pilot_remaining_nanodollars')) remaining.push(p.pilot_remaining_nanodollars);
   if (quote.schema !== 3 || quote.projection_informational !== true ||
       quote.blocked_reason !== 'cost_limit' || quote.binding?.repository !== repository ||
       quote.binding.pr !== pr.number || quote.binding.head !== pr.head.sha || quote.binding.base !== pr.base.sha ||
       !p || p.repository !== repository.toLowerCase() || p.pr !== pr.number ||
       p.pr_limit_nanodollars !== 2e9 || p.daily_limit_nanodollars !== 5e9 ||
-      ![quote.next_call_reserved_nanodollars,quote.projected_nanodollars,p.pr_remaining_nanodollars,p.daily_remaining_nanodollars].every(n=>Number.isSafeInteger(n) && n>=0) ||
+      ![quote.next_call_reserved_nanodollars,quote.projected_nanodollars,...remaining].every(n=>Number.isSafeInteger(n) && n>=0) ||
       p.pr_remaining_nanodollars > 2e9 || p.daily_remaining_nanodollars > 5e9 ||
-      quote.next_call_reserved_nanodollars <= Math.min(p.pr_remaining_nanodollars,p.daily_remaining_nanodollars)) throw Error('quote_stale');
+      quote.next_call_reserved_nanodollars <= Math.min(...remaining)) throw Error('quote_stale');
+}
+
+function verify_archive(archive,artifact,pr,repository,decode) {
+  let quote;
+  try {
+    quote = decode ? decode(archive) : JSON.parse(execFileSync('python3',
+      [path.join(__dirname,'quote.py')],{input:archive,maxBuffer:1000000,stdio:['pipe','pipe','pipe']}).toString());
+  } catch { throw Error('quote_expired_or_invalid'); }
+  cost_block(quote,pr,repository);
+  if (artifact.name !== `review-cost-block-${pr.number}-${pr.head.sha}-${quote.id}`) throw Error('quote_stale');
+  return quote;
 }
 
 async function from_comment({github,context,core,pr,decode}) {
@@ -61,12 +74,7 @@ async function from_comment({github,context,core,pr,decode}) {
   const run = (await github.rest.actions.getWorkflowRun({...context.repo,run_id:artifact.workflow_run.id})).data;
   if (!trusted_run(run,repository,context.payload.repository.default_branch)) throw Error('untrusted_quote');
   const archive = await github.rest.actions.downloadArtifact({...context.repo,artifact_id:artifact.id,archive_format:'zip'});
-  let quote;
-  try {
-    quote = decode ? decode(Buffer.from(archive.data)) : JSON.parse(execFileSync('python3',
-      [path.join(__dirname,'quote.py')],{input:Buffer.from(archive.data),maxBuffer:1000000,stdio:['pipe','pipe','pipe']}).toString());
-  } catch { throw Error('quote_expired_or_invalid'); }
-  cost_block(quote,pr,repository);
+  const quote = verify_archive(Buffer.from(archive.data),artifact,pr,repository,decode);
   const args = {...context.repo,pull_number:pr.number};
   async function recheck() {
     const pull = (await github.rest.pulls.get(args)).data;
@@ -121,4 +129,4 @@ async function record_failure(action) {
   }
 }
 
-module.exports = {parse,from_comment,trusted_run,revalidate,record_failure,cost_block};
+module.exports = {parse,from_comment,trusted_run,revalidate,record_failure,cost_block,verify_archive};

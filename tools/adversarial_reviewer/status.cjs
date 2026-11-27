@@ -38,6 +38,8 @@ function render(reason, quote, budget, report) {
       `PR allowance remaining: ${usd(quote.policy.pr_remaining_nanodollars)} of $2.00`,
       `Daily allowance remaining: ${usd(quote.policy.daily_remaining_nanodollars)} of $5.00`,
       'Daily reset: midnight UTC. The PR allowance does not reset.',
+      '', `Run a local review from trusted main: \`npm run review:local -- ${quote.binding.pr}\`.`,
+      'The default agent is agy. Append claude or codex to select another installed reviewer.',
       '', 'A repository admin can waive automated review for this revision using:',
       '```', `/savior review skip ${quote.binding.head}`, '```',
       'The waiver submits an approval without asserting a code-review pass. Other reviews and required checks still apply.');

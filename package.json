@@ -28,6 +28,7 @@
     "savior": "bridge/cli.mjs"
   },
   "scripts": {
+    "review:local": "node tools/local_review/run.mjs",
     "reviewer:cpu": "python3 tools/review_routing_research/run.py",
     "reviewer:cpu:test": "python3 -m unittest discover -s tools/review_routing_research",
     "reviewer:packing:qualify": "python3 tools/review_routing_research/qualify_packing.py",
