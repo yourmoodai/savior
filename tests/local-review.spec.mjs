@@ -73,6 +73,23 @@ test('historical paths absent from both trees still require an explicit disposit
   await assert.rejects(assess(input,[previous],()=>({...result,prior:[]})),/incomplete review coverage/);
 });
 
+test('a surviving defect can cite a changed destination from a different group',async()=>{
+  const changed=['add.js','b','c','d','e','f'];
+  const input={...source,paths:changed,available:[...changed,'unchanged.js'],
+    read:path=>path==='removed.js' ? null : 'return a-b;'};
+  const original={...claim,path:'removed.js'};
+  const review=(finding,tree=input)=>assess(tree,[original],prompt=>{
+    const {scope,prior}=JSON.parse(prompt.split('\n').at(-1));
+    const coverage=scope.map(path=>({path,reason:'assessed the complete patch'}));
+    return prior.length ? {...defect,coverage,findings:[finding]} : {...clean,coverage,prior:[]};
+  });
+  const finding=defect.findings[0];
+  assert.deepEqual((await review(finding)).findings,[finding]);
+  for (const change of [{path:'unchanged.js'},{side:'old'},{prior_ids:[]},{evidence:'wrong line'}])
+    await assert.rejects(review({...finding,...change}));
+  await assert.rejects(review(finding,{...input,available:[...input.available,'removed.js'],read:source.read}));
+});
+
 function check_fixture() {
   return {id:44,app:{id:app_id},name:check_name,status:'completed',conclusion:'success',head_sha:pr.head.sha,
     external_id:receipt_id(pr,artifact.id,sha),html_url:'https://github.com/yourmoodai/savior/runs/44',

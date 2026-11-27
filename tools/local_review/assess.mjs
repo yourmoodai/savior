@@ -4,11 +4,12 @@ Review every assigned path and check each prior allegation against actual code. 
 Return a single JSON object. For additional repository evidence return {"request":[{"path":"...","side":"new"}]}.
 Batch related context requests. Files and extra evidence are numbered as <line><tab><original text>.
 Copy the complete text after the first tab as evidence, including indentation, and report the number before it.
-A prior path marked absent exists in neither current tree. Check the patch for moved code before disposing of that allegation.
+A prior path marked absent exists in neither current tree.
 Otherwise return {"verdict":"approve|changes_requested|incomplete","coverage":[{"path":"...","reason":"what you verified"}],
 "prior":[{"id":1,"status":"refuted|confirmed","reason":"concrete evidence"}],
 "findings":[{"path":"...","side":"new|old","line":1,"prior_ids":[],"evidence":"exact full line","reason":"specific introduced defect and impact"}]}.
-Use a positive 1-based line. Report only introduced defects, located in an assigned file. List each confirmed allegation ID on its supporting finding. Use an empty prior_ids array for new defects.
+Use a positive 1-based line. Report only introduced defects. New findings belong in assigned files. If a prior path no longer exists on the new side, check for moved code and cite the changed destination on the new side, even outside the assigned group. Request its numbered source if necessary.
+List each confirmed allegation ID on its supporting finding. Use an empty prior_ids array for new defects.
 If evidence is insufficient, request context or respond incomplete. Approve only a fully reviewed group with zero defects.`;
 
 function exactly(rows,expected,key) {
@@ -28,7 +29,12 @@ export function validate(result,scope,prior,source) {
   const findings = result.findings.map(f=>{
     if (!Array.isArray(f.prior_ids) || f.prior_ids.some(id=>!result.prior.some(r=>r.id===id && r.status==='confirmed')))
       throw Error('invalid prior finding reference');
-    if (!scope.includes(f.path) || !['old','new'].includes(f.side) || !Number.isSafeInteger(f.line) || f.line<1 ||
+    for (const id of f.prior_ids) {
+      const original=prior.find(p=>p.id===id).path;
+      if (f.path!==original && !(f.side==='new' && source.paths.includes(f.path) && source.read(original,'new')===null))
+        throw Error('unrelated prior finding location');
+    }
+    if ((!scope.includes(f.path) && !f.prior_ids.length) || !['old','new'].includes(f.side) || !Number.isSafeInteger(f.line) || f.line<1 ||
         !explanation(f.reason) || typeof f.evidence !== 'string' || !f.evidence.trim()) throw Error('unverified finding location');
     const lines=source.read(f.path,f.side)?.split(/\r?\n/);
     if (!lines || f.line>lines.length) throw Error('unverified finding location');
@@ -38,8 +44,7 @@ export function validate(result,scope,prior,source) {
     return {...f,line:index+1};
   });
   for (const row of result.prior) {
-    const claim = prior.find(p=>p.id===row.id);
-    if (!(row.status==='refuted' || (row.status==='confirmed' && result.findings.some(f=>f.path===claim.path && f.prior_ids.includes(row.id)))))
+    if (!(row.status==='refuted' || (row.status==='confirmed' && findings.some(f=>f.prior_ids.includes(row.id)))))
       throw Error('unresolved prior finding');
   }
   return {...result,findings};
