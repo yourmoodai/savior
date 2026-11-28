@@ -23,6 +23,28 @@ def use_bindings(node):
     return {node.text.decode().split('::')[-1]}
 
 
+def use_paths(node, prefix=()):
+    if node.type == 'scoped_use_list':
+        path = node.child_by_field_name('path')
+        base = prefix+tuple(path.text.decode().split('::')) if path else prefix
+        yield from use_paths(node.child_by_field_name('list'), base)
+    elif node.type == 'use_list':
+        for child in node.named_children:
+            if child.type not in ('line_comment', 'block_comment'):
+                yield from use_paths(child, prefix)
+    elif node.type == 'use_as_clause':
+        yield from use_paths(node.child_by_field_name('path'), prefix)
+    elif node.type == 'use_wildcard':
+        path = node.text.decode().removesuffix('::*')
+        yield prefix + (tuple(path.split('::')) if path != '*' else ()) + ('*',), False
+    else:
+        parts = tuple(node.text.decode().split('::'))
+        if parts == ('self',) and prefix:
+            yield prefix, False
+        else:
+            yield prefix+parts, False
+
+
 class RustImports:
     def __init__(self, snapshot, parse):
         self.snapshot, self.parse = snapshot, parse
@@ -170,6 +192,26 @@ class RustImports:
         self.alias_cache[path] = result
         return result
 
+    def platform_aliases(self, bindings):
+        if len(bindings) != 2:
+            return False
+        tree = self.tree(bindings[0].path)
+        guards = set()
+        for binding in bindings:
+            uses = [n for n in tree.named_children if n.type == 'use_declaration'
+                    and n.start_point.row + 1 == binding.start and n.text.decode() == binding.text]
+            if len(uses) != 1:
+                return False
+            argument = uses[0].child_by_field_name('argument')
+            attribute = uses[0].prev_named_sibling
+            if argument.type != 'use_as_clause' or attribute is None or attribute.type != 'attribute_item':
+                return False
+            target = argument.child_by_field_name('path').text.decode()
+            if len(self.child(binding.path, target)) != 1:
+                return False
+            guards.add(attribute.text.decode())
+        return guards == {'#[cfg(unix)]', '#[cfg(windows)]'}
+
     def inline_scope(self, evidence):
         result = []
         node = self.tree(evidence.path)
@@ -235,6 +277,8 @@ class RustImports:
                         origins = [self.routes[root, evidence.path][-1] for root in roots
                                    if self.routes[root, evidence.path]]
                 initial_scope = '.'.join(inline) + '.' if inline else ''
+            elif self.child(evidence.path, parts[0]):
+                origins = [evidence.path]
             else:
                 dependency = self.workspace_dependency(evidence.path, parts[0])
                 if dependency is not None:
