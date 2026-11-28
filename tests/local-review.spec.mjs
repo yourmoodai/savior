@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
+import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {snapshot} from '../tools/local_review/source.mjs';
 import {assess} from '../tools/local_review/assess.mjs';
 import {complete} from '../tools/local_review/run.mjs';
 import {outstanding_findings} from '../tools/local_review/evidence.mjs';
@@ -196,4 +200,31 @@ test('a competing App failure blocks admission regardless of review order',()=>{
 test('a request for changes from a deleted account stays outstanding',()=>{
   const review={id:7,user:null,state:'CHANGES_REQUESTED'};
   assert.throws(()=>validation.assert_approval([review],{}),/changes requested/);
+});
+
+test('snapshot refuses binary evidence on either side of a change',()=>{
+  const original = process.cwd();
+  const directory = mkdtempSync(join(tmpdir(), 'savior-binary-review-'));
+  const git = (...args) => execFileSync('git', ['-c', 'user.name=Fixture', '-c',
+    'user.email=fixture@example.invalid', '-c', 'commit.gpgsign=false', '-c',
+    'core.hooksPath=.git/no-hooks', ...args], {cwd:directory, encoding:'utf8'}).trim();
+  try {
+    process.chdir(directory);
+    git('init', '--quiet');
+    function commit(content) {
+      writeFileSync('input.dat', content);
+      git('add', 'input.dat');
+      git('commit', '--quiet', '-m', 'fixture');
+      return {sha:git('rev-parse', 'HEAD')};
+    }
+    const before = commit('text before');
+    const binary = commit(Buffer.from([65, 0, 66]));
+    const after = commit('text after');
+    for (const [base, head] of [[before, binary], [binary, after]]) {
+      assert.throws(()=>snapshot({base, head}), /^Error: binary evidence: input\.dat$/);
+    }
+  } finally {
+    process.chdir(original);
+    rmSync(directory, {recursive:true, force:true});
+  }
 });
