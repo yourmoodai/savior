@@ -127,8 +127,12 @@ test('large PRs have no approval shortcut and bad comments cannot replace status
 test('cost status is compact, notifies applicable owners once per revision and never submits a defect',async()=>{
   const f=fixture();
   const report={commit_id:head,blocked_reason:'cost_limit',quote:f.quote};
-  await publish({...f,head,pr:5,phase:'complete',report});
-  await publish({...f,head,pr:5,phase:'complete',report});
+  for (let attempt=0; attempt<2; attempt++) {
+    const outcome=await publish({...f,head,pr:5,phase:'complete',report,quote_artifact:f.artifact.name});
+    assert.equal(outcome,false);
+    assert.equal(f.outputs.awaiting_local_review,'true');
+    assert.equal(f.outputs.failed,undefined);
+  }
   assert.equal(f.comments.length,2);
   assert.match(f.comments[0].body,/Next-call reservation: \$3.00/);
   assert.match(f.comments[0].body,/Whole-plan worst-case projection \(informational\): \$134.00/);
@@ -137,6 +141,27 @@ test('cost status is compact, notifies applicable owners once per revision and n
   assert.match(f.comments[1].body,/@owner: automated review is blocked/);
   assert.deepEqual(f.refs,['base']);assert.equal(f.created.length,0);
   assert.ok(f.comments[0].body.length<1500);
+});
+
+test('a budget handoff requires the published quote for this revision',async()=>{
+  for (const scenario of ['artifact missing','artifact mismatch','invalid reservation','findings']) {
+    const f=fixture();
+    const report={commit_id:head,blocked_reason:'cost_limit',quote:f.quote};
+    let quote_artifact=f.artifact.name;
+    if (scenario==='artifact missing') quote_artifact=undefined;
+    if (scenario==='artifact mismatch') quote_artifact+='-other';
+    if (scenario==='invalid reservation') f.quote.next_call_reserved_nanodollars=1;
+    if (scenario==='findings') report.findings=[{title:'unresolved defect'}];
+    const attempt=()=>publish({...f,head,pr:5,phase:'complete',report,quote_artifact});
+    if (scenario==='findings') {
+      assert.equal(await attempt(),false);
+      assert.equal(f.outputs.failed,true);
+    } else {
+      await assert.rejects(attempt);
+    }
+    assert.equal(f.outputs.awaiting_local_review,undefined);
+    assert.equal(f.created.length,0);
+  }
 });
 
 test('CODEOWNERS applies last match, teams, exclusions, nested paths and renamed files',()=>{

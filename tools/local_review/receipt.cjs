@@ -1,12 +1,16 @@
 const {createHash} = require('node:crypto');
-const {trusted_run,verify_archive} = require('../adversarial_reviewer/approval.cjs');
+const {trusted_run,verify_archive,latest_reviews} = require('../adversarial_reviewer/approval.cjs');
 
 const repository = 'yourmoodai/savior';
 const repo_id = 1418413891;
 const app_id = 5910949;
-const bot = 'your-mood-savior-prose-review[bot]';
+const bot_id = 360859138;
 const check_name = 'Savior local code review';
 const sha256 = text => createHash('sha256').update(text).digest('hex');
+
+function is_review_bot(user) {
+  return user?.type === 'Bot' && user.id === bot_id;
+}
 
 function run_base(artifact,run,pr) {
   if (artifact.workflow_run?.repository_id!==repo_id || run.id!==artifact.workflow_run.id ||
@@ -44,7 +48,7 @@ function assert_no_conflict(checks,reviews,pr) {
   for (const check of checks) {
     if (check.app?.id!==app_id || check.name!==check_name || check.head_sha!==pr.head.sha ||
         check.conclusion!=='failure' || !check.external_id?.startsWith(prefix)) continue;
-    const dismissed=reviews.some(r=>r.state==='DISMISSED' && r.user?.login===bot && r.user.type==='Bot' &&
+    const dismissed=reviews.some(r=>r.state==='DISMISSED' && is_review_bot(r.user) &&
       r.commit_id===pr.head.sha && r.body?.startsWith(marker(check)));
     if (!dismissed) throw Error('conflicting local review requires resolution');
   }
@@ -68,4 +72,4 @@ async function validate_check({github,context,pr,id}) {
   return marker(check);
 }
 
-module.exports = {repository,repo_id,app_id,bot,check_name,sha256,run_base,cost_run,receipt_id,receipt_binding,marker,assert_no_conflict,validate_check};
+module.exports = {repository,repo_id,app_id,is_review_bot,latest_reviews,check_name,sha256,run_base,cost_run,receipt_id,receipt_binding,marker,assert_no_conflict,validate_check};
