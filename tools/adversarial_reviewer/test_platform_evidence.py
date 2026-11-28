@@ -139,3 +139,25 @@ class PlatformEvidenceTests(unittest.TestCase):
         for path, value in controls:
             with self.subTest(value=value):
                 self.assertTrue(self.graph({**files, path: value}, 'src/lib.rs', 'value')[1])
+
+    def test_binary_call_retains_package_library(self):
+        manifest = ('[package]\nname="test-helper"\nversion="1.0.0"\n'
+                    '[[bin]]\nname="helper"\npath="src/main.rs"')
+        for crate, lib_path, lib_table in [('test_helper', 'src/lib.rs', ''),
+                                           ('custom', 'lib/start.rs', '\n[lib]\nname="custom"\npath="lib/start.rs"')]:
+            files = {'Cargo.toml': manifest + lib_table,
+                     'tests/run.rs': 'fn binary() { let _ = env!("CARGO_BIN_EXE_helper"); }',
+                     'src/main.rs': 'fn main() { ' + crate + '::run(); }',
+                     lib_path: 'mod nested;\npub fn run() { nested::hidden(); }',
+                     lib_path.rsplit('/', 1)[0] + '/nested.rs': 'pub fn hidden() {}'}
+            with self.subTest(crate=crate):
+                nodes, issues = self.graph(files, 'tests/run.rs', 'binary')
+                self.assertFalse(issues)
+                self.assertTrue(any(n.path.endswith('/nested.rs') and 'hidden' in n.names for n in nodes))
+                files[lib_path] = 'pub fn run() { opaque!(); }'
+                self.assertTrue(self.graph(files, 'tests/run.rs', 'binary')[1])
+
+    def test_explicit_library_with_missing_source_stays_blocked(self):
+        files = {'Cargo.toml': '[package]\nname="probe"\nversion="1"\n[lib]\npath="missing.rs"\n',
+                 'src/main.rs': 'fn main() { probe::run(); }'}
+        self.assertTrue(self.graph(files, 'src/main.rs', 'main')[1])

@@ -93,7 +93,11 @@ class RustImports:
         directory = posixpath.dirname(file)
         stem = posixpath.basename(file).removesuffix('.rs')
         if stem not in ('lib', 'main', 'mod'):
-            directory = posixpath.join(directory, stem)
+            package, manifest = self.manifest(file)
+            relative = posixpath.relpath(file, package or '.')
+            targets = [manifest.get('lib', {}).get('path'), *(entry.get('path') for entry in manifest.get('bin', []))]
+            if relative not in targets and not re.fullmatch(r'src/bin/[^/]+\.rs', relative):
+                directory = posixpath.join(directory, stem)
         candidates = [posixpath.join(directory, name + '.rs'), posixpath.join(directory, name, 'mod.rs')]
         return [(p, '') for p in candidates if p in self.snapshot.files]
 
@@ -137,6 +141,14 @@ class RustImports:
             for section in ['dependencies', 'dev-dependencies', 'build-dependencies']:
                 dependencies.extend((key, value) for key, value in table.get(section, {}).items()
                                     if key.replace('-', '_') == name)
+        library = manifest.get('lib', {})
+        library_name = library.get('name', manifest.get('package', {}).get('name', '').replace('-', '_'))
+        if library_name == name:
+            target = posixpath.normpath(posixpath.join(directory, library.get('path', 'src/lib.rs')))
+            if 'lib' in manifest or target in self.snapshot.files:
+                if dependencies or target.startswith(('/', '../')) or target not in self.snapshot.files:
+                    return []
+                return [target]
         targets, local = set(), False
         for key, dependency in dependencies:
             base = directory
@@ -233,6 +245,8 @@ class RustImports:
                 and n.child_by_field_name('name').text.decode() == name for n in tree.named_children):
             return False
         resolved, missing, external = self.resolve(evidence, [((name,), False)])
+        if missing and self.workspace_dependency(evidence.path, name) is not None:
+            return True
         return bool(external) or any(symbols == ('@module',) for _, symbols in resolved)
 
     def resolve(self, evidence, declarations, seen=()):
