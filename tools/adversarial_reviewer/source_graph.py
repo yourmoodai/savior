@@ -10,7 +10,7 @@ import re
 import subprocess
 
 from lockfile_evidence import npm_records
-from rust_evidence import RustImports, use_bindings
+from rust_evidence import RustImports, use_bindings, use_paths
 from rust_macros import MacroDependencies
 from javascript_evidence import declaration, deferred_body, import_bindings
 from python_evidence import namespace_accesses, namespace_alias, passive_decorators, passive_definition
@@ -166,30 +166,10 @@ def python_imports(text):
 
 
 def rust_imports(text):
-    def expand(node, prefix=()):
-        if node.type == 'scoped_use_list':
-            path = node.child_by_field_name('path')
-            base = prefix+tuple(path.text.decode().split('::')) if path else prefix
-            yield from expand(node.child_by_field_name('list'), base)
-        elif node.type == 'use_list':
-            for child in node.named_children:
-                if child.type not in ('line_comment', 'block_comment'):
-                    yield from expand(child, prefix)
-        elif node.type == 'use_as_clause':
-            yield from expand(node.child_by_field_name('path'), prefix)
-        elif node.type == 'use_wildcard':
-            path = node.text.decode().removesuffix('::*')
-            yield prefix + (tuple(path.split('::')) if path != '*' else ()) + ('*',), False
-        else:
-            parts = tuple(node.text.decode().split('::'))
-            if parts == ('self',) and prefix:
-                yield prefix, True
-            else:
-                yield prefix+parts, False
     root = parser('rust').parse(text.encode()).root_node
     for node in root.named_children:
         if node.type == 'use_declaration':
-            yield from expand(node.child_by_field_name('argument'))
+            yield from use_paths(node.child_by_field_name('argument'))
         elif node.type == 'mod_item':
             yield (node.child_by_field_name('name').text.decode(),), True
 
@@ -222,6 +202,7 @@ class Graph:
         self.rust_sources = {side: RustImports(source, parser) for side, source in sources.items()}
         self.rust_macros = {side: MacroDependencies(rust) for side, rust in self.rust_sources.items()}
         self.literal_files = {}
+        self.imported_modules = {}
         self.namespace_aliases = {}
         self.namespace_uses = {}
 
@@ -367,12 +348,29 @@ class Graph:
                                        if n.type in ('parameters', 'formal_parameters')))
             dynamic = False
             limitations = []
-            expansions, literal_files = [], set()
+            expansions, literal_files, imported_modules = [], set(), set()
             for call in members:
                 if call.type == 'macro_invocation':
                     try:
                         expanded, captured, included, complete = self.rust_macros[side].expand(path, call, side)
                         expansions.extend(expanded)
+                        imported_modules.update(item['binary_source'] for item in expanded if 'binary_source' in item)
+                        for expansion in expanded:
+                            for qualified in expansion.get('explicit_paths', ()):
+                                if qualified.startswith('Self::'):
+                                    captured.add(scope + qualified[6:].replace('::', '.'))
+                                    continue
+                                captured.add(qualified.replace('::', '.'))
+                                if self.rust_sources[side].namespace(namespace_probe, qualified.split('::')[0]):
+                                    import_nodes.append('use ' + qualified + ';')
+                            for site in expansion.get('calls', ()):
+                                target = site['expression']
+                                if target.startswith('self.'):
+                                    captured.add(scope + target[5:])
+                                if site['receiver'] or target in parameters:
+                                    reason = ('runtime receiver target' if site['receiver'] else 'injected callback target')
+                                    limitations.append({'path': path, 'side': side, 'line': site['line'],
+                                        'expression': target, 'reason': reason + ' is not statically established'})
                         refs.update(captured)
                         refs.update(scope+name for name in captured)
                         literal_files.update(included)
@@ -381,7 +379,16 @@ class Graph:
                         dynamic = True
                 function = call.child_by_field_name('function') if call.type in ('call', 'call_expression') else None
                 if javascript and function is not None and function.text == b'import':
-                    dynamic = True
+                    arguments = call.child_by_field_name('arguments').named_children
+                    target = None
+                    if len(arguments) == 1 and arguments[0].type == 'string':
+                        specifier = arguments[0].text[1:-1].decode()
+                        if re.fullmatch(r'\.{1,2}/[\w./-]+\.(?:mjs|cjs|js)', specifier):
+                            target = posixpath.normpath(posixpath.join(posixpath.dirname(path), specifier))
+                    if target in self.sources[side].files:
+                        imported_modules.add(target)
+                    else:
+                        dynamic = True
                 if javascript and function is not None and function.text == b'require':
                     arguments = call.child_by_field_name('arguments')
                     dynamic |= arguments is None or len(arguments.named_children) != 1 or arguments.named_children[0].type != 'string'
@@ -421,6 +428,7 @@ class Graph:
             self.enclosing_scope[identity] = scope
             evidence.macro_expansions = expansions
             self.literal_files[identity] = literal_files
+            self.imported_modules[identity] = imported_modules
             if language == 'rust':
                 self.enclosing[identity] = [n for (s, p, prefix), n in self.containers.items()
                                            if s == side and p == path and scope.startswith(prefix)]
@@ -482,6 +490,8 @@ class Graph:
                         n.type == 'call_expression' and n.child_by_field_name('function') is not None
                         and n.child_by_field_name('function').text in (b'import', b'require')
                         for n in header)
+                if deferred is None:
+                    self.imported_modules[init.id] = imported_modules
                 if scope:
                     evidence.refs.add(scope.rstrip('.'))
                     init.refs.add(scope.rstrip('.'))
@@ -557,7 +567,7 @@ class Graph:
         if identity in self.edges:
             return self.edges[identity]
         evidence = self.nodes[identity]
-        if PurePosixPath(evidence.path).suffix not in EXTENSIONS:
+        if identity in self.data_edges or PurePosixPath(evidence.path).suffix not in EXTENSIONS:
             self.edges[identity] = self.data_edges.get(identity, [])
             return self.edges[identity]
         siblings = self.module(evidence.side, evidence.path)
@@ -565,15 +575,15 @@ class Graph:
         selected_imports = []
         class_members = {}
         import_issues = []
+        for path in self.imported_modules.get(identity, []):
+            required.update(self.module(evidence.side, path))
         for path in self.literal_files.get(identity, []):
-            literal = self.module(evidence.side, path)
-            if not literal:
-                source = self.sources[evidence.side].read(path)
-                key = digest([self.sources[evidence.side].revision, path, 'literal', source])
-                self.nodes[key] = Evidence(key, path, evidence.side, 1, source.count('\n')+1,
-                                           source, set(), set(), False)
-                self.modules[evidence.side, path] = literal = [key]
-            required.update(literal)
+            source = self.sources[evidence.side].read(path)
+            key = digest([self.sources[evidence.side].revision, path, 'literal', source])
+            self.nodes[key] = Evidence(key, path, evidence.side, 1, source.count('\n')+1,
+                                       source, set(), set(), False)
+            self.data_edges[key] = []
+            required.add(key)
         for sibling in siblings:
             other = self.nodes[sibling]
             if sibling in self.initializers:
@@ -630,7 +640,8 @@ class Graph:
         # Duplicate definitions are conservative alternatives, never silently selected.
         for name in evidence.refs:
             bindings = [self.nodes[n] for n in siblings if name in self.nodes[n].names]
-            if len(bindings) > 1 and not self.shared_python_namespace(name, bindings):
+            if (len(bindings) > 1 and not self.shared_python_namespace(name, bindings) and not
+                    (evidence.path.endswith('.rs') and self.rust_sources[evidence.side].platform_aliases(bindings))):
                 issues.append('ambiguous definition: '+evidence.path+':'+name)
         self.edges[identity] = sorted(required-{identity})
         return self.edges[identity]
