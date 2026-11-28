@@ -15,8 +15,8 @@ generates `native/index.cjs`, which selects a platform binary. The installed
 bridge can also load `savior.node` from `SAVIOR_RUNTIME_DIR`. A directory
 provided by a caller identifies a location. It supplies no evidence of who
 built the file there or which revision it implements. PR #43 exposed this on
-both sides of its diff. [Bridge](../../bridge/cli.mjs) ·
-[Build inputs](../../crates/node/Cargo.toml)
+both sides of its diff. [Bridge](https://github.com/yourmoodai/savior/blob/31e2495c142d46cdf646398e8eaf879c201b5706/bridge/cli.mjs) ·
+[Build inputs](https://github.com/yourmoodai/savior/blob/31e2495c142d46cdf646398e8eaf879c201b5706/crates/node/Cargo.toml)
 
 Source review runs before a PR can execute native code. Rebuilding the addon
 during review would execute candidate build scripts with the wrong privileges
@@ -24,7 +24,7 @@ and charge native compute to rejected changes. Committing the generated
 JavaScript would make its dispatch visible, but each platform binary would
 still need its own provenance. The existing release bootstrap already checks
 a signed, target-specific inventory. [Review ordering](0012-approve-before-building.md) ·
-[Release bootstrap](../../bridge/bootstrap.mjs)
+[Release bootstrap](https://github.com/yourmoodai/savior/blob/31e2495c142d46cdf646398e8eaf879c201b5706/bridge/bootstrap.mjs)
 
 ## Decision
 
@@ -57,7 +57,7 @@ target, including the macOS bundle layout. It checks length and digest in a
 private location protected from replacement through loading. An environment
 directory can locate a candidate only if the same checks succeed. Source
 development can use an explicitly requested local build with its own receipt.
-Its authority ends at that checkout. [Windows signing handoff](../../scripts/release/windows_handoff.py)
+Its authority ends at that checkout. [Windows signing handoff](https://github.com/yourmoodai/savior/blob/31e2495c142d46cdf646398e8eaf879c201b5706/scripts/release/windows_handoff.py)
 
 ## Invariants & Abstention
 
