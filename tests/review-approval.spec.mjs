@@ -144,21 +144,30 @@ test('cost status is compact, notifies applicable owners once per revision and n
 });
 
 test('a budget handoff requires the published quote for this revision',async()=>{
-  for (const scenario of ['artifact missing','artifact mismatch','invalid reservation','findings']) {
+  for (const scenario of ['artifact missing','artifact mismatch','invalid reservation']) {
     const f=fixture();
     const report={commit_id:head,blocked_reason:'cost_limit',quote:f.quote};
     let quote_artifact=f.artifact.name;
     if (scenario==='artifact missing') quote_artifact=undefined;
     if (scenario==='artifact mismatch') quote_artifact+='-other';
     if (scenario==='invalid reservation') f.quote.next_call_reserved_nanodollars=1;
-    if (scenario==='findings') report.findings=[{title:'unresolved defect'}];
-    const attempt=()=>publish({...f,head,pr:5,phase:'complete',report,quote_artifact});
-    if (scenario==='findings') {
-      assert.equal(await attempt(),false);
-      assert.equal(f.outputs.failed,true);
-    } else {
-      await assert.rejects(attempt);
-    }
+    await assert.rejects(publish({...f,head,pr:5,phase:'complete',report,quote_artifact}));
+    assert.equal(f.outputs.awaiting_local_review,undefined);
+    assert.equal(f.created.length,0);
+  }
+});
+
+test('a valid spending quote cannot hide an unresolved review problem',async()=>{
+  for (const problem of [
+    {findings:[{title:'unresolved defect'}]},
+    {context_gaps:['missing dependency']},
+    {review_failures:['incomplete assessment']},
+  ]) {
+    const f=fixture();
+    const report={commit_id:head,blocked_reason:'cost_limit',quote:f.quote,...problem};
+    const approved=await publish({...f,head,pr:5,phase:'complete',report,quote_artifact:f.artifact.name});
+    assert.equal(approved,false);
+    assert.equal(f.outputs.failed,true);
     assert.equal(f.outputs.awaiting_local_review,undefined);
     assert.equal(f.created.length,0);
   }
