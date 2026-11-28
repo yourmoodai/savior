@@ -200,14 +200,12 @@ impl Trace {
         }
         Ok(())
     }
-    fn without_text(mut self) -> Self {
-        self.original = None;
-        self.output = None;
-        if let Some(decision) = self.decision.as_mut() {
-            decision.marker = None;
-        }
-        self
-    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum TraceRecording {
+    Saved,
+    NotConsented,
 }
 
 pub struct TraceStore {
@@ -299,7 +297,7 @@ impl TraceStore {
         ))?;
         Ok(())
     }
-    pub fn record(&mut self, mut trace: Trace, generation: i64) -> ReviewResult<()> {
+    pub fn record(&mut self, trace: Trace, generation: i64) -> ReviewResult<TraceRecording> {
         trace.validate()?;
         // Admission and revocation serialize on the same transaction.
         let tx = db(self
@@ -311,7 +309,7 @@ impl TraceStore {
             |r| Ok((r.get(0)?, r.get(1)?)),
         ))?;
         if !enabled || generation != current {
-            trace = trace.without_text();
+            return Ok(TraceRecording::NotConsented);
         }
         let event = serde_json::to_string(&trace).map_err(|_| "invalid_trace")?;
         if event.len() > MAX_EVENT_BYTES {
@@ -322,7 +320,8 @@ impl TraceStore {
             params![trace.id, trace.timestamp_ms, trace.outcome, event],
         ))?;
         db(tx.commit())?;
-        self.prune(now_ms())
+        self.prune(now_ms())?;
+        Ok(TraceRecording::Saved)
     }
     pub fn disposition(&self, id: &str, disposition: &str) -> ReviewResult<()> {
         if !["blocked", "cancelled", "forwarded", "forwarding_unknown"].contains(&disposition) {
@@ -453,11 +452,15 @@ pub struct TraceContext {
     pub policy: String,
     pub detector: String,
 }
-pub fn record_failure(code: &str, cancelled: bool) -> ReviewResult<String> {
+pub fn record_failure(code: &str, cancelled: bool) -> ReviewResult<Option<String>> {
     let directory = state_directory()?;
     let mut store = TraceStore::open(&directory)?;
+    let (enabled, generation) = store.consent()?;
+    if !enabled {
+        return Ok(None);
+    }
     let id = random_id();
-    store.record(
+    let recorded = store.record(
         Trace {
             schema: 1,
             offset_unit: "utf8".into(),
@@ -476,9 +479,9 @@ pub fn record_failure(code: &str, cancelled: bool) -> ReviewResult<String> {
             original: None,
             output: None,
         },
-        -1,
+        generation,
     )?;
-    Ok(id)
+    Ok((recorded == TraceRecording::Saved).then_some(id))
 }
 pub fn rewrite_traced(
     model: &mut dyn savior::Detector,
@@ -580,7 +583,6 @@ pub fn rewrite_observed(
     if let Ok(result) = &result {
         crate::live::publish(text, result, strategy, id);
     }
-    let full = consent.is_some_and(|c| c.0);
     let trace = Trace {
         schema: 1,
         offset_unit: "utf8".into(),
@@ -615,15 +617,20 @@ pub fn rewrite_observed(
         "completed",
         json!({"trace":trace,"assessment":answer.get("assessment")}),
     );
-    let trace = if full { trace } else { trace.without_text() };
-    let saved = directory
-        .and_then(|p| TraceStore::open(&p))
-        .and_then(|mut store| store.record(trace, consent.map_or(-1, |c| c.1)));
-    if saved.is_ok() {
-        answer["trace_id"] = id.into();
-    } else {
-        answer["trace_warning"] = "trace_not_recorded".into();
-        crate::observation::publish(id, "recording", json!({"warning":"trace_not_recorded"}));
+    let saved = match consent {
+        Some((false, _)) => Ok(TraceRecording::NotConsented),
+        Some((true, generation)) => directory
+            .and_then(|p| TraceStore::open(&p))
+            .and_then(|mut store| store.record(trace, generation)),
+        None => Err("trace_consent_unavailable".into()),
+    };
+    match saved {
+        Ok(TraceRecording::Saved) => answer["trace_id"] = id.into(),
+        Ok(TraceRecording::NotConsented) => (),
+        Err(_) => {
+            answer["trace_warning"] = "trace_not_recorded".into();
+            crate::observation::publish(id, "recording", json!({"warning":"trace_not_recorded"}));
+        }
     }
     answer
 }

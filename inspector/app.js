@@ -144,7 +144,7 @@ async function stream() {
 }
 async function refresh_state() {
   state = await api('status'); $('status').textContent = `${state.events} saved events · full-text recording ${state.full_text ? 'on' : 'off'} · no remote telemetry`;
-  $('recording-state').textContent = state.full_text ? 'Full-text recording is on.' : 'Full-text recording is off. Live viewing does not save prompt text.';
+  $('recording-state').textContent = state.full_text ? 'Full-text recording is on.' : 'Full-text recording is off. Live viewing does not save history.';
   $('enable').disabled = state.full_text; $('disable').disabled = !state.full_text;
 }
 async function refresh_history() { await refresh_state(); rows = await api('events', {before, after_id, outcome: $('outcome').value}); render(); }

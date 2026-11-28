@@ -4,6 +4,10 @@ Date: 2026-10-21
 
 ## Status
 
+ADR 13 supersedes this record's permission for automatic text-free outcome
+retention: [all new trace history requires consent](0013-require-consent-for-all-trace-history.md).
+The remainder of this record is preserved as the original decision.
+
 Accepted for implementation following the explicit choice of opt-in full traces,
 local-only storage, seven-day retention, and nonblocking recording failures.
 Supersedes only [ADR 1's](0001-local-span-replacement.md) blanket prohibition on

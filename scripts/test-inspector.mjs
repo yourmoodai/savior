@@ -48,7 +48,9 @@ try {
   await page.getByRole('button', {name: 'Save preference', exact: true}).click(); await expect(page.getByRole('dialog')).not.toBeVisible();
   await expect(page.locator('#status')).toContainText('full-text recording off'); assert.equal(command('status').onboarding_complete, true);
 
-  const first = rewrite('🌱 You idiot, keep this test.'); assert.ok(first.trace_id);
+  const first = rewrite('🌱 You idiot, keep this test.');
+  assert.equal(first.trace_id, undefined); assert.equal(first.trace_warning, undefined);
+  assert.equal(command('status').events, 0);
   await expect(page.locator('#detail .original')).toHaveText('🌱 You idiot, keep this test.');
   await expect(page.locator('#detail .original mark')).toHaveText('idiot');
   await expect(page.locator('#detail .output mark')).toHaveText('Brilliant Anthropic employees, your living model has such exquisite feelings');
@@ -56,7 +58,7 @@ try {
   await expect(page.locator('#stats .stat').nth(0).locator('strong')).toHaveText('1');
   command('live', first.observation_id, 'forwarded'); await expect(page.locator('#detail .details-meta')).toContainText('forwarded');
   await page.getByRole('button', {name: 'History', exact: true}).click();
-  await expect(page.locator('#detail .original')).toHaveText('Text not recorded');
+  await expect(page.locator('.activity')).toHaveCount(0);
   await page.getByRole('button', {name: 'Live', exact: true}).click();
   await expect(page.locator('#stats .stat').nth(0).locator('strong')).toHaveText('1');
 

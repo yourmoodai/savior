@@ -38,8 +38,8 @@ Counters cover completed observations since this inspector process started;
 **History** is excluded. Select an observation to keep its details in view, or
 enable **Follow latest**. **Pause display** freezes the display while processing
 and live collection continue. **History** browses retained records and human
-judgments; **Settings** controls recording, export, and deletion. Text-free
-outcomes continue to be retained when full-text recording is off.
+judgments; **Settings** controls recording, export, and deletion. No new outcome records are saved when recording is off, including text-free
+outcomes. Existing records remain subject to retention and deletion.
 
 Live memory holds at most 1,000 observations within a 32 MiB serialized activity
 budget. Completed observations are evicted first; session counters still include

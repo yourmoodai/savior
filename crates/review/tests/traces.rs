@@ -39,17 +39,15 @@ fn event() -> Trace {
     }
 }
 #[test]
-fn default_is_metadata_only_and_revocation_wins() {
+fn default_records_nothing_and_revocation_wins() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().canonicalize().unwrap();
     let mut store = TraceStore::open(&path).unwrap();
     let e = event();
     let id = e.id.clone();
     store.record(e, 0).unwrap();
-    let saved = store.get(&id).unwrap();
-    assert!(saved["original"].is_null());
-    assert!(saved["output"].is_null());
-    assert!(saved["decision"]["marker"].is_null());
+    assert!(store.get(&id).is_err());
+    assert_eq!(store.status().unwrap()["events"], 0);
     assert!(
         !std::fs::read(path.join("traces.sqlite3"))
             .unwrap()
@@ -66,7 +64,13 @@ fn default_is_metadata_only_and_revocation_wins() {
     let e = event();
     let id = e.id.clone();
     store.record(e, generation).unwrap();
-    assert!(store.get(&id).unwrap()["original"].is_null());
+    assert!(store.get(&id).is_err());
+    assert_eq!(store.status().unwrap()["events"], 1);
+    store.set_consent(true).unwrap();
+    let stale = event();
+    let stale_id = stale.id.clone();
+    store.record(stale, generation).unwrap();
+    assert!(store.get(&stale_id).is_err());
 }
 
 #[test]
@@ -86,6 +90,35 @@ fn history_preference_defaults_no_and_survives_reopening() {
     let store = TraceStore::open(&path).unwrap();
     assert!(store.consent().unwrap().0);
     assert_eq!(store.status().unwrap()["onboarding_complete"], true);
+}
+
+#[test]
+fn failures_and_cancellations_require_history_consent() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().canonicalize().unwrap();
+    let mut store = TraceStore::open(&path).unwrap();
+    for outcome in ["failed", "cancelled"] {
+        let mut failure = event();
+        failure.original = None;
+        failure.output = None;
+        failure.decision = None;
+        failure.outcome = outcome.into();
+        failure.disposition = if outcome == "cancelled" {
+            "cancelled"
+        } else {
+            "blocked"
+        }
+        .into();
+        failure.code = Some("inference_failed".into());
+        let id = failure.id.clone();
+        store.record(failure.clone(), 0).unwrap();
+        assert!(store.get(&id).is_err());
+        store.set_consent(true).unwrap();
+        let generation = store.consent().unwrap().1;
+        store.record(failure, generation).unwrap();
+        assert_eq!(store.get(&id).unwrap()["outcome"], outcome);
+        store.set_consent(false).unwrap();
+    }
 }
 
 #[test]
@@ -208,9 +241,11 @@ fn interrupted_snapshot_is_recoverable_without_losing_journal() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().canonicalize().unwrap();
     let mut store = TraceStore::open(&path).unwrap();
+    store.set_consent(true).unwrap();
+    let generation = store.consent().unwrap().1;
     let value = event();
     let id = value.id.clone();
-    store.record(value, 0).unwrap();
+    store.record(value, generation).unwrap();
     drop(store);
     std::fs::write(
         path.join("traces.parquet.partial"),

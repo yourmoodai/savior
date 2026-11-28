@@ -195,7 +195,11 @@ pub fn command(args: &[String]) -> ReviewResult<()> {
         [command, code, state] if command == "failure" => {
             drop(store);
             let id = crate::traces::record_failure(code, state == "cancelled")?;
-            println!("{}", json!({"trace_id":id}));
+            let value = match id {
+                Some(id) => json!({"recorded":true,"trace_id":id}),
+                None => json!({"recorded":false}),
+            };
+            println!("{value}");
             return Ok(());
         }
         [command] if command == "status" => store.status()?,
