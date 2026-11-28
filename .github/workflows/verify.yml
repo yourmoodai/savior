@@ -101,6 +101,10 @@ jobs:
           python-version: '3.12.16'
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node scripts/verify-branding.mjs
+      - name: test reviewer and admission controls
+        run: >-
+          node --test tests/local-review.spec.mjs tests/review-approval.spec.mjs
+          tests/review-author-gate.spec.mjs tests/review-pilot.spec.mjs tests/review-status.spec.mjs
       - run: python3 -m pip install -r tools/adversarial_reviewer/requirements.txt
       - run: python3 -m unittest discover -s tools/adversarial_reviewer
       - run: python3 -m unittest discover -s tools/review_routing_research
