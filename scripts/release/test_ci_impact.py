@@ -28,14 +28,23 @@ class ImpactTests(unittest.TestCase):
                         ci_impact.main()
 
     def test_website_and_shared_inputs(self):
-        self.assertFalse(ci_impact.native_required([
+        self.assertEqual(ci_impact.change_scope([
             'site/templates/base.html', 'scripts/site.py', 'scripts/test-site.mjs',
-            'docs/assets/social-preview.png', '.github/workflows/site.yml']))
+            'docs/assets/social-preview.png', '.github/workflows/site.yml']), 'website-only')
         for path in ['crates/core/src/lib.rs', 'Cargo.lock', 'package-lock.json',
                      'scripts/release/package.py', '.github/workflows/verify.yml',
                      'scripts/release/ci_impact.py', 'unknown-input']:
             with self.subTest(path=path):
-                self.assertTrue(ci_impact.native_required(['site/zola.toml', path]))
+                self.assertEqual(ci_impact.change_scope(['site/zola.toml', path]), 'full')
+
+    def test_reviewer_scope_requires_an_exclusively_review_diff(self):
+        review = ['tools/local_review/assess.mjs', 'tests/local-review.spec.mjs']
+        self.assertEqual(ci_impact.change_scope(review), 'reviewer-only')
+        for paths in (None, [], ['Cargo.toml', 'crates/network/src/adapter.rs'],
+                      review + ['package-lock.json'], review + ['tests/review-transport.spec.mjs'],
+                      review + ['site/zola.toml'], ['tools/local_review_other/run.mjs']):
+            with self.subTest(paths=paths):
+                self.assertEqual(ci_impact.change_scope(paths), 'full')
 
     def test_missing_history_and_manual_dispatch_require_builds(self):
         self.assertIsNone(ci_impact.changed_paths('', 'a' * 40, 'push'))
@@ -65,7 +74,7 @@ class ImpactTests(unittest.TestCase):
                 for event in ['push', 'pull_request']:
                     paths = ci_impact.changed_paths(base, head, event)
                     self.assertIn('runtime.rs', paths)
-                    self.assertTrue(ci_impact.native_required(paths))
+                    self.assertEqual(ci_impact.change_scope(paths), 'full')
 
     def test_gates_accept_only_intentional_skips(self):
         for required in ['true', 'false']:
@@ -73,6 +82,10 @@ class ImpactTests(unittest.TestCase):
             needs = {'context': {'result': 'success', 'outputs': {'native_required': required}},
                      'tooling': {'result': 'success'}, 'coreml': {'result': expected}}
             ci_impact.check_gate(needs, 'context', ['tooling'], ['coreml'])
+            needs['tooling']['result'] = 'failure'
+            with self.assertRaises(ValueError):
+                ci_impact.check_gate(needs, 'context', ['tooling'], ['coreml'])
+            needs['tooling']['result'] = 'success'
             for bad in ['failure', 'cancelled', 'skipped' if required == 'true' else 'success']:
                 needs['coreml']['result'] = bad
                 with self.assertRaises(ValueError):
