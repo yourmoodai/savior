@@ -6,12 +6,10 @@ function assert_target(pr, binding) {
 }
 
 function assert_approval(reviews, binding, local_marker) {
-  const latest = new Map();
-  for (const r of [...reviews].sort((a,b)=>a.id-b.id)) {
-    if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(r.state)) latest.set(r.user?.login || r.id,r);
-  }
-  if ([...latest.values()].some(r=>r.state==='CHANGES_REQUESTED')) throw Error('changes requested');
-  const r=latest.get(local_marker ? require('../local_review/receipt.cjs').bot : 'github-actions[bot]');
+  const {is_review_bot,latest_reviews} = require('../local_review/receipt.cjs');
+  const latest = latest_reviews(reviews);
+  if (latest.some(r=>r.state==='CHANGES_REQUESTED')) throw Error('changes requested');
+  const r=latest.find(r=>local_marker ? is_review_bot(r.user) : r.user?.login==='github-actions[bot]');
   const marker=local_marker || `<!-- savior-assessment:${binding.head}:${binding.base}:${binding.run}:${binding.attempt} -->`;
   if (r?.user.type !== 'Bot' || r.state !== 'APPROVED' || r.commit_id !== binding.head ||
       !r.body?.startsWith(marker)) throw Error('current adversarial approval required');
@@ -22,6 +20,10 @@ async function execute({github,context,core,phase,binding,results}) {
   if (!Number.isSafeInteger(number) || number<=0) throw Error('invalid pr');
   const args={...context.repo,pull_number:number};
   const pr=(await github.rest.pulls.get(args)).data;
+  if (pr.state === 'closed' && (phase === 'start' || phase === 'finish')) {
+    core.notice('validation ended because the pull request closed');
+    return;
+  }
   const target=binding || {pr:String(number),head:pr.head.sha,base:pr.base.sha};
   const run_url=`${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/attempts/${target.attempt || process.env.GITHUB_RUN_ATTEMPT}`;
   async function status(state,description) {

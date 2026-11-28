@@ -9,6 +9,12 @@ const context={repo:{owner:'owner',repo:'repo'},payload:{},serverUrl:'https://gi
 const binding={pr:'21',head:'head',base:'base',run:42,attempt:'1'};
 const approval={id:1,user:{login:'github-actions[bot]',type:'Bot'},state:'APPROVED',commit_id:'head',body:'<!-- savior-assessment:head:base:42:1 -->'};
 const pr={state:'open',draft:false,head:{sha:'head'},base:{sha:'base',ref:'main'},merge_commit_sha:'merge'};
+test('a queued run for a closed PR leaves its last readiness status intact',async()=>{
+  const github={rest:{pulls:{get:async()=>({data:{...pr,state:'closed'}})}}};
+  for (const phase of ['start','finish']) {
+    await execute({github,context,core:{notice(){}},phase,binding,results:{}});
+  }
+});
 test('an obsolete run cannot replace a newer run or invalidation status',async()=>{
   for(const url of [undefined,'https://github.com/owner/repo/actions/runs/43/attempts/1']) {
     const writes=[];

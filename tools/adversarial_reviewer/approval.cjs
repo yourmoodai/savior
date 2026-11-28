@@ -63,6 +63,17 @@ function verify_archive(archive,artifact,pr,repository,decode) {
   return quote;
 }
 
+function latest_reviews(reviews) {
+  const latest = new Map();
+  for (const review of [...reviews].sort((a,b)=>a.id-b.id)) {
+    if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(review.state)) {
+      const actor = review.user?.id ?? review.user?.login ?? `deleted reviewer on review ${review.id}`;
+      latest.set(actor, review);
+    }
+  }
+  return [...latest.values()];
+}
+
 async function from_comment({github,context,core,pr,decode}) {
   ready(pr,context);
   const comment = await comment_authority({github,context,pr});
@@ -82,16 +93,13 @@ async function from_comment({github,context,core,pr,decode}) {
     if (pull.head.sha !== pr.head.sha || pull.base.sha !== pr.base.sha) throw Error('quote_stale');
     await comment_authority({github,context,pr:pull});
     const reviews = await github.paginate(github.rest.pulls.listReviews,{...args,per_page:100});
-    const latest = new Map();
-    for (const review of reviews) {
-      if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(review.state)) latest.set(review.user.login,review);
-    }
+    const latest = latest_reviews(reviews);
     // Requests on earlier revisions remain binding until superseded or dismissed.
-    if ([...latest.values()].some(r=>r.state === 'CHANGES_REQUESTED')) throw Error('changes_requested');
+    if (latest.some(r=>r.state === 'CHANGES_REQUESTED')) throw Error('changes_requested');
     const final_pull = (await github.rest.pulls.get(args)).data;
     ready(final_pull,context);
     if (final_pull.head.sha !== pr.head.sha || final_pull.base.sha !== pr.base.sha) throw Error('quote_stale');
-    return latest.get('github-actions[bot]');
+    return latest.find(r=>r.user?.login === 'github-actions[bot]');
   }
   await recheck();
   const existing = await recheck();
@@ -129,4 +137,4 @@ async function record_failure(action) {
   }
 }
 
-module.exports = {parse,from_comment,trusted_run,revalidate,record_failure,cost_block,verify_archive};
+module.exports = {parse,from_comment,trusted_run,revalidate,record_failure,cost_block,verify_archive,latest_reviews};

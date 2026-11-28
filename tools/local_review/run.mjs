@@ -6,7 +6,7 @@ import {get,gh,list,cost_evidence} from './evidence.mjs';
 import {app_client} from './github.mjs';
 import receipt from './receipt.cjs';
 
-const {repository,repo_id,app_id,bot,check_name,receipt_id,marker}=receipt;
+const {repository,repo_id,app_id,is_review_bot,latest_reviews,check_name,receipt_id,marker}=receipt;
 function current(pr,original) {
   if (pr.state!=='open' || pr.draft || pr.base.ref!=='main' || pr.base.repo.id!==repo_id ||
       pr.head.repo?.id!==repo_id || pr.base.sha!==original.base.sha || pr.head.sha!==original.head.sha)
@@ -33,16 +33,13 @@ export async function complete({pr,agent,evidence,existing,inspect,write,refresh
   }
   const state=check.conclusion==='success'?'APPROVED':'CHANGES_REQUESTED';
   const stamp=marker(check);
-  const latest=new Map();
   const competing=state==='APPROVED' ? await checks() : [];
   const history=await reviews();
   if (state==='APPROVED') receipt.assert_no_conflict(competing,history,pr);
-  for (const row of history.sort((a,b)=>a.id-b.id)) {
-    if (['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(row.state)) latest.set(row.user?.login || row.id,row);
-  }
-  const own=latest.get(bot);
-  if (state==='APPROVED' && [...latest.values()].some(r=>r.state==='CHANGES_REQUESTED' &&
-      (r.user?.login!==bot || r.commit_id===pr.head.sha))) throw Error('outstanding request for changes');
+  const latest=latest_reviews(history);
+  const own=latest.find(r=>is_review_bot(r.user));
+  if (state==='APPROVED' && latest.some(r=>r.state==='CHANGES_REQUESTED' &&
+      (!is_review_bot(r.user) || r.commit_id===pr.head.sha))) throw Error('outstanding request for changes');
   const previous=/^<!-- savior-local-review:(\d+):/.exec(own?.body || '');
   if (previous && Number(previous[1])>check.id) throw Error('local review superseded');
   if (own?.body?.startsWith(stamp) && own.state==='DISMISSED') throw Error('local review dismissed');

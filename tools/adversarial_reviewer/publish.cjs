@@ -9,7 +9,7 @@ function verdict(report) {
   return clean;
 }
 
-module.exports = async function publish({github, context, core, head, pr, phase, report, evidence, reason, quote}) {
+module.exports = async function publish({github, context, core, head, pr, phase, report, evidence, reason, quote, quote_artifact}) {
   const args = {...context.repo, pull_number:Number(pr)};
   async function current() {
     const pull = (await github.rest.pulls.get(args)).data;
@@ -38,14 +38,22 @@ module.exports = async function publish({github, context, core, head, pr, phase,
   if (existing) {
     if (existing.body !== body) await github.rest.issues.updateComment({...context.repo, comment_id:existing.id, body});
   } else await github.rest.issues.createComment({...context.repo, issue_number:Number(pr), body});
-  if (report?.blocked_reason === 'cost_limit') {
+  if (phase === 'complete' && report.blocked_reason === 'cost_limit') {
+    const pull = (await github.rest.pulls.get(args)).data;
+    require('./approval.cjs').cost_block(report.quote,pull,`${context.repo.owner}/${context.repo.repo}`);
+    if (!/^[0-9a-f]{64}$/.test(report.quote.id) ||
+        quote_artifact !== `review-cost-block-${pr}-${head}-${report.quote.id}`) throw Error('missing budget handoff artifact');
     const notification = `<!-- savior-cost-notification:${head} -->`;
     if (!comments.some(c=>c.user?.login === 'github-actions[bot]' && c.user?.type === 'Bot' && c.body?.startsWith(notification))) {
-      const pull = (await github.rest.pulls.get(args)).data;
       if (pull.base.sha !== report.quote.binding.base || !await current()) return;
       const owners = await require('./codeowners.cjs').owners({github,context,pr:pull});
       if (owners.length && await current()) await github.rest.issues.createComment({...context.repo,issue_number:Number(pr),
         body:`${notification}\n${owners.join(' ')}: automated review is blocked because the next-call reservation exceeds the remaining allowance. Run a local review from trusted main with \`npm run review:local -- ${pr}\`. A repository admin can waive review for this revision with \`/savior review skip ${head}\`. See the review status for the reservation and allowances.`});
+    }
+    if (!report.findings?.length && !report.context_gaps?.length && !report.review_failures?.length) {
+      core.notice('budget stop recorded; awaiting local review');
+      core.setOutput('awaiting_local_review', 'true');
+      return false;
     }
   }
   if (phase === 'complete' && !report.blocked_reason) {

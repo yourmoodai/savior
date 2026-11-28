@@ -61,7 +61,7 @@ jobs:
               binding: 'start' === 'start' ? undefined : {...binding,run:context.runId,attempt:process.env.GITHUB_RUN_ATTEMPT},
               results: JSON.parse(process.env.RESULTS)});
   review:
-    if: needs.start.outputs.dependabot != 'true' && !needs.start.outputs.local_check
+    if: needs.start.outputs.pr && !needs.start.outputs.local_check
     needs: start
     permissions:
       contents: read
@@ -157,7 +157,11 @@ jobs:
     with:
       test_sha: ${{ needs.admission.outputs.test_sha }}
   readiness:
-    if: always() && needs.start.result == 'success' && needs.start.outputs.dependabot != 'true'
+    # The head status stays pending until a separate local approval admits validation.
+    if: >-
+      always() && needs.start.result == 'success' && needs.start.outputs.pr &&
+      !(needs.review.result == 'success' && needs.review.outputs.awaiting_local_review == 'true' &&
+        needs.review.outputs.approved == 'false' && !needs.start.outputs.local_check && needs.admission.result == 'skipped')
     needs: [start, review, admission, commits, verify, qualification, site]
     runs-on: ubuntu-24.04
     timeout-minutes: 5

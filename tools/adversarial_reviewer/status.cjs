@@ -4,7 +4,7 @@ const reasons = {
   author_unauthorized:'Review not performed: the PR author is neither a repository admin nor a named CODEOWNER with write access.',
   disabled:'Review not performed: the Bedrock reviewer is disabled.',
   spending_unresolved:'Review blocked: earlier spending is missing or unattributed. Reconcile the ledger before new inference. A waiver cannot repair spending evidence.',
-  cost_limit:'Automated review blocked by cost.',
+  cost_limit:'Hosted review reached its spending limit. Awaiting local review.',
   budget_exhausted:'Review stopped at its spending limit. Coverage is incomplete.',
   qualification_failed:'Review not performed: live model qualification failed.',
   infrastructure_failed:'Review unavailable: an infrastructure prerequisite failed. Inspect the linked workflow; this is not a code finding.',

@@ -3,7 +3,7 @@ import {fileURLToPath} from 'node:url';
 import approval from '../adversarial_reviewer/approval.cjs';
 import receipt from './receipt.cjs';
 
-const {repository,run_base,cost_run,app_id,bot,check_name,marker}=receipt;
+const {repository,run_base,cost_run,app_id,is_review_bot,latest_reviews,check_name,marker}=receipt;
 const prefix='repos/'+repository;
 export function gh(args,options) {
   return execFileSync('gh',args,{timeout:120_000,maxBuffer:64_000_000,...options});
@@ -17,8 +17,7 @@ export function list(path,key) {
 }
 const download=id=>gh(['api',prefix+'/actions/artifacts/'+id+'/zip']);
 export function outstanding_findings(pr,reviews,fetch_check) {
-  const own=reviews.filter(r=>r.user?.type==='Bot' && r.user.login===bot &&
-    ['APPROVED','CHANGES_REQUESTED','DISMISSED'].includes(r.state)).sort((a,b)=>b.id-a.id)[0];
+  const own=latest_reviews(reviews).find(r=>is_review_bot(r.user));
   if (own?.state!=='CHANGES_REQUESTED') return [];
   const id=/^<!-- savior-local-review:(\d+):/.exec(own.body)?.[1];
   if (!id) throw Error('unidentified outstanding local review');

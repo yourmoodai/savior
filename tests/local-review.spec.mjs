@@ -11,7 +11,8 @@ import {outstanding_findings} from '../tools/local_review/evidence.mjs';
 import receipt from '../tools/local_review/receipt.cjs';
 import validation from '../tools/ci/pr_validation.cjs';
 
-const {repository,repo_id,app_id,check_name,bot,receipt_id,validate_check,marker}=receipt;
+const {repository,repo_id,app_id,check_name,receipt_id,validate_check,marker}=receipt;
+const review_bot = {id:360859138, login:'yourmood-ai[bot]', type:'Bot'};
 const pr={number:42,head:{sha:'a'.repeat(40)},base:{sha:'b'.repeat(40)}};
 const artifact={id:8,name:'',workflow_run:{id:9,repository_id:repo_id},size_in_bytes:123};
 const run={id:9,path:'.github/workflows/pr-validation.yml',event:'workflow_dispatch',
@@ -106,7 +107,7 @@ test('cache on GitHub survives a retry and never revives dismissed approval',asy
     write:async()=>async(path,method,payload)=>{
       events.push(path);
       if (path==='/check-runs') {check={...check_fixture(),...payload};return check;}
-      reviews.push({id:1,user:{login:bot,type:'Bot'},state:'APPROVED',commit_id:pr.head.sha,body:payload.body});
+      reviews.push({id:1,user:review_bot,state:'APPROVED',commit_id:pr.head.sha,body:payload.body});
     },reviews:async()=>reviews};
   await complete(args);
   await complete({...args,existing:[check]});
@@ -142,8 +143,13 @@ test('CI binds the App identity, review, trusted cost artifact and both revision
     getWorkflowRun:async()=>({data:run}),downloadArtifact:async()=>({data:archive.zip})}}};
   const args={github,context,pr,id:'44'};
   const stamp=await validate_check(args);
-  const review={id:6,user:{login:bot,type:'Bot'},state:'APPROVED',commit_id:pr.head.sha,body:stamp+'\nreport'};
+  const review={id:6,user:review_bot,state:'APPROVED',commit_id:pr.head.sha,body:stamp+'\nreport'};
   validation.assert_approval([review],{head:pr.head.sha},stamp);
+  const old_login = {...review_bot, login:'your-mood-savior-prose-review[bot]'};
+  validation.assert_approval([{...review,id:5,state:'CHANGES_REQUESTED',user:old_login},review],{head:pr.head.sha},stamp);
+  for (const user of [{...review_bot,id:12},{...review_bot,type:'User'}]) {
+    assert.throws(()=>validation.assert_approval([{...review,user}],{head:pr.head.sha},stamp));
+  }
   assert.throws(()=>validation.assert_approval([{...review,user:{login:'unrelated',type:'Bot'}}],{head:pr.head.sha},stamp));
   for (const fields of [{id:45},{head_sha:pr.base.sha},{app:{id:19}},{conclusion:'failure'},
     {external_id:receipt_id({...pr,base:pr.head},8,sha)}]) {
@@ -182,7 +188,7 @@ for report,preflight,expected in [(base,base,[]),({**base,'findings':[1]},base,[
 
 test('carry unresolved App findings to a later revision using the original report',()=>{
   const check={...check_fixture(),conclusion:'failure',output:{text:'```json\n'+JSON.stringify(defect)+'\n```'}};
-  const review={user:{login:bot,type:'Bot'},id:7,state:'CHANGES_REQUESTED',commit_id:pr.head.sha,body:marker(check)};
+  const review={user:review_bot,id:7,state:'CHANGES_REQUESTED',commit_id:pr.head.sha,body:marker(check)};
   const next={...pr,head:{sha:'d'.repeat(40)}};
   assert.equal(outstanding_findings(next,[review],()=>check)[0].details,defect.findings[0].reason);
   assert.throws(()=>outstanding_findings(next,[review],()=>({...check,app:{id:88}})));
@@ -192,7 +198,7 @@ test('carry unresolved App findings to a later revision using the original repor
 test('a competing App failure blocks admission regardless of review order',()=>{
   const failed={...check_fixture(),conclusion:'failure'};
   assert.throws(()=>receipt.assert_no_conflict([failed],[],pr),/conflicting/);
-  const dismissal={state:'DISMISSED',user:{type:'Bot',login:bot},commit_id:pr.head.sha,body:marker(failed)};
+  const dismissal={state:'DISMISSED',user:review_bot,commit_id:pr.head.sha,body:marker(failed)};
   receipt.assert_no_conflict([failed],[dismissal],pr);
   assert.throws(()=>receipt.assert_no_conflict([failed],[{...dismissal,commit_id:'obsolete'}],pr));
 });
